@@ -2,7 +2,7 @@
 <html lang="ru" data-theme="auto">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>GitHub Uploader</title>
 
     <!-- PWA -->
@@ -12,7 +12,7 @@
 
     <!-- iOS (Safari не читает манифест) -->
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="GitUp">
     <link rel="apple-touch-icon" href="/icons/icon-192.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -586,6 +586,17 @@
             background: var(--accent);
             border-radius: 2px;
             transition: width 0.4s ease;
+        }
+
+        /* ── SAFE AREA (iOS standalone) ── */
+        @supports (padding-top: env(safe-area-inset-top)) {
+            .header {
+                padding-top: calc(env(safe-area-inset-top) + 8px);
+                height: calc(56px + env(safe-area-inset-top));
+            }
+            .main {
+                padding-bottom: calc(48px + env(safe-area-inset-bottom));
+            }
         }
 
         /* ── MOBILE ── */
