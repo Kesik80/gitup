@@ -7,7 +7,7 @@
 
     <!-- PWA -->
     <link rel="manifest" href="/icons/manifest.json">
-    <meta name="theme-color" content="#2563eb">
+    <meta name="theme-color" content="#ffffff" id="themeColorMeta">
     <meta name="mobile-web-app-capable" content="yes">
 
     <!-- iOS (Safari не читает манифест) -->
@@ -590,8 +590,12 @@
 
         /* ── SAFE AREA (iOS standalone) ── */
         @supports (padding-top: env(safe-area-inset-top)) {
+            body {
+                /* Цвет за статус-баром совпадает с шапкой */
+                background-color: var(--surface);
+            }
             .header {
-                padding-top: calc(env(safe-area-inset-top) + 8px);
+                padding-top: calc(env(safe-area-inset-top) + 10px);
                 height: calc(56px + env(safe-area-inset-top));
             }
             .main {
@@ -850,7 +854,16 @@
         document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
         const map = { auto: 'themeAuto', light: 'themeLight', dark: 'themeDark' };
         document.getElementById(map[t])?.classList.add('active');
+
+        // Цвет статус-бара совпадает с шапкой
+        const isDark = t === 'dark' || (t === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        document.getElementById('themeColorMeta').setAttribute('content', isDark ? '#161b22' : '#ffffff');
     }
+
+    // Следим за системной темой в авто-режиме
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+        if ((localStorage.getItem('gh-theme') || 'auto') === 'auto') applyTheme('auto');
+    });
 
     // ── STATE ──────────────────────────────────────────────
     let selectedFiles = [];
