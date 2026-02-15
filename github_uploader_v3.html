@@ -1,0 +1,1285 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="auto">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Uploader</title>
+
+    <!-- PWA -->
+    <link rel="manifest" href="/icons/manifest.json">
+    <meta name="theme-color" content="#2563eb">
+    <meta name="mobile-web-app-capable" content="yes">
+
+    <!-- iOS (Safari не читает манифест) -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="GitUp">
+    <link rel="apple-touch-icon" href="/icons/icon-192.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Sora:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #f0f2f5;
+            --surface: #ffffff;
+            --surface2: #f7f8fa;
+            --border: #e2e5ea;
+            --text: #1a1d23;
+            --text2: #5a6172;
+            --text3: #9aa0ad;
+            --accent: #2563eb;
+            --accent-hover: #1d4ed8;
+            --accent-glow: rgba(37,99,235,0.15);
+            --green: #16a34a;
+            --green-bg: #dcfce7;
+            --red: #dc2626;
+            --red-bg: #fee2e2;
+            --yellow: #d97706;
+            --yellow-bg: #fef3c7;
+            --blue-bg: #dbeafe;
+            --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.06);
+            --shadow-lg: 0 8px 32px rgba(0,0,0,0.10);
+            --radius: 12px;
+            --radius-sm: 8px;
+            --radius-xs: 6px;
+        }
+
+        [data-theme="dark"] {
+            --bg: #0d1117;
+            --surface: #161b22;
+            --surface2: #1c2128;
+            --border: #30363d;
+            --text: #e6edf3;
+            --text2: #8b949e;
+            --text3: #484f58;
+            --accent: #58a6ff;
+            --accent-hover: #79c0ff;
+            --accent-glow: rgba(88,166,255,0.15);
+            --green: #3fb950;
+            --green-bg: rgba(63,185,80,0.12);
+            --red: #f85149;
+            --red-bg: rgba(248,81,73,0.12);
+            --yellow: #d29922;
+            --yellow-bg: rgba(210,153,34,0.15);
+            --blue-bg: rgba(88,166,255,0.12);
+            --shadow: 0 1px 3px rgba(0,0,0,0.3), 0 4px 16px rgba(0,0,0,0.2);
+            --shadow-lg: 0 8px 32px rgba(0,0,0,0.4);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            [data-theme="auto"] {
+                --bg: #0d1117;
+                --surface: #161b22;
+                --surface2: #1c2128;
+                --border: #30363d;
+                --text: #e6edf3;
+                --text2: #8b949e;
+                --text3: #484f58;
+                --accent: #58a6ff;
+                --accent-hover: #79c0ff;
+                --accent-glow: rgba(88,166,255,0.15);
+                --green: #3fb950;
+                --green-bg: rgba(63,185,80,0.12);
+                --red: #f85149;
+                --red-bg: rgba(248,81,73,0.12);
+                --yellow: #d29922;
+                --yellow-bg: rgba(210,153,34,0.15);
+                --blue-bg: rgba(88,166,255,0.12);
+                --shadow: 0 1px 3px rgba(0,0,0,0.3), 0 4px 16px rgba(0,0,0,0.2);
+                --shadow-lg: 0 8px 32px rgba(0,0,0,0.4);
+            }
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Sora', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            transition: background 0.3s, color 0.3s;
+            line-height: 1.5;
+        }
+
+        /* ── HEADER ── */
+        .header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 0 20px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(12px);
+        }
+
+        .header-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+            font-size: 15px;
+            color: var(--text);
+        }
+
+        .header-logo svg { color: var(--accent); flex-shrink: 0; }
+
+        .header-controls { display: flex; align-items: center; gap: 8px; }
+
+        .theme-btn {
+            width: 36px; height: 36px;
+            border-radius: var(--radius-xs);
+            border: 1px solid var(--border);
+            background: var(--surface2);
+            color: var(--text2);
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 16px;
+            transition: all 0.2s;
+        }
+        .theme-btn:hover { background: var(--accent-glow); color: var(--accent); border-color: var(--accent); }
+        .theme-btn.active { background: var(--accent-glow); color: var(--accent); border-color: var(--accent); }
+
+        /* ── MAIN LAYOUT ── */
+        .main {
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 24px 16px 48px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        /* ── CARDS ── */
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            transition: border-color 0.2s;
+        }
+
+        .card-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .card-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text2);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .card-title svg { color: var(--accent); }
+
+        .card-body { padding: 20px; }
+
+        /* ── FORM ── */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        @media (max-width: 560px) {
+            .form-grid { grid-template-columns: 1fr; }
+        }
+
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
+        .form-group.full { grid-column: 1 / -1; }
+
+        label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text2);
+            letter-spacing: 0.03em;
+        }
+
+        input, select {
+            padding: 9px 12px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-xs);
+            font-size: 14px;
+            font-family: inherit;
+            background: var(--surface2);
+            color: var(--text);
+            transition: all 0.2s;
+            width: 100%;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+            background: var(--surface);
+        }
+
+        input::placeholder { color: var(--text3); }
+
+        select option { background: var(--surface); color: var(--text); }
+
+        /* ── BUTTONS ── */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            padding: 9px 18px;
+            border: none;
+            border-radius: var(--radius-xs);
+            font-size: 14px;
+            font-family: inherit;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: #fff;
+        }
+        .btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); box-shadow: 0 4px 12px var(--accent-glow); }
+        .btn-primary:active { transform: translateY(0); }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--text2);
+            border: 1px solid var(--border);
+        }
+        .btn-ghost:hover { background: var(--surface2); color: var(--text); }
+
+        .btn-success {
+            background: var(--green);
+            color: #fff;
+            width: 100%;
+            padding: 12px;
+            font-size: 15px;
+            border-radius: var(--radius-sm);
+        }
+        .btn-success:hover { filter: brightness(1.1); transform: translateY(-1px); box-shadow: 0 6px 16px rgba(22,163,74,0.3); }
+        .btn-success:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+        /* ── FOLDER TREE ── */
+        .folder-tree {
+            border: 1px solid var(--border);
+            border-radius: var(--radius-xs);
+            background: var(--surface2);
+            max-height: 180px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: var(--border) transparent;
+        }
+
+        .folder-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 12px;
+            font-size: 13px;
+            cursor: pointer;
+            color: var(--text2);
+            border-bottom: 1px solid var(--border);
+            transition: all 0.15s;
+        }
+        .folder-item:last-child { border-bottom: none; }
+        .folder-item:hover { background: var(--accent-glow); color: var(--accent); }
+        .folder-item.selected { background: var(--accent-glow); color: var(--accent); font-weight: 500; }
+        .folder-item svg { flex-shrink: 0; opacity: 0.7; }
+
+        /* ── DROP ZONE ── */
+        .drop-zone {
+            border: 2px dashed var(--border);
+            border-radius: var(--radius-sm);
+            padding: 40px 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.25s;
+            background: var(--surface2);
+        }
+
+        .drop-zone:hover, .drop-zone.dragover {
+            border-color: var(--accent);
+            background: var(--accent-glow);
+        }
+
+        .drop-zone.dragover { transform: scale(1.01); }
+
+        .drop-zone-icon {
+            width: 48px; height: 48px;
+            border-radius: 12px;
+            background: var(--accent-glow);
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 14px;
+            color: var(--accent);
+        }
+
+        .drop-zone h3 { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+        .drop-zone p { font-size: 13px; color: var(--text2); margin-bottom: 14px; }
+
+        /* ── FILE LIST ── */
+        .file-list { display: flex; flex-direction: column; gap: 8px; }
+
+        .file-item {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-xs);
+            padding: 12px 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.2s;
+            animation: slideIn 0.2s ease;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .file-item:hover { border-color: var(--accent); }
+        .file-item.uploading { border-color: var(--accent); }
+        .file-item.success { border-color: var(--green); background: var(--green-bg); }
+        .file-item.error { border-color: var(--red); background: var(--red-bg); }
+
+        .file-icon {
+            width: 34px; height: 34px;
+            border-radius: var(--radius-xs);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+            font-size: 16px;
+        }
+
+        .file-info { flex: 1; min-width: 0; }
+
+        /* ── RENAME AREA ── */
+        .file-name-wrap {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        /* Normal display mode */
+        .file-name-display {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text);
+            font-family: 'JetBrains Mono', monospace;
+            word-break: break-all;
+        }
+
+        .rename-trigger {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            padding: 2px 7px;
+            border-radius: 4px;
+            border: 1px dashed transparent;
+            cursor: pointer;
+            transition: all 0.15s;
+            font-size: 12px;
+            color: var(--text3);
+            background: none;
+            font-family: inherit;
+        }
+        .rename-trigger:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: var(--accent-glow);
+        }
+
+        /* Edit mode */
+        .rename-form {
+            display: none;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+            width: 100%;
+        }
+        .rename-form.active { display: flex; }
+        .file-name-wrap.editing .file-name-display { display: none; }
+        .file-name-wrap.editing .rename-trigger { display: none; }
+        .file-name-wrap.editing .rename-form { display: flex; }
+
+        .rename-input {
+            flex: 1;
+            min-width: 120px;
+            max-width: 320px;
+            padding: 5px 9px;
+            font-size: 13px;
+            font-family: 'JetBrains Mono', monospace;
+            border: 1.5px solid var(--accent);
+            border-radius: var(--radius-xs);
+            background: var(--surface);
+            color: var(--text);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+        .rename-input:focus { outline: none; }
+
+        .rename-actions { display: flex; gap: 4px; }
+
+        .icon-btn {
+            width: 28px; height: 28px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-xs);
+            background: var(--surface);
+            color: var(--text2);
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.15s;
+            flex-shrink: 0;
+        }
+        .icon-btn:hover { transform: scale(1.05); }
+        .icon-btn.save { border-color: var(--green); color: var(--green); }
+        .icon-btn.save:hover { background: var(--green-bg); }
+        .icon-btn.cancel:hover { background: var(--surface2); }
+        .icon-btn.remove { border-color: transparent; }
+        .icon-btn.remove:hover { border-color: var(--red); color: var(--red); background: var(--red-bg); }
+
+        /* Rename success flash */
+        @keyframes renameFlash {
+            0% { background: var(--green-bg); }
+            100% { background: transparent; }
+        }
+        .rename-success { animation: renameFlash 1.2s ease forwards; }
+
+        .file-path {
+            font-size: 11px;
+            color: var(--text3);
+            margin-top: 2px;
+            font-family: 'JetBrains Mono', monospace;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .file-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .file-size {
+            font-size: 11px;
+            color: var(--text3);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* ── STATUS BADGE ── */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 9px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .badge-pending { background: var(--yellow-bg); color: var(--yellow); }
+        .badge-uploading { background: var(--blue-bg); color: var(--accent); }
+        .badge-success { background: var(--green-bg); color: var(--green); }
+        .badge-error { background: var(--red-bg); color: var(--red); }
+
+        /* Spinner */
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .spin { animation: spin 0.8s linear infinite; display: inline-block; }
+
+        /* ── TOAST ── */
+        .toast-container {
+            position: fixed;
+            top: 68px;
+            right: 24px;
+            z-index: 999;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            pointer-events: none;
+        }
+
+        .toast {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 12px 16px;
+            border-radius: var(--radius-sm);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-lg);
+            font-size: 13px;
+            max-width: 340px;
+            pointer-events: auto;
+            animation: toastIn 0.25s ease;
+        }
+
+        @keyframes toastIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes toastOut {
+            to { opacity: 0; transform: translateY(-10px); }
+        }
+
+        .toast.hiding { animation: toastOut 0.2s ease forwards; }
+
+        .toast-icon { flex-shrink: 0; margin-top: 1px; }
+        .toast-success .toast-icon { color: var(--green); }
+        .toast-error .toast-icon { color: var(--red); }
+        .toast-text { color: var(--text); line-height: 1.4; }
+
+        /* ── SECTION LABEL ── */
+        .section-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text3);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            padding: 0 4px;
+        }
+
+        /* ── LOADING ── */
+        .loading-text {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text2);
+            font-size: 13px;
+            padding: 12px;
+        }
+
+        /* ── EMPTY STATE ── */
+        .empty-state {
+            text-align: center;
+            padding: 24px;
+            color: var(--text3);
+            font-size: 13px;
+        }
+
+        /* ── PROGRESS BAR ── */
+        .progress-bar {
+            height: 3px;
+            background: var(--border);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--accent);
+            border-radius: 2px;
+            transition: width 0.4s ease;
+        }
+
+        /* ── MOBILE ── */
+        @media (max-width: 480px) {
+            .main { padding: 12px 10px 32px; }
+            .card-body { padding: 14px; }
+            .card-header { padding: 12px 14px; }
+            .drop-zone { padding: 28px 16px; }
+            .file-item { padding: 10px 12px; gap: 8px; }
+            .toast-container { top: 64px; right: 10px; left: 10px; }
+            .toast { max-width: 100%; }
+            .file-meta .file-size { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+    <div class="header-logo">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/>
+        </svg>
+        GitHub Uploader
+    </div>
+    <div class="header-controls">
+        <button class="theme-btn" id="themeAuto" onclick="setTheme('auto')" title="Авто (системная тема)">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="theme-btn" id="themeLight" onclick="setTheme('light')" title="Светлая тема">
+            <svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="4"/><path stroke="currentColor" stroke-width="2" d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="theme-btn" id="themeDark" onclick="setTheme('dark')" title="Тёмная тема">
+            <svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+            </svg>
+        </button>
+    </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+    <!-- SETTINGS -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/>
+                </svg>
+                Подключение
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>GitHub Token</label>
+                    <input type="password" id="token" placeholder="ghp_xxxxxxxxxxxx" autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label>Имя пользователя</label>
+                    <input type="text" id="username" placeholder="your-username" autocomplete="off">
+                </div>
+                <div class="form-group full" style="align-items:flex-start">
+                    <button class="btn btn-primary" onclick="loadRepositories()">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                        </svg>
+                        Загрузить репозитории
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CREATE REPO -->
+    <div class="card">
+        <div class="card-header" style="cursor:pointer" onclick="toggleCreateRepo()">
+            <div class="card-title">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                Создать новый репозиторий
+            </div>
+            <svg id="createRepoChevron" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color:var(--text3);transition:transform 0.2s">
+                <polyline points="6 9 12 15 18 9"/>
+            </svg>
+        </div>
+        <div id="createRepoBody" style="display:none">
+            <div class="card-body">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Название репозитория</label>
+                        <input type="text" id="newRepoName" placeholder="my-new-repo" autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label>Видимость</label>
+                        <select id="newRepoVisibility">
+                            <option value="false">🌐 Public</option>
+                            <option value="true">🔒 Private</option>
+                        </select>
+                    </div>
+                    <div class="form-group full">
+                        <label>Описание <span style="color:var(--text3);font-weight:400">(необязательно)</span></label>
+                        <input type="text" id="newRepoDesc" placeholder="Описание репозитория">
+                    </div>
+                    <div class="form-group full" style="align-items:flex-start">
+                        <button class="btn btn-primary" onclick="createRepository()">
+                            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                            </svg>
+                            Создать репозиторий
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- REPO SETTINGS -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+                </svg>
+                Репозиторий и папка
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Репозиторий</label>
+                    <select id="repository" onchange="loadBranches()">
+                        <option value="">— выберите репозиторий —</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Ветка</label>
+                    <select id="branch">
+                        <option value="main">main</option>
+                    </select>
+                </div>
+                <div class="form-group full">
+                    <label>Папка назначения</label>
+                    <div class="folder-tree" id="folderTree">
+                        <div class="loading-text">
+                            <span>Выберите репозиторий для загрузки структуры папок</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FILES -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                </svg>
+                Файлы
+            </div>
+            <span id="file-count" class="section-label"></span>
+        </div>
+        <div class="card-body" style="display:flex;flex-direction:column;gap:14px;">
+            <!-- Drop zone -->
+            <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+                <div class="drop-zone-icon">
+                    <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                        <polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/>
+                        <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
+                    </svg>
+                </div>
+                <h3>Перетащите файлы сюда</h3>
+                <p>или нажмите для выбора</p>
+                <input type="file" id="fileInput" multiple style="display:none" onchange="handleFileSelect(event)">
+            </div>
+
+            <!-- File list -->
+            <div class="file-list" id="fileList"></div>
+
+            <!-- Progress -->
+            <div id="uploadProgress" style="display:none">
+                <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text2);margin-bottom:4px;">
+                    <span id="progressLabel">Загрузка...</span>
+                    <span id="progressPct">0%</span>
+                </div>
+                <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+            </div>
+
+            <!-- Upload button -->
+            <button class="btn btn-success" id="uploadBtn" onclick="uploadFiles()">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/>
+                    <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
+                </svg>
+                Загрузить в GitHub
+            </button>
+        </div>
+    </div>
+
+</div>
+
+<!-- TOASTS -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+    // ── THEME ──────────────────────────────────────────────
+    const saved = localStorage.getItem('gh-theme') || 'auto';
+    applyTheme(saved);
+
+    function setTheme(t) { localStorage.setItem('gh-theme', t); applyTheme(t); }
+
+    function applyTheme(t) {
+        document.documentElement.setAttribute('data-theme', t);
+        document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
+        const map = { auto: 'themeAuto', light: 'themeLight', dark: 'themeDark' };
+        document.getElementById(map[t])?.classList.add('active');
+    }
+
+    // ── STATE ──────────────────────────────────────────────
+    let selectedFiles = [];
+    let currentPath = '';
+    let folderStructure = [];
+    let isUploading = false;
+
+    // ── DRAG & DROP ────────────────────────────────────────
+    const dropZone = document.getElementById('dropZone');
+    dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+    dropZone.addEventListener('drop', e => {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+        handleFileSelect(e);
+    });
+
+    // ── CREATE REPOSITORY ─────────────────────────────────
+    function toggleCreateRepo() {
+        const body = document.getElementById('createRepoBody');
+        const chevron = document.getElementById('createRepoChevron');
+        const open = body.style.display === 'none';
+        body.style.display = open ? 'block' : 'none';
+        chevron.style.transform = open ? 'rotate(180deg)' : 'rotate(0deg)';
+    }
+
+    async function createRepository() {
+        const token = v('token');
+        const name = v('newRepoName');
+        const isPrivate = document.getElementById('newRepoVisibility').value === 'true';
+        const desc = v('newRepoDesc');
+
+        if (!token) { toast('Введите GitHub Token', 'error'); return; }
+        if (!name) { toast('Введите название репозитория', 'error'); return; }
+        if (!/^[a-zA-Z0-9_.-]+$/.test(name)) {
+            toast('Только буквы, цифры, дефис, точка и подчёркивание', 'error'); return;
+        }
+
+        const btn = event.target.closest('button');
+        btn.disabled = true;
+        btn.textContent = '⟳ Создание...';
+
+        try {
+            const r = await fetch('https://api.github.com/user/repos', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `token ${token}`,
+                    'Accept': 'application/vnd.github.v3+json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    name,
+                    description: desc,
+                    private: isPrivate,
+                    auto_init: true   // создаёт initial commit с README, иначе ветка пустая
+                })
+            });
+
+            if (!r.ok) {
+                const err = await r.json();
+                throw new Error(err.errors?.[0]?.message || err.message || 'Ошибка создания');
+            }
+
+            const repo = await r.json();
+
+            // Добавляем новый репозиторий в список и выбираем его
+            const sel = document.getElementById('repository');
+            const opt = document.createElement('option');
+            opt.value = repo.full_name;
+            opt.textContent = repo.full_name;
+            sel.appendChild(opt);
+            sel.value = repo.full_name;
+
+            // Загружаем ветки нового репо
+            await loadBranches();
+
+            // Сворачиваем панель создания
+            document.getElementById('createRepoBody').style.display = 'none';
+            document.getElementById('createRepoChevron').style.transform = 'rotate(0deg)';
+            document.getElementById('newRepoName').value = '';
+            document.getElementById('newRepoDesc').value = '';
+
+            toast(`Репозиторий «${repo.full_name}» создан и выбран`, 'success');
+        } catch(e) {
+            toast('Ошибка: ' + e.message, 'error');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = `<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Создать репозиторий`;
+        }
+    }
+
+    // ── REPOSITORIES ──────────────────────────────────────
+    async function loadRepositories() {
+        const token = v('token'), username = v('username');
+        if (!token || !username) { toast('Введите токен и имя пользователя', 'error'); return; }
+        try {
+            const r = await ghFetch(`https://api.github.com/user/repos?per_page=100`, token);
+            const repos = await r.json();
+            const sel = document.getElementById('repository');
+            sel.innerHTML = '<option value="">— выберите репозиторий —</option>';
+            repos.forEach(repo => {
+                const o = document.createElement('option');
+                o.value = repo.full_name; o.textContent = repo.full_name;
+                sel.appendChild(o);
+            });
+            toast('Репозитории загружены', 'success');
+        } catch(e) { toast('Ошибка: ' + e.message, 'error'); }
+    }
+
+    async function loadBranches() {
+        const token = v('token'), repo = v('repository');
+        if (!repo) return;
+        try {
+            const r = await ghFetch(`https://api.github.com/repos/${repo}/branches`, token);
+            const branches = await r.json();
+            const sel = document.getElementById('branch');
+            sel.innerHTML = '';
+            branches.forEach(b => {
+                const o = document.createElement('option');
+                o.value = b.name; o.textContent = b.name;
+                sel.appendChild(o);
+            });
+            loadFolderStructure();
+        } catch(e) { toast('Ошибка: ' + e.message, 'error'); }
+    }
+
+    async function loadFolderStructure() {
+        const token = v('token'), repo = v('repository'), branch = v('branch');
+        if (!repo) return;
+        const tree = document.getElementById('folderTree');
+        tree.innerHTML = '<div class="loading-text"><span class="spin">⟳</span> Загрузка папок...</div>';
+        try {
+            const r = await ghFetch(`https://api.github.com/repos/${repo}/git/trees/${branch}?recursive=1`, token);
+            const data = await r.json();
+            folderStructure = (data.tree || []).filter(i => i.type === 'tree');
+            displayFolderTree();
+        } catch(e) { tree.innerHTML = '<div class="loading-text">Ошибка загрузки папок</div>'; }
+    }
+
+    function displayFolderTree() {
+        const tree = document.getElementById('folderTree');
+        tree.innerHTML = '';
+        const mkItem = (path, label, depth) => {
+            const div = document.createElement('div');
+            div.className = 'folder-item' + (path === currentPath ? ' selected' : '');
+            div.style.paddingLeft = (12 + depth * 16) + 'px';
+            div.innerHTML = `<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg> ${label}`;
+            div.onclick = () => selectFolder(path, div);
+            return div;
+        };
+        tree.appendChild(mkItem('', '/ Корневая папка', 0));
+        folderStructure.forEach(f => {
+            const depth = f.path.split('/').length;
+            const label = f.path.split('/').pop();
+            tree.appendChild(mkItem(f.path, label, depth));
+        });
+    }
+
+    function selectFolder(path, el) {
+        document.querySelectorAll('.folder-item').forEach(i => i.classList.remove('selected'));
+        el.classList.add('selected');
+        currentPath = path;
+        // Update paths for already-added files that haven't been manually renamed
+        selectedFiles.forEach(item => {
+            item.path = currentPath ? `${currentPath}/${item.displayName}` : item.displayName;
+        });
+        displayFileList();
+    }
+
+    // ── FILE HANDLING ──────────────────────────────────────
+    function handleFileSelect(e) {
+        if (isUploading) return;
+        const files = e.target?.files || e.dataTransfer?.files;
+        if (!files) return;
+        Array.from(files).forEach(file => {
+            selectedFiles.push({
+                id: Date.now() + Math.random(),
+                file,
+                displayName: file.name,
+                path: currentPath ? `${currentPath}/${file.name}` : file.name,
+                status: 'pending',
+                size: file.size
+            });
+        });
+        document.getElementById('fileInput').value = '';
+        displayFileList();
+    }
+
+    function displayFileList() {
+        const list = document.getElementById('fileList');
+        const countEl = document.getElementById('file-count');
+
+        if (selectedFiles.length === 0) {
+            list.innerHTML = '';
+            countEl.textContent = '';
+            return;
+        }
+        countEl.textContent = `${selectedFiles.length} ${pluralFiles(selectedFiles.length)}`;
+
+        list.innerHTML = '';
+        selectedFiles.forEach(item => {
+            const div = document.createElement('div');
+            div.className = `file-item ${item.status === 'success' ? 'success' : item.status === 'error' ? 'error' : item.status === 'uploading' ? 'uploading' : ''}`;
+            div.id = `fi-${item.id}`;
+
+            div.innerHTML = `
+                <div class="file-icon">${fileEmoji(item.displayName)}</div>
+                <div class="file-info">
+                    <div class="file-name-wrap" id="fnw-${item.id}">
+                        <span class="file-name-display" id="fnd-${item.id}">${esc(item.displayName)}</span>
+                        <button class="rename-trigger" onclick="startRename(${item.id})" title="Переименовать">
+                            <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                            </svg>
+                            Переименовать
+                        </button>
+                        <div class="rename-form" id="rf-${item.id}">
+                            <input class="rename-input" id="ri-${item.id}" type="text" value="${esc(item.displayName)}"
+                                onkeydown="onRenameKey(event,${item.id})"
+                                placeholder="новое имя файла">
+                            <div class="rename-actions">
+                                <button class="icon-btn save" onclick="saveRename(${item.id})" title="Сохранить (Enter)">
+                                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                                </button>
+                                <button class="icon-btn cancel" onclick="cancelRename(${item.id})" title="Отмена (Esc)">
+                                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="file-path" id="fp-${item.id}">${esc(item.path)}</div>
+                </div>
+                <div class="file-meta">
+                    <span class="file-size">${formatSize(item.size)}</span>
+                    ${badgeHtml(item.status)}
+                    <button class="icon-btn remove" onclick="removeFile(${item.id})" title="Удалить">
+                        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/>
+                            <path d="M9 6V4h6v2"/>
+                        </svg>
+                    </button>
+                </div>
+            `;
+            list.appendChild(div);
+        });
+    }
+
+    // ── RENAME ────────────────────────────────────────────
+    function startRename(id) {
+        const wrap = document.getElementById(`fnw-${id}`);
+        const rf = document.getElementById(`rf-${id}`);
+        wrap.classList.add('editing');
+        rf.classList.add('active');
+        const inp = document.getElementById(`ri-${id}`);
+        inp.focus();
+        // Select without extension
+        const name = inp.value;
+        const dot = name.lastIndexOf('.');
+        if (dot > 0) { inp.setSelectionRange(0, dot); }
+        else { inp.select(); }
+    }
+
+    function saveRename(id) {
+        const item = selectedFiles.find(f => f.id === id);
+        if (!item) return;
+        const newName = document.getElementById(`ri-${id}`).value.trim();
+        if (!newName) { toast('Имя файла не может быть пустым', 'error'); return; }
+
+        item.displayName = newName;
+        item.path = currentPath ? `${currentPath}/${newName}` : newName;
+
+        // Update DOM without full redraw — snappy UX
+        const wrap = document.getElementById(`fnw-${id}`);
+        const displayEl = document.getElementById(`fnd-${id}`);
+        const pathEl = document.getElementById(`fp-${id}`);
+        const iconEl = document.getElementById(`fi-${id}`)?.querySelector('.file-icon');
+
+        displayEl.textContent = newName;
+        pathEl.textContent = item.path;
+        if (iconEl) iconEl.textContent = fileEmoji(newName);
+
+        // Exit edit mode
+        wrap.classList.remove('editing');
+        document.getElementById(`rf-${id}`)?.classList.remove('active');
+
+        // Flash green
+        const fi = document.getElementById(`fi-${id}`);
+        fi.classList.add('rename-success');
+        setTimeout(() => fi.classList.remove('rename-success'), 1200);
+
+        toast(`Переименован в «${newName}»`, 'success');
+    }
+
+    function cancelRename(id) {
+        const item = selectedFiles.find(f => f.id === id);
+        const wrap = document.getElementById(`fnw-${id}`);
+        // Restore input value
+        const inp = document.getElementById(`ri-${id}`);
+        if (inp && item) inp.value = item.displayName;
+        wrap.classList.remove('editing');
+        document.getElementById(`rf-${id}`)?.classList.remove('active');
+    }
+
+    function onRenameKey(e, id) {
+        if (e.key === 'Enter') saveRename(id);
+        if (e.key === 'Escape') cancelRename(id);
+    }
+
+    // ── REMOVE ────────────────────────────────────────────
+    function removeFile(id) {
+        selectedFiles = selectedFiles.filter(f => f.id !== id);
+        displayFileList();
+    }
+
+    // ── UPLOAD ────────────────────────────────────────────
+    async function uploadFiles() {
+        if (isUploading) return;
+        const token = v('token'), repo = v('repository'), branch = v('branch');
+        if (!repo) { toast('Выберите репозиторий', 'error'); return; }
+        if (!selectedFiles.length) { toast('Добавьте файлы для загрузки', 'error'); return; }
+
+        isUploading = true;
+        document.getElementById('uploadBtn').disabled = true;
+        const progressWrap = document.getElementById('uploadProgress');
+        progressWrap.style.display = 'block';
+
+        try {
+            const commitRes = await ghFetch(`https://api.github.com/repos/${repo}/git/refs/heads/${branch}`, token);
+            if (!commitRes.ok) throw new Error('Ошибка получения ветки');
+            const commitData = await commitRes.json();
+            const currentCommitSha = commitData.object.sha;
+
+            const commitInfoRes = await ghFetch(`https://api.github.com/repos/${repo}/git/commits/${currentCommitSha}`, token);
+            if (!commitInfoRes.ok) throw new Error('Ошибка получения коммита');
+            const commitInfo = await commitInfoRes.json();
+            const baseTreeSha = commitInfo.tree.sha;
+
+            const fileBlobs = [];
+            let done = 0;
+
+            for (const item of selectedFiles) {
+                item.status = 'uploading';
+                updateFileStatus(item);
+                setProgress(done, selectedFiles.length, item.displayName);
+
+                try {
+                    const base64 = await fileToBase64(item.file);
+                    const blobRes = await ghPost(`https://api.github.com/repos/${repo}/git/blobs`, token, { content: base64, encoding: 'base64' });
+                    if (!blobRes.ok) throw new Error('Blob error');
+                    const blobData = await blobRes.json();
+                    fileBlobs.push({ path: item.path, mode: '100644', type: 'blob', sha: blobData.sha });
+                    item.status = 'success';
+                } catch {
+                    item.status = 'error';
+                }
+                done++;
+                updateFileStatus(item);
+                setProgress(done, selectedFiles.length, '');
+            }
+
+            const treeRes = await ghPost(`https://api.github.com/repos/${repo}/git/trees`, token, { base_tree: baseTreeSha, tree: fileBlobs });
+            if (!treeRes.ok) throw new Error('Ошибка создания дерева');
+            const treeData = await treeRes.json();
+
+            const newCommitRes = await ghPost(`https://api.github.com/repos/${repo}/git/commits`, token, {
+                message: `Upload ${selectedFiles.length} file(s) via GitHub Uploader`,
+                tree: treeData.sha,
+                parents: [currentCommitSha]
+            });
+            if (!newCommitRes.ok) throw new Error('Ошибка создания коммита');
+            const newCommit = await newCommitRes.json();
+
+            const updateRes = await fetch(`https://api.github.com/repos/${repo}/git/refs/heads/${branch}`, {
+                method: 'PATCH',
+                headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+                body: JSON.stringify({ sha: newCommit.sha })
+            });
+            if (!updateRes.ok) throw new Error('Ошибка обновления ветки');
+
+            toast(`✅ ${fileBlobs.length} файл(ов) загружено в ${repo}`, 'success');
+        } catch(e) {
+            toast('Ошибка: ' + e.message, 'error');
+        } finally {
+            isUploading = false;
+            document.getElementById('uploadBtn').disabled = false;
+            setTimeout(() => { progressWrap.style.display = 'none'; }, 2000);
+        }
+    }
+
+    function updateFileStatus(item) {
+        const fi = document.getElementById(`fi-${item.id}`);
+        if (!fi) return;
+        fi.className = `file-item ${item.status === 'success' ? 'success' : item.status === 'error' ? 'error' : item.status === 'uploading' ? 'uploading' : ''}`;
+        const meta = fi.querySelector('.file-meta');
+        const oldBadge = meta.querySelector('.badge');
+        if (oldBadge) oldBadge.outerHTML = badgeHtml(item.status);
+    }
+
+    function setProgress(done, total, name) {
+        const pct = total > 0 ? Math.round(done / total * 100) : 0;
+        document.getElementById('progressFill').style.width = pct + '%';
+        document.getElementById('progressPct').textContent = pct + '%';
+        document.getElementById('progressLabel').textContent = name ? `Загрузка: ${name}` : `Готово ${done} из ${total}`;
+    }
+
+    // ── HELPERS ───────────────────────────────────────────
+    function v(id) { return document.getElementById(id).value.trim(); }
+    function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+    function ghFetch(url, token) {
+        return fetch(url, { headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' } });
+    }
+    function ghPost(url, token, body) {
+        return fetch(url, { method: 'POST', headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    }
+
+    function fileToBase64(file) {
+        return new Promise((res, rej) => {
+            const r = new FileReader();
+            r.readAsDataURL(file);
+            r.onload = () => res(r.result.split(',')[1]);
+            r.onerror = rej;
+        });
+    }
+
+    function formatSize(bytes) {
+        if (!bytes) return '';
+        if (bytes < 1024) return bytes + ' B';
+        if (bytes < 1024*1024) return (bytes/1024).toFixed(1) + ' KB';
+        return (bytes/1024/1024).toFixed(1) + ' MB';
+    }
+
+    function fileEmoji(name) {
+        const ext = name.split('.').pop().toLowerCase();
+        const map = { jpg:'🖼', jpeg:'🖼', png:'🖼', gif:'🖼', svg:'🎨', webp:'🖼', mp4:'🎬', mov:'🎬', mp3:'🎵', wav:'🎵', pdf:'📄', zip:'📦', tar:'📦', gz:'📦', json:'📋', js:'📜', ts:'📜', jsx:'📜', tsx:'📜', html:'🌐', css:'🎨', md:'📝', txt:'📝', py:'🐍', sh:'⚙️', yml:'⚙️', yaml:'⚙️' };
+        return map[ext] || '📄';
+    }
+
+    function pluralFiles(n) {
+        if (n % 10 === 1 && n % 100 !== 11) return 'файл';
+        if (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20)) return 'файла';
+        return 'файлов';
+    }
+
+    function badgeHtml(status) {
+        const map = {
+            pending: `<span class="badge badge-pending">ожидание</span>`,
+            uploading: `<span class="badge badge-uploading"><span class="spin">⟳</span> загрузка</span>`,
+            success: `<span class="badge badge-success">✓ готово</span>`,
+            error: `<span class="badge badge-error">✗ ошибка</span>`
+        };
+        return map[status] || '';
+    }
+
+    function toast(msg, type = 'success') {
+        const c = document.getElementById('toastContainer');
+        const t = document.createElement('div');
+        t.className = `toast toast-${type}`;
+        t.innerHTML = `
+            <div class="toast-icon">${type === 'success' ? '✓' : '✕'}</div>
+            <div class="toast-text">${msg}</div>`;
+        c.appendChild(t);
+        setTimeout(() => {
+            t.classList.add('hiding');
+            setTimeout(() => t.remove(), 250);
+        }, 3500);
+    }
+</script>
+</body>
+</html>
