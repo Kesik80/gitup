@@ -603,6 +603,183 @@
             }
         }
 
+        /* ── FILE EXPLORER ── */
+        .explorer-toolbar {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--border);
+            background: var(--surface2);
+            flex-wrap: wrap;
+        }
+
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            flex: 1;
+            min-width: 0;
+            font-size: 12px;
+            font-family: 'JetBrains Mono', monospace;
+            flex-wrap: wrap;
+        }
+
+        .breadcrumb-item {
+            color: var(--accent);
+            cursor: pointer;
+            padding: 2px 5px;
+            border-radius: 4px;
+            white-space: nowrap;
+            transition: background 0.15s;
+        }
+        .breadcrumb-item:hover { background: var(--accent-glow); }
+        .breadcrumb-item.current { color: var(--text); cursor: default; }
+        .breadcrumb-item.current:hover { background: transparent; }
+        .breadcrumb-sep { color: var(--text3); user-select: none; }
+
+        .explorer-body {
+            min-height: 120px;
+            max-height: 340px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: var(--border) transparent;
+        }
+
+        .explorer-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 14px;
+            border-bottom: 1px solid var(--border);
+            transition: background 0.12s;
+            cursor: default;
+        }
+        .explorer-item:last-child { border-bottom: none; }
+        .explorer-item:hover { background: var(--surface2); }
+
+        .explorer-item-icon {
+            width: 28px; height: 28px;
+            border-radius: var(--radius-xs);
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+            font-size: 14px;
+        }
+        .explorer-item-icon.folder { background: var(--yellow-bg); color: var(--yellow); }
+        .explorer-item-icon.file   { background: var(--surface); border: 1px solid var(--border); color: var(--text3); font-size: 11px; }
+
+        .explorer-item-info { flex: 1; min-width: 0; }
+        .explorer-item-name {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .explorer-item-name.folder-link {
+            color: var(--accent);
+            cursor: pointer;
+        }
+        .explorer-item-name.folder-link:hover { text-decoration: underline; }
+        .explorer-item-meta {
+            font-size: 11px;
+            color: var(--text3);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .explorer-item-actions {
+            display: flex;
+            gap: 4px;
+            opacity: 0;
+            transition: opacity 0.15s;
+            flex-shrink: 0;
+        }
+        .explorer-item:hover .explorer-item-actions { opacity: 1; }
+
+        /* Always show on touch */
+        @media (hover: none) {
+            .explorer-item-actions { opacity: 1; }
+        }
+
+        /* Delete confirm modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.55);
+            z-index: 500;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            backdrop-filter: blur(4px);
+        }
+        .modal-overlay.open { display: flex; }
+
+        .modal {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-lg);
+            padding: 24px;
+            max-width: 380px;
+            width: 100%;
+            animation: modalIn 0.2s ease;
+        }
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.95) translateY(8px); }
+            to   { opacity: 1; transform: scale(1)    translateY(0); }
+        }
+
+        .modal-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .modal-title svg { color: var(--red); }
+
+        .modal-body {
+            font-size: 13px;
+            color: var(--text2);
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        .modal-body code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            padding: 1px 5px;
+            border-radius: 4px;
+            color: var(--text);
+            word-break: break-all;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+        }
+
+        .btn-danger {
+            background: var(--red);
+            color: #fff;
+            padding: 8px 16px;
+            border: none;
+            border-radius: var(--radius-xs);
+            font-size: 13px;
+            font-family: inherit;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-danger:hover { filter: brightness(1.1); }
+        .btn-danger:disabled { opacity: 0.5; cursor: not-allowed; }
+
         /* ── MOBILE ── */
         @media (max-width: 480px) {
             .main { padding: 12px 10px 32px; }
@@ -784,6 +961,55 @@
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FILE EXPLORER -->
+    <div class="card" id="explorerCard" style="display:none">
+        <div class="card-header">
+            <div class="card-title">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                    <polyline points="9 22 9 12 15 12 15 22"/>
+                </svg>
+                Проводник
+            </div>
+            <button class="btn btn-ghost" style="padding:5px 10px;font-size:12px" onclick="refreshExplorer()">
+                <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                </svg>
+                Обновить
+            </button>
+        </div>
+        <!-- Breadcrumb -->
+        <div class="explorer-toolbar">
+            <div class="breadcrumb" id="explorerBreadcrumb">
+                <span class="breadcrumb-item current">/ root</span>
+            </div>
+        </div>
+        <!-- Content -->
+        <div class="explorer-body" id="explorerBody">
+            <div class="loading-text"><span class="spin">⟳</span> Загрузка...</div>
+        </div>
+    </div>
+
+    <!-- DELETE MODAL -->
+    <div class="modal-overlay" id="deleteModal">
+        <div class="modal">
+            <div class="modal-title">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <polyline points="3 6 5 6 21 6"/>
+                    <path d="M19 6l-1 14H6L5 6"/>
+                    <path d="M10 11v6M14 11v6"/>
+                    <path d="M9 6V4h6v2"/>
+                </svg>
+                <span id="deleteModalTitle">Удалить?</span>
+            </div>
+            <div class="modal-body" id="deleteModalBody"></div>
+            <div class="modal-actions">
+                <button class="btn btn-ghost" onclick="closeDeleteModal()">Отмена</button>
+                <button class="btn-danger" id="deleteConfirmBtn" onclick="confirmDelete()">Удалить</button>
             </div>
         </div>
     </div>
@@ -987,6 +1213,7 @@
                 sel.appendChild(o);
             });
             loadFolderStructure();
+            showExplorer();
         } catch(e) { toast('Ошибка: ' + e.message, 'error'); }
     }
 
@@ -1330,6 +1557,9 @@
             if (!updateRes.ok) throw new Error('Ошибка обновления ветки');
 
             toast(`✅ ${fileBlobs.length} файл(ов) загружено в ${repo}`, 'success');
+            // Обновить проводник
+            explorerCache = {};
+            if (explorerPath !== undefined) loadExplorerPath(explorerPath);
         } catch(e) {
             toast('Ошибка: ' + e.message, 'error');
         } finally {
@@ -1353,6 +1583,251 @@
         document.getElementById('progressFill').style.width = pct + '%';
         document.getElementById('progressPct').textContent = pct + '%';
         document.getElementById('progressLabel').textContent = name ? `Загрузка: ${name}` : `Готово ${done} из ${total}`;
+    }
+
+    // ── FILE EXPLORER ─────────────────────────────────────
+    let explorerPath = '';          // текущий путь в проводнике
+    let explorerCache = {};         // кэш содержимого папок
+    let deleteTarget = null;        // { path, sha, type }
+
+    function showExplorer() {
+        const repo = v('repository');
+        if (!repo) return;
+        document.getElementById('explorerCard').style.display = 'block';
+        explorerPath = '';
+        explorerCache = {};
+        loadExplorerPath('');
+    }
+
+    async function refreshExplorer() {
+        explorerCache = {};
+        loadExplorerPath(explorerPath);
+    }
+
+    async function loadExplorerPath(path) {
+        explorerPath = path;
+        renderBreadcrumb(path);
+
+        const body = document.getElementById('explorerBody');
+        body.innerHTML = '<div class="loading-text"><span class="spin">⟳</span> Загрузка...</div>';
+
+        // Check cache
+        if (explorerCache[path]) {
+            renderExplorerItems(explorerCache[path]);
+            return;
+        }
+
+        const token = v('token');
+        const repo  = v('repository');
+        const branch = v('branch');
+        const apiPath = path ? `contents/${path}` : 'contents';
+
+        try {
+            const r = await ghFetch(`https://api.github.com/repos/${repo}/${apiPath}?ref=${branch}`, token);
+            if (!r.ok) throw new Error('Ошибка загрузки');
+            const items = await r.json();
+            const sorted = items.sort((a, b) => {
+                if (a.type === b.type) return a.name.localeCompare(b.name);
+                return a.type === 'dir' ? -1 : 1;
+            });
+            explorerCache[path] = sorted;
+            renderExplorerItems(sorted);
+        } catch(e) {
+            body.innerHTML = `<div class="loading-text" style="color:var(--red)">Ошибка: ${e.message}</div>`;
+        }
+    }
+
+    function renderBreadcrumb(path) {
+        const el = document.getElementById('explorerBreadcrumb');
+        const parts = path ? path.split('/') : [];
+        let html = `<span class="breadcrumb-item" onclick="loadExplorerPath('')">root</span>`;
+        parts.forEach((part, i) => {
+            const subPath = parts.slice(0, i + 1).join('/');
+            const isCurrent = i === parts.length - 1;
+            html += `<span class="breadcrumb-sep">/</span>`;
+            html += `<span class="breadcrumb-item ${isCurrent ? 'current' : ''}"
+                ${isCurrent ? '' : `onclick="loadExplorerPath('${esc(subPath)}')"`}
+                >${esc(part)}</span>`;
+        });
+        el.innerHTML = html;
+    }
+
+    function renderExplorerItems(items) {
+        const body = document.getElementById('explorerBody');
+
+        if (items.length === 0) {
+            body.innerHTML = '<div class="loading-text" style="color:var(--text3)">Папка пуста</div>';
+            return;
+        }
+
+        body.innerHTML = '';
+        items.forEach(item => {
+            const isDir  = item.type === 'dir';
+            const ext    = item.name.split('.').pop().toLowerCase();
+            const emoji  = isDir ? '📁' : (fileEmoji(item.name));
+            const size   = item.size ? formatSize(item.size) : '';
+
+            const div = document.createElement('div');
+            div.className = 'explorer-item';
+            div.innerHTML = `
+                <div class="explorer-item-icon ${isDir ? 'folder' : 'file'}">${emoji}</div>
+                <div class="explorer-item-info">
+                    <div class="explorer-item-name ${isDir ? 'folder-link' : ''}"
+                        ${isDir ? `onclick="loadExplorerPath('${esc(item.path)}')"` : ''}
+                        title="${esc(item.path)}">${esc(item.name)}</div>
+                    <div class="explorer-item-meta">${isDir ? 'папка' : size}</div>
+                </div>
+                <div class="explorer-item-actions">
+                    ${!isDir ? `
+                    <button class="icon-btn" onclick="useFileAsDestination('${esc(item.path)}')" title="Открыть папку для загрузки">
+                        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+                        </svg>
+                    </button>` : `
+                    <button class="icon-btn" onclick="loadExplorerPath('${esc(item.path)}')" title="Открыть папку">
+                        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <polyline points="9 18 15 12 9 6"/>
+                        </svg>
+                    </button>`}
+                    <button class="icon-btn remove"
+                        onclick="openDeleteModal('${esc(item.path)}', '${item.sha || ''}', '${item.type}')"
+                        title="Удалить">
+                        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <polyline points="3 6 5 6 21 6"/>
+                            <path d="M19 6l-1 14H6L5 6"/>
+                            <path d="M9 6V4h6v2"/>
+                        </svg>
+                    </button>
+                </div>
+            `;
+            body.appendChild(div);
+        });
+    }
+
+    // Выбрать папку файла как папку назначения
+    function useFileAsDestination(filePath) {
+        const dir = filePath.includes('/') ? filePath.split('/').slice(0, -1).join('/') : '';
+        // Найти элемент в дереве папок и выбрать его
+        const items = document.querySelectorAll('.folder-item');
+        let found = false;
+        items.forEach(el => {
+            if (el.dataset.path === dir) { selectFolder(dir, el); found = true; }
+        });
+        if (!found) { currentPath = dir; }
+        toast(`Папка назначения: ${dir || 'root'}`, 'success');
+        // Прокрутить к секции загрузки
+        document.getElementById('dropZone').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    // ── DELETE ────────────────────────────────────────────
+    function openDeleteModal(path, sha, type) {
+        deleteTarget = { path, sha, type };
+        const isDir = type === 'dir';
+        document.getElementById('deleteModalTitle').textContent = isDir ? 'Удалить папку?' : 'Удалить файл?';
+        document.getElementById('deleteModalBody').innerHTML =
+            isDir
+            ? `Папка <code>${path}</code> и всё её содержимое будут удалены навсегда. Это действие нельзя отменить.`
+            : `Файл <code>${path}</code> будет удалён навсегда. Это действие нельзя отменить.`;
+        document.getElementById('deleteModal').classList.add('open');
+    }
+
+    function closeDeleteModal() {
+        document.getElementById('deleteModal').classList.remove('open');
+        deleteTarget = null;
+    }
+
+    // Клик вне модала — закрыть
+    document.getElementById('deleteModal').addEventListener('click', e => {
+        if (e.target === e.currentTarget) closeDeleteModal();
+    });
+
+    async function confirmDelete() {
+        if (!deleteTarget) return;
+        const { path, sha, type } = deleteTarget;
+        const token  = v('token');
+        const repo   = v('repository');
+        const branch = v('branch');
+        const btn    = document.getElementById('deleteConfirmBtn');
+
+        btn.disabled = true;
+        btn.textContent = 'Удаление...';
+
+        try {
+            if (type === 'dir') {
+                await deleteFolderRecursive(token, repo, branch, path);
+            } else {
+                await deleteFile(token, repo, branch, path, sha);
+            }
+            // Очистить кэш и обновить проводник
+            explorerCache = {};
+            closeDeleteModal();
+            loadExplorerPath(explorerPath);
+            toast(`«${path}» удалено`, 'success');
+        } catch(e) {
+            toast('Ошибка удаления: ' + e.message, 'error');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = 'Удалить';
+        }
+    }
+
+    async function deleteFile(token, repo, branch, path, sha) {
+        // Если sha не известен — запросить
+        let fileSha = sha;
+        if (!fileSha) {
+            const r = await ghFetch(`https://api.github.com/repos/${repo}/contents/${path}?ref=${branch}`, token);
+            if (!r.ok) throw new Error('Не удалось получить SHA файла');
+            fileSha = (await r.json()).sha;
+        }
+        const r = await fetch(`https://api.github.com/repos/${repo}/contents/${path}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: `Delete ${path}`, sha: fileSha, branch })
+        });
+        if (!r.ok) {
+            const err = await r.json();
+            throw new Error(err.message || 'Ошибка удаления');
+        }
+    }
+
+    async function deleteFolderRecursive(token, repo, branch, path) {
+        // Получить все файлы в папке рекурсивно через tree API
+        const branchRef = await ghFetch(`https://api.github.com/repos/${repo}/git/refs/heads/${branch}`, token);
+        const branchData = await branchRef.json();
+        const commitSha  = branchData.object.sha;
+
+        const commitInfo = await ghFetch(`https://api.github.com/repos/${repo}/git/commits/${commitSha}`, token);
+        const commitData = await commitInfo.json();
+        const baseTree   = commitData.tree.sha;
+
+        // Получить всё дерево
+        const treeRes  = await ghFetch(`https://api.github.com/repos/${repo}/git/trees/${commitSha}?recursive=1`, token);
+        const treeData = await treeRes.json();
+
+        // Отфильтровать: всё что НЕ внутри удаляемой папки
+        const kept = treeData.tree
+            .filter(item => item.type === 'blob' && !item.path.startsWith(path + '/') && item.path !== path)
+            .map(item => ({ path: item.path, mode: item.mode, type: item.type, sha: item.sha }));
+
+        // Создать новое дерево без удалённой папки
+        const newTreeRes = await ghPost(`https://api.github.com/repos/${repo}/git/trees`, token, { tree: kept });
+        if (!newTreeRes.ok) throw new Error('Ошибка создания дерева');
+        const newTree = await newTreeRes.json();
+
+        const newCommitRes = await ghPost(`https://api.github.com/repos/${repo}/git/commits`, token, {
+            message: `Delete folder ${path}`,
+            tree: newTree.sha,
+            parents: [commitSha]
+        });
+        if (!newCommitRes.ok) throw new Error('Ошибка создания коммита');
+        const newCommit = await newCommitRes.json();
+
+        const updateRes = await fetch(`https://api.github.com/repos/${repo}/git/refs/heads/${branch}`, {
+            method: 'PATCH',
+            headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+            body: JSON.stringify({ sha: newCommit.sha })
+        });
+        if (!updateRes.ok) throw new Error('Ошибка обновления ветки');
     }
 
     // ── HELPERS ───────────────────────────────────────────
