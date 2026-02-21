@@ -93,11 +93,12 @@
 
         body {
             font-family: 'Sora', sans-serif;
+            font-size: 17px;
             background: var(--bg);
             color: var(--text);
             min-height: 100vh;
             transition: background 0.3s, color 0.3s;
-            line-height: 1.5;
+            line-height: 1.6;
         }
 
         /* ── HEADER ── */
@@ -121,7 +122,7 @@
             align-items: center;
             gap: 10px;
             font-weight: 600;
-            font-size: 15px;
+            font-size: 16px;
             color: var(--text);
         }
 
@@ -173,7 +174,7 @@
         }
 
         .card-title {
-            font-size: 13px;
+            font-size: 14px;
             font-weight: 600;
             color: var(--text2);
             text-transform: uppercase;
@@ -201,17 +202,17 @@
         .form-group.full { grid-column: 1 / -1; }
 
         label {
-            font-size: 12px;
+            font-size: 13px;
             font-weight: 600;
             color: var(--text2);
             letter-spacing: 0.03em;
         }
 
         input, select {
-            padding: 9px 12px;
+            padding: 10px 13px;
             border: 1px solid var(--border);
             border-radius: var(--radius-xs);
-            font-size: 14px;
+            font-size: 15px;
             font-family: inherit;
             background: var(--surface2);
             color: var(--text);
@@ -236,10 +237,10 @@
             align-items: center;
             justify-content: center;
             gap: 7px;
-            padding: 9px 18px;
+            padding: 10px 20px;
             border: none;
             border-radius: var(--radius-xs);
-            font-size: 14px;
+            font-size: 15px;
             font-family: inherit;
             font-weight: 500;
             cursor: pointer;
@@ -287,8 +288,8 @@
             display: flex;
             align-items: center;
             gap: 6px;
-            padding: 7px 12px;
-            font-size: 13px;
+            padding: 9px 14px;
+            font-size: 14px;
             cursor: pointer;
             color: var(--text2);
             border-bottom: 1px solid var(--border);
@@ -326,8 +327,8 @@
             color: var(--accent);
         }
 
-        .drop-zone h3 { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
-        .drop-zone p { font-size: 13px; color: var(--text2); margin-bottom: 14px; }
+        .drop-zone h3 { font-size: 17px; font-weight: 600; margin-bottom: 4px; }
+        .drop-zone p { font-size: 14px; color: var(--text2); margin-bottom: 14px; }
 
         /* ── FILE LIST ── */
         .file-list { display: flex; flex-direction: column; gap: 8px; }
@@ -376,7 +377,7 @@
 
         /* Normal display mode */
         .file-name-display {
-            font-size: 14px;
+            font-size: 15px;
             font-weight: 500;
             color: var(--text);
             font-family: 'JetBrains Mono', monospace;
@@ -392,7 +393,7 @@
             border: 1px dashed transparent;
             cursor: pointer;
             transition: all 0.15s;
-            font-size: 12px;
+            font-size: 13px;
             color: var(--text3);
             background: none;
             font-family: inherit;
@@ -421,7 +422,7 @@
             min-width: 120px;
             max-width: 320px;
             padding: 5px 9px;
-            font-size: 13px;
+            font-size: 14px;
             font-family: 'JetBrains Mono', monospace;
             border: 1.5px solid var(--accent);
             border-radius: var(--radius-xs);
@@ -459,7 +460,7 @@
         .rename-success { animation: renameFlash 1.2s ease forwards; }
 
         .file-path {
-            font-size: 11px;
+            font-size: 12px;
             color: var(--text3);
             margin-top: 2px;
             font-family: 'JetBrains Mono', monospace;
@@ -476,7 +477,7 @@
         }
 
         .file-size {
-            font-size: 11px;
+            font-size: 12px;
             color: var(--text3);
             font-family: 'JetBrains Mono', monospace;
         }
@@ -486,9 +487,9 @@
             display: inline-flex;
             align-items: center;
             gap: 4px;
-            padding: 2px 9px;
+            padding: 3px 10px;
             border-radius: 20px;
-            font-size: 11px;
+            font-size: 12px;
             font-weight: 600;
             white-space: nowrap;
         }
@@ -522,7 +523,7 @@
             background: var(--surface);
             border: 1px solid var(--border);
             box-shadow: var(--shadow-lg);
-            font-size: 13px;
+            font-size: 14px;
             max-width: 340px;
             pointer-events: auto;
             animation: toastIn 0.25s ease;
@@ -546,7 +547,7 @@
 
         /* ── SECTION LABEL ── */
         .section-label {
-            font-size: 11px;
+            font-size: 12px;
             font-weight: 600;
             color: var(--text3);
             text-transform: uppercase;
@@ -560,7 +561,7 @@
             align-items: center;
             gap: 8px;
             color: var(--text2);
-            font-size: 13px;
+            font-size: 14px;
             padding: 12px;
         }
 
@@ -620,7 +621,7 @@
             gap: 2px;
             flex: 1;
             min-width: 0;
-            font-size: 12px;
+            font-size: 13px;
             font-family: 'JetBrains Mono', monospace;
             flex-wrap: wrap;
         }
@@ -669,8 +670,19 @@
         .explorer-item-icon.file   { background: var(--surface); border: 1px solid var(--border); color: var(--text3); font-size: 11px; }
 
         .explorer-item-info { flex: 1; min-width: 0; }
+        
+        .explorer-item-name-wrap {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+        .explorer-item-name-wrap.editing .explorer-item-name { display: none; }
+        .explorer-item-name-wrap.editing .rename-trigger { display: none; }
+        .explorer-item-name-wrap.editing .rename-form { display: flex !important; }
+
         .explorer-item-name {
-            font-size: 13px;
+            font-size: 14px;
             font-weight: 500;
             color: var(--text);
             white-space: nowrap;
@@ -683,7 +695,7 @@
         }
         .explorer-item-name.folder-link:hover { text-decoration: underline; }
         .explorer-item-meta {
-            font-size: 11px;
+            font-size: 12px;
             color: var(--text3);
             font-family: 'JetBrains Mono', monospace;
         }
@@ -732,7 +744,7 @@
         }
 
         .modal-title {
-            font-size: 15px;
+            font-size: 16px;
             font-weight: 600;
             color: var(--text);
             margin-bottom: 8px;
@@ -743,7 +755,7 @@
         .modal-title svg { color: var(--red); }
 
         .modal-body {
-            font-size: 13px;
+            font-size: 14px;
             color: var(--text2);
             margin-bottom: 20px;
             line-height: 1.6;
@@ -768,10 +780,10 @@
         .btn-danger {
             background: var(--red);
             color: #fff;
-            padding: 8px 16px;
+            padding: 9px 18px;
             border: none;
             border-radius: var(--radius-xs);
-            font-size: 13px;
+            font-size: 14px;
             font-family: inherit;
             font-weight: 500;
             cursor: pointer;
@@ -967,7 +979,7 @@
 
     <!-- FILE EXPLORER -->
     <div class="card" id="explorerCard" style="display:none">
-        <div class="card-header">
+        <div class="card-header" style="cursor:pointer" onclick="toggleExplorer()">
             <div class="card-title">
                 <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
@@ -975,22 +987,36 @@
                 </svg>
                 Проводник
             </div>
-            <button class="btn btn-ghost" style="padding:5px 10px;font-size:12px" onclick="refreshExplorer()">
-                <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+            <div style="display:flex;align-items:center;gap:8px">
+                <button class="btn btn-ghost" style="padding:5px 10px;font-size:12px" onclick="refreshExplorer(); event.stopPropagation();">
+                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                    </svg>
+                    Обновить
+                </button>
+                <svg id="explorerChevron" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color:var(--text3);transition:transform 0.2s">
+                    <polyline points="6 9 12 15 18 9"/>
                 </svg>
-                Обновить
-            </button>
-        </div>
-        <!-- Breadcrumb -->
-        <div class="explorer-toolbar">
-            <div class="breadcrumb" id="explorerBreadcrumb">
-                <span class="breadcrumb-item current">/ root</span>
             </div>
         </div>
-        <!-- Content -->
-        <div class="explorer-body" id="explorerBody">
-            <div class="loading-text"><span class="spin">⟳</span> Загрузка...</div>
+        <div id="explorerContent" style="display:none">
+            <!-- Breadcrumb -->
+            <div class="explorer-toolbar">
+                <div class="breadcrumb" id="explorerBreadcrumb">
+                    <span class="breadcrumb-item current">/ root</span>
+                </div>
+                <button class="btn btn-ghost" id="pasteBtn" style="padding:5px 10px;font-size:12px;gap:5px;display:none" onclick="pasteItems()">
+                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+                        <rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
+                    </svg>
+                    <span id="pasteBtnText">Вставить</span>
+                </button>
+            </div>
+            <!-- Content -->
+            <div class="explorer-body" id="explorerBody">
+                <div class="loading-text"><span class="spin">⟳</span> Загрузка...</div>
+            </div>
         </div>
     </div>
 
@@ -1589,11 +1615,24 @@
     let explorerPath = '';          // текущий путь в проводнике
     let explorerCache = {};         // кэш содержимого папок
     let deleteTarget = null;        // { path, sha, type }
+    let explorerExpanded = false;   // состояние раскрытия
+    let clipboard = null;           // { items: [{path, sha, type, name}], action: 'copy'|'cut' }
+
+    function toggleExplorer() {
+        const content = document.getElementById('explorerContent');
+        const chevron = document.getElementById('explorerChevron');
+        explorerExpanded = !explorerExpanded;
+        content.style.display = explorerExpanded ? 'block' : 'none';
+        chevron.style.transform = explorerExpanded ? 'rotate(180deg)' : 'rotate(0deg)';
+    }
 
     function showExplorer() {
         const repo = v('repository');
         if (!repo) return;
-        document.getElementById('explorerCard').style.display = 'block';
+        const card = document.getElementById('explorerCard');
+        card.style.display = 'block';
+        
+        // Don't auto-expand - user clicks to open
         explorerPath = '';
         explorerCache = {};
         loadExplorerPath('');
@@ -1607,6 +1646,7 @@
     async function loadExplorerPath(path) {
         explorerPath = path;
         renderBreadcrumb(path);
+        updatePasteButton();
 
         const body = document.getElementById('explorerBody');
         body.innerHTML = '<div class="loading-text"><span class="spin">⟳</span> Загрузка...</div>';
@@ -1669,15 +1709,64 @@
 
             const div = document.createElement('div');
             div.className = 'explorer-item';
+            div.id = `exp-${item.sha}`;
             div.innerHTML = `
                 <div class="explorer-item-icon ${isDir ? 'folder' : 'file'}">${emoji}</div>
                 <div class="explorer-item-info">
-                    <div class="explorer-item-name ${isDir ? 'folder-link' : ''}"
-                        ${isDir ? `onclick="loadExplorerPath('${esc(item.path)}')"` : ''}
-                        title="${esc(item.path)}">${esc(item.name)}</div>
+                    <div class="explorer-item-name-wrap" id="exp-name-wrap-${item.sha}">
+                        <div class="explorer-item-name ${isDir ? 'folder-link' : ''}" 
+                            id="exp-name-display-${item.sha}"
+                            ${isDir ? `onclick="loadExplorerPath('${esc(item.path)}')"` : ''}
+                            title="${esc(item.path)}">${esc(item.name)}</div>
+                        <button class="rename-trigger" onclick="startExplorerRename('${item.sha}', '${esc(item.name)}', '${esc(item.path)}', '${item.type}')" 
+                            title="Переименовать" style="margin-left:6px;font-size:11px;padding:1px 5px">
+                            <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                            </svg>
+                        </button>
+                        <div class="rename-form" id="exp-rename-form-${item.sha}" style="display:none;width:100%">
+                            <input class="rename-input" id="exp-rename-input-${item.sha}" type="text" 
+                                value="${esc(item.name)}"
+                                onkeydown="onExplorerRenameKey(event, '${item.sha}', '${esc(item.path)}', '${item.type}')"
+                                style="max-width:100%;font-size:13px"
+                                placeholder="новое имя">
+                            <div class="rename-actions">
+                                <button class="icon-btn save" 
+                                    onclick="saveExplorerRename('${item.sha}', '${esc(item.path)}', '${item.type}')" 
+                                    title="Сохранить (Enter)">
+                                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                        <polyline points="20 6 9 17 4 12"/>
+                                    </svg>
+                                </button>
+                                <button class="icon-btn cancel" 
+                                    onclick="cancelExplorerRename('${item.sha}')" 
+                                    title="Отмена (Esc)">
+                                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                        <line x1="18" y1="6" x2="6" y2="18"/>
+                                        <line x1="6" y1="6" x2="18" y2="18"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                     <div class="explorer-item-meta">${isDir ? 'папка' : size}</div>
                 </div>
                 <div class="explorer-item-actions">
+                    <button class="icon-btn" onclick="copyItem('${esc(item.path)}', '${item.sha}', '${item.type}', '${esc(item.name)}')" title="Копировать">
+                        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                        </svg>
+                    </button>
+                    <button class="icon-btn" onclick="cutItem('${esc(item.path)}', '${item.sha}', '${item.type}', '${esc(item.name)}')" title="Вырезать">
+                        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/>
+                            <line x1="20" y1="4" x2="8.12" y2="15.88"/>
+                            <line x1="14.47" y1="14.48" x2="20" y2="20"/>
+                            <line x1="8.12" y1="8.12" x2="12" y2="12"/>
+                        </svg>
+                    </button>
                     ${!isDir ? `
                     <button class="icon-btn" onclick="useFileAsDestination('${esc(item.path)}')" title="Открыть папку для загрузки">
                         <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -1702,6 +1791,323 @@
             `;
             body.appendChild(div);
         });
+    }
+
+    // ── EXPLORER RENAME ───────────────────────────────────
+    function startExplorerRename(sha, name, path, type) {
+        const wrap = document.getElementById(`exp-name-wrap-${sha}`);
+        const form = document.getElementById(`exp-rename-form-${sha}`);
+        const input = document.getElementById(`exp-rename-input-${sha}`);
+        
+        wrap.classList.add('editing');
+        form.style.display = 'flex';
+        input.focus();
+        
+        // Select name without extension for files
+        if (type !== 'dir') {
+            const dot = name.lastIndexOf('.');
+            if (dot > 0) input.setSelectionRange(0, dot);
+            else input.select();
+        } else {
+            input.select();
+        }
+    }
+
+    function cancelExplorerRename(sha) {
+        const wrap = document.getElementById(`exp-name-wrap-${sha}`);
+        const form = document.getElementById(`exp-rename-form-${sha}`);
+        wrap.classList.remove('editing');
+        form.style.display = 'none';
+    }
+
+    function onExplorerRenameKey(e, sha, path, type) {
+        if (e.key === 'Enter') saveExplorerRename(sha, path, type);
+        if (e.key === 'Escape') cancelExplorerRename(sha);
+    }
+
+    async function saveExplorerRename(sha, oldPath, type) {
+        const input = document.getElementById(`exp-rename-input-${sha}`);
+        const newName = input.value.trim();
+        
+        if (!newName) { toast('Имя не может быть пустым', 'error'); return; }
+        
+        const oldName = oldPath.includes('/') ? oldPath.split('/').pop() : oldPath;
+        if (newName === oldName) { cancelExplorerRename(sha); return; }
+        
+        // Validate
+        if (/[\\:*?"<>|]/.test(newName)) { toast('Недопустимые символы в имени', 'error'); return; }
+        
+        const token  = v('token');
+        const repo   = v('repository');
+        const branch = v('branch');
+        const btn    = document.querySelector(`#exp-rename-form-${sha} .icon-btn.save`);
+        
+        btn.disabled = true;
+        
+        try {
+            const parentPath = oldPath.includes('/') ? oldPath.split('/').slice(0, -1).join('/') : '';
+            const newPath = parentPath ? `${parentPath}/${newName}` : newName;
+            
+            if (type === 'dir') {
+                await renameFolderRecursive(token, repo, branch, oldPath, newPath);
+            } else {
+                await renameFile(token, repo, branch, oldPath, newPath, sha);
+            }
+            
+            // Update cache and UI
+            explorerCache = {};
+            cancelExplorerRename(sha);
+            await loadExplorerPath(explorerPath);
+            
+            // Flash success
+            const item = document.getElementById(`exp-${sha}`);
+            if (item) {
+                item.style.background = 'var(--green-bg)';
+                setTimeout(() => { item.style.background = ''; }, 1200);
+            }
+            
+            toast(`Переименовано в «${newName}»`, 'success');
+        } catch(e) {
+            toast('Ошибка переименования: ' + e.message, 'error');
+        } finally {
+            btn.disabled = false;
+        }
+    }
+
+    async function renameFile(token, repo, branch, oldPath, newPath, sha) {
+        // Get file content
+        const contentRes = await ghFetch(`https://api.github.com/repos/${repo}/contents/${oldPath}?ref=${branch}`, token);
+        if (!contentRes.ok) throw new Error('Не удалось получить файл');
+        const fileData = await contentRes.json();
+        
+        // Create new file
+        const createRes = await fetch(`https://api.github.com/repos/${repo}/contents/${newPath}`, {
+            method: 'PUT',
+            headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                message: `Rename ${oldPath} to ${newPath}`,
+                content: fileData.content,
+                branch
+            })
+        });
+        if (!createRes.ok) {
+            const err = await createRes.json();
+            throw new Error(err.message || 'Ошибка создания файла');
+        }
+        
+        // Delete old file
+        await deleteFile(token, repo, branch, oldPath, fileData.sha);
+    }
+
+    async function renameFolderRecursive(token, repo, branch, oldPath, newPath) {
+        // Get branch commit
+        const branchRef = await ghFetch(`https://api.github.com/repos/${repo}/git/refs/heads/${branch}`, token);
+        const branchData = await branchRef.json();
+        const commitSha  = branchData.object.sha;
+        
+        const commitInfo = await ghFetch(`https://api.github.com/repos/${repo}/git/commits/${commitSha}`, token);
+        const commitData = await commitInfo.json();
+        
+        // Get full tree
+        const treeRes = await ghFetch(`https://api.github.com/repos/${repo}/git/trees/${commitSha}?recursive=1`, token);
+        const treeData = await treeRes.json();
+        
+        // Rename: replace oldPath prefix with newPath
+        const updatedTree = treeData.tree
+            .filter(item => item.type === 'blob')
+            .map(item => {
+                if (item.path === oldPath || item.path.startsWith(oldPath + '/')) {
+                    return {
+                        path: item.path.replace(oldPath, newPath),
+                        mode: item.mode,
+                        type: item.type,
+                        sha: item.sha
+                    };
+                }
+                return { path: item.path, mode: item.mode, type: item.type, sha: item.sha };
+            });
+        
+        // Create new tree
+        const newTreeRes = await ghPost(`https://api.github.com/repos/${repo}/git/trees`, token, { tree: updatedTree });
+        if (!newTreeRes.ok) throw new Error('Ошибка создания дерева');
+        const newTree = await newTreeRes.json();
+        
+        const newCommitRes = await ghPost(`https://api.github.com/repos/${repo}/git/commits`, token, {
+            message: `Rename folder ${oldPath} to ${newPath}`,
+            tree: newTree.sha,
+            parents: [commitSha]
+        });
+        if (!newCommitRes.ok) throw new Error('Ошибка создания коммита');
+        const newCommit = await newCommitRes.json();
+        
+        const updateRes = await fetch(`https://api.github.com/repos/${repo}/git/refs/heads/${branch}`, {
+            method: 'PATCH',
+            headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+            body: JSON.stringify({ sha: newCommit.sha })
+        });
+        if (!updateRes.ok) throw new Error('Ошибка обновления ветки');
+    }
+
+    // ── COPY / CUT / PASTE ────────────────────────────────
+    function copyItem(path, sha, type, name) {
+        clipboard = {
+            items: [{ path, sha, type, name }],
+            action: 'copy'
+        };
+        updatePasteButton();
+        toast(`Скопировано: ${name}`, 'success');
+    }
+
+    function cutItem(path, sha, type, name) {
+        clipboard = {
+            items: [{ path, sha, type, name }],
+            action: 'cut'
+        };
+        updatePasteButton();
+        toast(`Вырезано: ${name}`, 'success');
+    }
+
+    function updatePasteButton() {
+        const btn = document.getElementById('pasteBtn');
+        const text = document.getElementById('pasteBtnText');
+        if (clipboard && clipboard.items.length > 0) {
+            btn.style.display = 'flex';
+            const action = clipboard.action === 'cut' ? 'Переместить' : 'Вставить';
+            const count = clipboard.items.length;
+            text.textContent = `${action} (${count})`;
+        } else {
+            btn.style.display = 'none';
+        }
+    }
+
+    async function pasteItems() {
+        if (!clipboard || clipboard.items.length === 0) return;
+        
+        const token = v('token');
+        const repo  = v('repository');
+        const branch = v('branch');
+        const destPath = explorerPath;
+        const { items, action } = clipboard;
+        
+        const btn = document.getElementById('pasteBtn');
+        btn.disabled = true;
+        const origText = btn.innerHTML;
+        btn.innerHTML = '<span class="spin">⟳</span> Обработка...';
+
+        try {
+            for (const item of items) {
+                const newName = item.name;
+                const newPath = destPath ? `${destPath}/${newName}` : newName;
+                
+                // Check if already exists
+                if (newPath === item.path) {
+                    toast(`${item.name} уже в этой папке`, 'error');
+                    continue;
+                }
+                
+                if (item.type === 'dir') {
+                    await copyFolderRecursive(token, repo, branch, item.path, newPath);
+                    if (action === 'cut') {
+                        await deleteFolderRecursive(token, repo, branch, item.path);
+                    }
+                } else {
+                    await copyFile(token, repo, branch, item.path, newPath, item.sha);
+                    if (action === 'cut') {
+                        await deleteFile(token, repo, branch, item.path, item.sha);
+                    }
+                }
+            }
+            
+            // Clear clipboard if cut
+            if (action === 'cut') {
+                clipboard = null;
+                updatePasteButton();
+            }
+            
+            // Refresh
+            explorerCache = {};
+            await loadExplorerPath(destPath);
+            
+            const verb = action === 'cut' ? 'перемещено' : 'скопировано';
+            toast(`✓ ${items.length} ${pluralFiles(items.length)} ${verb}`, 'success');
+        } catch(e) {
+            toast('Ошибка: ' + e.message, 'error');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = origText;
+        }
+    }
+
+    async function copyFile(token, repo, branch, sourcePath, destPath, sha) {
+        // Get file content
+        const contentRes = await ghFetch(`https://api.github.com/repos/${repo}/contents/${sourcePath}?ref=${branch}`, token);
+        if (!contentRes.ok) throw new Error('Не удалось получить файл');
+        const fileData = await contentRes.json();
+        
+        // Create new file
+        const createRes = await fetch(`https://api.github.com/repos/${repo}/contents/${destPath}`, {
+            method: 'PUT',
+            headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                message: `Copy ${sourcePath} to ${destPath}`,
+                content: fileData.content,
+                branch
+            })
+        });
+        if (!createRes.ok) {
+            const err = await createRes.json();
+            throw new Error(err.message || 'Ошибка копирования файла');
+        }
+    }
+
+    async function copyFolderRecursive(token, repo, branch, sourcePath, destPath) {
+        // Get branch commit
+        const branchRef = await ghFetch(`https://api.github.com/repos/${repo}/git/refs/heads/${branch}`, token);
+        const branchData = await branchRef.json();
+        const commitSha  = branchData.object.sha;
+        
+        const commitInfo = await ghFetch(`https://api.github.com/repos/${repo}/git/commits/${commitSha}`, token);
+        const commitData = await commitInfo.json();
+        
+        // Get full tree
+        const treeRes = await ghFetch(`https://api.github.com/repos/${repo}/git/trees/${commitSha}?recursive=1`, token);
+        const treeData = await treeRes.json();
+        
+        // Copy: duplicate items from sourcePath to destPath
+        const existingTree = treeData.tree
+            .filter(item => item.type === 'blob')
+            .map(item => ({ path: item.path, mode: item.mode, type: item.type, sha: item.sha }));
+        
+        const copiedItems = treeData.tree
+            .filter(item => item.type === 'blob' && (item.path === sourcePath || item.path.startsWith(sourcePath + '/')))
+            .map(item => ({
+                path: item.path.replace(sourcePath, destPath),
+                mode: item.mode,
+                type: item.type,
+                sha: item.sha
+            }));
+        
+        const newTree = [...existingTree, ...copiedItems];
+        
+        // Create new tree
+        const newTreeRes = await ghPost(`https://api.github.com/repos/${repo}/git/trees`, token, { tree: newTree });
+        if (!newTreeRes.ok) throw new Error('Ошибка создания дерева');
+        const newTreeData = await newTreeRes.json();
+        
+        const newCommitRes = await ghPost(`https://api.github.com/repos/${repo}/git/commits`, token, {
+            message: `Copy folder ${sourcePath} to ${destPath}`,
+            tree: newTreeData.sha,
+            parents: [commitSha]
+        });
+        if (!newCommitRes.ok) throw new Error('Ошибка создания коммита');
+        const newCommit = await newCommitRes.json();
+        
+        const updateRes = await fetch(`https://api.github.com/repos/${repo}/git/refs/heads/${branch}`, {
+            method: 'PATCH',
+            headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+            body: JSON.stringify({ sha: newCommit.sha })
+        });
+        if (!updateRes.ok) throw new Error('Ошибка обновления ветки');
     }
 
     // Выбрать папку файла как папку назначения
