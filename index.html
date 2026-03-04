@@ -1,2303 +1,2039 @@
 <!DOCTYPE html>
-<html lang="ru" data-theme="auto">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>GitHub Uploader</title>
-
-    <!-- PWA -->
-    <link rel="manifest" href="/icons/manifest.json">
-    <meta name="theme-color" content="#ffffff" id="themeColorMeta">
-    <meta name="mobile-web-app-capable" content="yes">
-
-    <!-- iOS (Safari не читает манифест) -->
+    <meta name="theme-color" content="#0a0e14">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="GitUp">
-    <link rel="apple-touch-icon" href="/icons/icon-192.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Sora:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
         :root {
-            --bg: #f0f2f5;
-            --surface: #ffffff;
-            --surface2: #f7f8fa;
-            --border: #e2e5ea;
-            --text: #1a1d23;
-            --text2: #5a6172;
-            --text3: #9aa0ad;
-            --accent: #2563eb;
-            --accent-hover: #1d4ed8;
-            --accent-glow: rgba(37,99,235,0.15);
-            --green: #16a34a;
-            --green-bg: #dcfce7;
-            --red: #dc2626;
-            --red-bg: #fee2e2;
-            --yellow: #d97706;
-            --yellow-bg: #fef3c7;
-            --blue-bg: #dbeafe;
-            --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.06);
-            --shadow-lg: 0 8px 32px rgba(0,0,0,0.10);
-            --radius: 12px;
-            --radius-sm: 8px;
-            --radius-xs: 6px;
+            /* Cyberpunk-inspired palette */
+            --bg-void: #0a0e14;
+            --bg-deep: #101419;
+            --bg-surface: #151a21;
+            --bg-elevated: #1a1f27;
+            
+            --border-dim: rgba(139, 233, 253, 0.08);
+            --border-bright: rgba(139, 233, 253, 0.25);
+            
+            --text-primary: #e6f1ff;
+            --text-secondary: #8be9fd;
+            --text-dim: #6272a4;
+            
+            --accent-cyan: #8be9fd;
+            --accent-pink: #ff79c6;
+            --accent-purple: #bd93f9;
+            --accent-green: #50fa7b;
+            --accent-yellow: #f1fa8c;
+            --accent-orange: #ffb86c;
+            --accent-red: #ff5555;
+            
+            --glow-cyan: 0 0 20px rgba(139, 233, 253, 0.4);
+            --glow-pink: 0 0 20px rgba(255, 121, 198, 0.4);
+            --glow-purple: 0 0 20px rgba(189, 147, 249, 0.4);
+            
+            --gradient-cyber: linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-purple) 100%);
+            --gradient-neon: linear-gradient(135deg, var(--accent-pink) 0%, var(--accent-purple) 50%, var(--accent-cyan) 100%);
         }
-
-        [data-theme="dark"] {
-            --bg: #0d1117;
-            --surface: #161b22;
-            --surface2: #1c2128;
-            --border: #30363d;
-            --text: #e6edf3;
-            --text2: #8b949e;
-            --text3: #484f58;
-            --accent: #58a6ff;
-            --accent-hover: #79c0ff;
-            --accent-glow: rgba(88,166,255,0.15);
-            --green: #3fb950;
-            --green-bg: rgba(63,185,80,0.12);
-            --red: #f85149;
-            --red-bg: rgba(248,81,73,0.12);
-            --yellow: #d29922;
-            --yellow-bg: rgba(210,153,34,0.15);
-            --blue-bg: rgba(88,166,255,0.12);
-            --shadow: 0 1px 3px rgba(0,0,0,0.3), 0 4px 16px rgba(0,0,0,0.2);
-            --shadow-lg: 0 8px 32px rgba(0,0,0,0.4);
+        
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg-void);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
         }
-
-        @media (prefers-color-scheme: dark) {
-            [data-theme="auto"] {
-                --bg: #0d1117;
-                --surface: #161b22;
-                --surface2: #1c2128;
-                --border: #30363d;
-                --text: #e6edf3;
-                --text2: #8b949e;
-                --text3: #484f58;
-                --accent: #58a6ff;
-                --accent-hover: #79c0ff;
-                --accent-glow: rgba(88,166,255,0.15);
-                --green: #3fb950;
-                --green-bg: rgba(63,185,80,0.12);
-                --red: #f85149;
-                --red-bg: rgba(248,81,73,0.12);
-                --yellow: #d29922;
-                --yellow-bg: rgba(210,153,34,0.15);
-                --blue-bg: rgba(88,166,255,0.12);
-                --shadow: 0 1px 3px rgba(0,0,0,0.3), 0 4px 16px rgba(0,0,0,0.2);
-                --shadow-lg: 0 8px 32px rgba(0,0,0,0.4);
+        
+        /* Animated grid background */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: 
+                linear-gradient(var(--border-dim) 1px, transparent 1px),
+                linear-gradient(90deg, var(--border-dim) 1px, transparent 1px);
+            background-size: 50px 50px;
+            opacity: 0.3;
+            pointer-events: none;
+            animation: gridPulse 8s ease-in-out infinite;
+        }
+        
+        @keyframes gridPulse {
+            0%, 100% { opacity: 0.2; }
+            50% { opacity: 0.4; }
+        }
+        
+        /* Scan line effect */
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(
+                to bottom,
+                transparent 0%,
+                rgba(139, 233, 253, 0.03) 50%,
+                transparent 100%
+            );
+            height: 100%;
+            animation: scan 4s linear infinite;
+            pointer-events: none;
+        }
+        
+        @keyframes scan {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(100%); }
+        }
+        
+        .app {
+            position: relative;
+            z-index: 1;
+            max-width: 1800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        /* Header */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 24px 0;
+            margin-bottom: 32px;
+            border-bottom: 2px solid var(--border-dim);
+            position: relative;
+        }
+        
+        .header::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 200px;
+            height: 2px;
+            background: var(--gradient-cyber);
+            box-shadow: var(--glow-cyan);
+            animation: headerGlow 3s ease-in-out infinite;
+        }
+        
+        @keyframes headerGlow {
+            0%, 100% { width: 200px; opacity: 0.6; }
+            50% { width: 300px; opacity: 1; }
+        }
+        
+        .logo {
+            font-family: 'Space Mono', monospace;
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            background: var(--gradient-cyber);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: var(--glow-cyan);
+            position: relative;
+        }
+        
+        .logo::before {
+            content: '▶';
+            position: absolute;
+            left: -30px;
+            color: var(--accent-cyan);
+            animation: blink 1.5s step-end infinite;
+        }
+        
+        @keyframes blink {
+            0%, 49% { opacity: 1; }
+            50%, 100% { opacity: 0; }
+        }
+        
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 20px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-dim);
+            border-radius: 100px;
+            font-family: 'Space Mono', monospace;
+            font-size: 12px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        
+        .status.connected {
+            border-color: var(--accent-green);
+            color: var(--accent-green);
+            box-shadow: 0 0 15px rgba(80, 250, 123, 0.2);
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--text-dim);
+        }
+        
+        .status.connected .status-dot {
+            background: var(--accent-green);
+            box-shadow: 0 0 10px var(--accent-green);
+            animation: pulse 2s ease infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.7; }
+        }
+        
+        /* Grid layout */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 24px;
+        }
+        
+        @media (min-width: 1024px) {
+            .main-grid {
+                grid-template-columns: 420px 1fr;
             }
         }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        body {
-            font-family: 'Sora', sans-serif;
-            font-size: 17px;
-            background: var(--bg);
-            color: var(--text);
-            min-height: 100vh;
-            transition: background 0.3s, color 0.3s;
-            line-height: 1.6;
-        }
-
-        /* ── HEADER ── */
-        .header {
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            background: var(--surface);
-            border-bottom: 1px solid var(--border);
-            padding: 0 20px;
-            height: 56px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            box-shadow: var(--shadow);
-            backdrop-filter: blur(12px);
-        }
-
-        .header-logo {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-weight: 600;
-            font-size: 16px;
-            color: var(--text);
-        }
-
-        .header-logo svg { color: var(--accent); flex-shrink: 0; }
-
-        .header-controls { display: flex; align-items: center; gap: 8px; }
-
-        .theme-btn {
-            width: 36px; height: 36px;
-            border-radius: var(--radius-xs);
-            border: 1px solid var(--border);
-            background: var(--surface2);
-            color: var(--text2);
-            cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 16px;
-            transition: all 0.2s;
-        }
-        .theme-btn:hover { background: var(--accent-glow); color: var(--accent); border-color: var(--accent); }
-        .theme-btn.active { background: var(--accent-glow); color: var(--accent); border-color: var(--accent); }
-
-        /* ── MAIN LAYOUT ── */
-        .main {
-            max-width: 860px;
-            margin: 0 auto;
-            padding: 24px 16px 48px;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-
-        /* ── CARDS ── */
+        
+        /* Card */
         .card {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
+            background: var(--bg-deep);
+            border: 1px solid var(--border-dim);
+            border-radius: 12px;
             overflow: hidden;
-            transition: border-color 0.2s;
+            position: relative;
         }
-
+        
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: var(--gradient-cyber);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .card:hover::before {
+            opacity: 1;
+        }
+        
         .card-header {
-            padding: 16px 20px;
-            border-bottom: 1px solid var(--border);
+            padding: 20px 24px;
+            background: var(--bg-surface);
+            border-bottom: 1px solid var(--border-dim);
+            font-family: 'Space Mono', monospace;
+            font-size: 11px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--accent-cyan);
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 8px;
         }
-
-        .card-title {
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--text2);
+        
+        .card-body {
+            padding: 24px;
+        }
+        
+        /* Form */
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-family: 'Space Mono', monospace;
+            font-size: 11px;
+            letter-spacing: 1px;
             text-transform: uppercase;
-            letter-spacing: 0.06em;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            color: var(--text-secondary);
         }
-        .card-title svg { color: var(--accent); }
-
-        .card-body { padding: 20px; }
-
-        /* ── FORM ── */
-        .form-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
-
-        @media (max-width: 560px) {
-            .form-grid { grid-template-columns: 1fr; }
-        }
-
-        .form-group { display: flex; flex-direction: column; gap: 6px; }
-        .form-group.full { grid-column: 1 / -1; }
-
-        label {
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--text2);
-            letter-spacing: 0.03em;
-        }
-
-        input, select {
-            padding: 10px 13px;
-            border: 1px solid var(--border);
-            border-radius: var(--radius-xs);
-            font-size: 15px;
-            font-family: inherit;
-            background: var(--surface2);
-            color: var(--text);
-            transition: all 0.2s;
+        
+        .form-input,
+        .form-select {
             width: 100%;
-        }
-
-        input:focus, select:focus {
+            padding: 14px 16px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-dim);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-family: 'Space Mono', monospace;
+            font-size: 14px;
+            transition: all 0.3s;
             outline: none;
-            border-color: var(--accent);
-            box-shadow: 0 0 0 3px var(--accent-glow);
-            background: var(--surface);
         }
-
-        input::placeholder { color: var(--text3); }
-
-        select option { background: var(--surface); color: var(--text); }
-
-        /* ── BUTTONS ── */
+        
+        .form-input:focus,
+        .form-select:focus {
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 0 3px rgba(139, 233, 253, 0.1), var(--glow-cyan);
+            background: var(--bg-elevated);
+        }
+        
+        .form-input::placeholder {
+            color: var(--text-dim);
+        }
+        
+        /* Buttons */
         .btn {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 7px;
-            padding: 10px 20px;
+            gap: 10px;
+            padding: 14px 24px;
             border: none;
-            border-radius: var(--radius-xs);
-            font-size: 15px;
-            font-family: inherit;
-            font-weight: 500;
+            border-radius: 8px;
+            font-family: 'Space Mono', monospace;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
             cursor: pointer;
-            transition: all 0.2s;
-            white-space: nowrap;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
         }
-
+        
+        .btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: var(--gradient-cyber);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .btn:hover::before {
+            opacity: 0.2;
+        }
+        
         .btn-primary {
-            background: var(--accent);
-            color: #fff;
+            background: var(--gradient-cyber);
+            color: var(--bg-void);
+            font-weight: 700;
+            box-shadow: var(--glow-cyan);
         }
-        .btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); box-shadow: 0 4px 12px var(--accent-glow); }
-        .btn-primary:active { transform: translateY(0); }
-
-        .btn-ghost {
-            background: transparent;
-            color: var(--text2);
-            border: 1px solid var(--border);
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--glow-cyan), 0 8px 24px rgba(139, 233, 253, 0.3);
         }
-        .btn-ghost:hover { background: var(--surface2); color: var(--text); }
-
+        
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+        
+        .btn-secondary {
+            background: var(--bg-elevated);
+            color: var(--text-secondary);
+            border: 1px solid var(--border-bright);
+        }
+        
+        .btn-secondary:hover {
+            background: var(--bg-surface);
+            border-color: var(--accent-cyan);
+            box-shadow: var(--glow-cyan);
+        }
+        
         .btn-success {
-            background: var(--green);
-            color: #fff;
+            background: var(--accent-green);
+            color: var(--bg-void);
             width: 100%;
-            padding: 12px;
-            font-size: 15px;
-            border-radius: var(--radius-sm);
-        }
-        .btn-success:hover { filter: brightness(1.1); transform: translateY(-1px); box-shadow: 0 6px 16px rgba(22,163,74,0.3); }
-        .btn-success:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
-
-        /* ── FOLDER TREE ── */
-        .folder-tree {
-            border: 1px solid var(--border);
-            border-radius: var(--radius-xs);
-            background: var(--surface2);
-            max-height: 180px;
-            overflow-y: auto;
-            scrollbar-width: thin;
-            scrollbar-color: var(--border) transparent;
-        }
-
-        .folder-item {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            padding: 9px 14px;
+            padding: 16px;
             font-size: 14px;
-            cursor: pointer;
-            color: var(--text2);
-            border-bottom: 1px solid var(--border);
-            transition: all 0.15s;
+            box-shadow: 0 0 20px rgba(80, 250, 123, 0.3);
         }
-        .folder-item:last-child { border-bottom: none; }
-        .folder-item:hover { background: var(--accent-glow); color: var(--accent); }
-        .folder-item.selected { background: var(--accent-glow); color: var(--accent); font-weight: 500; }
-        .folder-item svg { flex-shrink: 0; opacity: 0.7; }
-
-        /* ── DROP ZONE ── */
-        .drop-zone {
-            border: 2px dashed var(--border);
-            border-radius: var(--radius-sm);
-            padding: 40px 24px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.25s;
-            background: var(--surface2);
+        
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 30px rgba(80, 250, 123, 0.5), 0 8px 24px rgba(80, 250, 123, 0.3);
         }
-
-        .drop-zone:hover, .drop-zone.dragover {
-            border-color: var(--accent);
-            background: var(--accent-glow);
+        
+        .btn-success:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
         }
-
-        .drop-zone.dragover { transform: scale(1.01); }
-
-        .drop-zone-icon {
-            width: 48px; height: 48px;
+        
+        .btn-icon {
+            width: 44px;
+            height: 44px;
+            padding: 0;
+        }
+        
+        .btn-danger {
+            background: var(--accent-red);
+            color: var(--bg-void);
+            box-shadow: 0 0 20px rgba(255, 85, 85, 0.3);
+        }
+        
+        .btn-danger:hover {
+            box-shadow: 0 0 30px rgba(255, 85, 85, 0.5);
+        }
+        
+        /* Explorer */
+        .explorer {
+            height: 600px;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-deep);
+            border: 1px solid var(--border-dim);
             border-radius: 12px;
-            background: var(--accent-glow);
-            display: flex; align-items: center; justify-content: center;
-            margin: 0 auto 14px;
-            color: var(--accent);
+            overflow: hidden;
         }
-
-        .drop-zone h3 { font-size: 17px; font-weight: 600; margin-bottom: 4px; }
-        .drop-zone p { font-size: 14px; color: var(--text2); margin-bottom: 14px; }
-
-        /* ── FILE LIST ── */
-        .file-list { display: flex; flex-direction: column; gap: 8px; }
-
-        .file-item {
-            background: var(--surface2);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-xs);
-            padding: 12px 14px;
+        
+        .explorer-toolbar {
+            padding: 16px;
+            background: var(--bg-surface);
+            border-bottom: 1px solid var(--border-dim);
             display: flex;
             align-items: center;
             gap: 12px;
-            transition: all 0.2s;
-            animation: slideIn 0.2s ease;
-        }
-
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateY(-6px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .file-item:hover { border-color: var(--accent); }
-        .file-item.uploading { border-color: var(--accent); }
-        .file-item.success { border-color: var(--green); background: var(--green-bg); }
-        .file-item.error { border-color: var(--red); background: var(--red-bg); }
-
-        .file-icon {
-            width: 34px; height: 34px;
-            border-radius: var(--radius-xs);
-            background: var(--surface);
-            border: 1px solid var(--border);
-            display: flex; align-items: center; justify-content: center;
-            flex-shrink: 0;
-            font-size: 16px;
-        }
-
-        .file-info { flex: 1; min-width: 0; }
-
-        /* ── RENAME AREA ── */
-        .file-name-wrap {
-            display: flex;
-            align-items: center;
-            gap: 6px;
             flex-wrap: wrap;
         }
-
-        /* Normal display mode */
-        .file-name-display {
-            font-size: 15px;
-            font-weight: 500;
-            color: var(--text);
-            font-family: 'JetBrains Mono', monospace;
-            word-break: break-all;
-        }
-
-        .rename-trigger {
-            display: inline-flex;
+        
+        .breadcrumb {
+            flex: 1;
+            display: flex;
             align-items: center;
-            gap: 3px;
-            padding: 2px 7px;
+            gap: 8px;
+            font-family: 'Space Mono', monospace;
+            font-size: 12px;
+            color: var(--text-secondary);
+            min-width: 0;
+            overflow-x: auto;
+            scrollbar-width: thin;
+            scrollbar-color: var(--accent-cyan) transparent;
+        }
+        
+        .breadcrumb::-webkit-scrollbar {
+            height: 4px;
+        }
+        
+        .breadcrumb::-webkit-scrollbar-thumb {
+            background: var(--accent-cyan);
             border-radius: 4px;
-            border: 1px dashed transparent;
+        }
+        
+        .breadcrumb-item {
+            color: var(--accent-cyan);
             cursor: pointer;
-            transition: all 0.15s;
-            font-size: 13px;
-            color: var(--text3);
-            background: none;
-            font-family: inherit;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: all 0.2s;
+            white-space: nowrap;
         }
-        .rename-trigger:hover {
-            border-color: var(--accent);
-            color: var(--accent);
-            background: var(--accent-glow);
+        
+        .breadcrumb-item:hover {
+            background: var(--bg-elevated);
+            box-shadow: var(--glow-cyan);
         }
-
-        /* Edit mode */
-        .rename-form {
+        
+        .breadcrumb-item.current {
+            color: var(--text-primary);
+            cursor: default;
+        }
+        
+        .breadcrumb-item.current:hover {
+            background: transparent;
+            box-shadow: none;
+        }
+        
+        .breadcrumb-sep {
+            color: var(--text-dim);
+        }
+        
+        .explorer-actions-bar {
+            padding: 12px 16px;
+            background: rgba(139, 233, 253, 0.05);
+            border-bottom: 1px solid var(--accent-cyan);
             display: none;
             align-items: center;
-            gap: 6px;
+            gap: 12px;
             flex-wrap: wrap;
-            width: 100%;
         }
-        .rename-form.active { display: flex; }
-        .file-name-wrap.editing .file-name-display { display: none; }
-        .file-name-wrap.editing .rename-trigger { display: none; }
-        .file-name-wrap.editing .rename-form { display: flex; }
-
-        .rename-input {
+        
+        .explorer-actions-bar.active {
+            display: flex;
+        }
+        
+        .explorer-selection-text {
             flex: 1;
-            min-width: 120px;
-            max-width: 320px;
-            padding: 5px 9px;
-            font-size: 14px;
-            font-family: 'JetBrains Mono', monospace;
-            border: 1.5px solid var(--accent);
-            border-radius: var(--radius-xs);
-            background: var(--surface);
-            color: var(--text);
-            box-shadow: 0 0 0 3px var(--accent-glow);
-        }
-        .rename-input:focus { outline: none; }
-
-        .rename-actions { display: flex; gap: 4px; }
-
-        .icon-btn {
-            width: 28px; height: 28px;
-            border: 1px solid var(--border);
-            border-radius: var(--radius-xs);
-            background: var(--surface);
-            color: var(--text2);
-            cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-            transition: all 0.15s;
-            flex-shrink: 0;
-        }
-        .icon-btn:hover { transform: scale(1.05); }
-        .icon-btn.save { border-color: var(--green); color: var(--green); }
-        .icon-btn.save:hover { background: var(--green-bg); }
-        .icon-btn.cancel:hover { background: var(--surface2); }
-        .icon-btn.remove { border-color: transparent; }
-        .icon-btn.remove:hover { border-color: var(--red); color: var(--red); background: var(--red-bg); }
-
-        /* Rename success flash */
-        @keyframes renameFlash {
-            0% { background: var(--green-bg); }
-            100% { background: transparent; }
-        }
-        .rename-success { animation: renameFlash 1.2s ease forwards; }
-
-        .file-path {
-            font-size: 12px;
-            color: var(--text3);
-            margin-top: 2px;
-            font-family: 'JetBrains Mono', monospace;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .file-meta {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            flex-shrink: 0;
-        }
-
-        .file-size {
-            font-size: 12px;
-            color: var(--text3);
-            font-family: 'JetBrains Mono', monospace;
-        }
-
-        /* ── STATUS BADGE ── */
-        .badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            padding: 3px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            white-space: nowrap;
-        }
-        .badge-pending { background: var(--yellow-bg); color: var(--yellow); }
-        .badge-uploading { background: var(--blue-bg); color: var(--accent); }
-        .badge-success { background: var(--green-bg); color: var(--green); }
-        .badge-error { background: var(--red-bg); color: var(--red); }
-
-        /* Spinner */
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .spin { animation: spin 0.8s linear infinite; display: inline-block; }
-
-        /* ── TOAST ── */
-        .toast-container {
-            position: fixed;
-            top: 68px;
-            right: 24px;
-            z-index: 999;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            pointer-events: none;
-        }
-
-        .toast {
-            display: flex;
-            align-items: flex-start;
-            gap: 10px;
-            padding: 12px 16px;
-            border-radius: var(--radius-sm);
-            background: var(--surface);
-            border: 1px solid var(--border);
-            box-shadow: var(--shadow-lg);
-            font-size: 14px;
-            max-width: 340px;
-            pointer-events: auto;
-            animation: toastIn 0.25s ease;
-        }
-
-        @keyframes toastIn {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        @keyframes toastOut {
-            to { opacity: 0; transform: translateY(-10px); }
-        }
-
-        .toast.hiding { animation: toastOut 0.2s ease forwards; }
-
-        .toast-icon { flex-shrink: 0; margin-top: 1px; }
-        .toast-success .toast-icon { color: var(--green); }
-        .toast-error .toast-icon { color: var(--red); }
-        .toast-text { color: var(--text); line-height: 1.4; }
-
-        /* ── SECTION LABEL ── */
-        .section-label {
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--text3);
+            font-family: 'Space Mono', monospace;
+            font-size: 11px;
+            letter-spacing: 1px;
             text-transform: uppercase;
-            letter-spacing: 0.08em;
-            padding: 0 4px;
+            color: var(--accent-cyan);
         }
-
-        /* ── LOADING ── */
-        .loading-text {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            color: var(--text2);
-            font-size: 14px;
-            padding: 12px;
-        }
-
-        /* ── EMPTY STATE ── */
-        .empty-state {
-            text-align: center;
-            padding: 24px;
-            color: var(--text3);
-            font-size: 13px;
-        }
-
-        /* ── PROGRESS BAR ── */
-        .progress-bar {
-            height: 3px;
-            background: var(--border);
-            border-radius: 2px;
-            overflow: hidden;
-            margin-top: 8px;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: var(--accent);
-            border-radius: 2px;
-            transition: width 0.4s ease;
-        }
-
-        /* ── SAFE AREA (iOS standalone) ── */
-        @supports (padding-top: env(safe-area-inset-top)) {
-            body {
-                /* Цвет за статус-баром совпадает с шапкой */
-                background-color: var(--surface);
-            }
-            .header {
-                padding-top: calc(env(safe-area-inset-top) + 10px);
-                height: calc(56px + env(safe-area-inset-top));
-            }
-            .main {
-                padding-bottom: calc(48px + env(safe-area-inset-bottom));
-            }
-        }
-
-        /* ── FILE EXPLORER ── */
-        .explorer-toolbar {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            padding: 10px 14px;
-            border-bottom: 1px solid var(--border);
-            background: var(--surface2);
-            flex-wrap: wrap;
-        }
-
-        .breadcrumb {
-            display: flex;
-            align-items: center;
-            gap: 2px;
+        
+        .explorer-content {
             flex: 1;
-            min-width: 0;
-            font-size: 13px;
-            font-family: 'JetBrains Mono', monospace;
-            flex-wrap: wrap;
-        }
-
-        .breadcrumb-item {
-            color: var(--accent);
-            cursor: pointer;
-            padding: 2px 5px;
-            border-radius: 4px;
-            white-space: nowrap;
-            transition: background 0.15s;
-        }
-        .breadcrumb-item:hover { background: var(--accent-glow); }
-        .breadcrumb-item.current { color: var(--text); cursor: default; }
-        .breadcrumb-item.current:hover { background: transparent; }
-        .breadcrumb-sep { color: var(--text3); user-select: none; }
-
-        .explorer-body {
-            min-height: 120px;
-            max-height: 340px;
             overflow-y: auto;
             scrollbar-width: thin;
-            scrollbar-color: var(--border) transparent;
+            scrollbar-color: var(--accent-cyan) transparent;
         }
-
+        
+        .explorer-content::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .explorer-content::-webkit-scrollbar-thumb {
+            background: var(--accent-cyan);
+            border-radius: 4px;
+        }
+        
         .explorer-item {
             display: flex;
             align-items: center;
-            gap: 10px;
-            padding: 8px 14px;
-            border-bottom: 1px solid var(--border);
-            transition: background 0.12s;
-            cursor: default;
+            gap: 16px;
+            padding: 16px;
+            border-bottom: 1px solid var(--border-dim);
+            transition: all 0.2s;
+            cursor: pointer;
         }
-        .explorer-item:last-child { border-bottom: none; }
-        .explorer-item:hover { background: var(--surface2); }
-
-        .explorer-item-icon {
-            width: 28px; height: 28px;
-            border-radius: var(--radius-xs);
-            display: flex; align-items: center; justify-content: center;
-            flex-shrink: 0;
-            font-size: 14px;
-        }
-        .explorer-item-icon.folder { background: var(--yellow-bg); color: var(--yellow); }
-        .explorer-item-icon.file   { background: var(--surface); border: 1px solid var(--border); color: var(--text3); font-size: 11px; }
-
-        .explorer-item-info { flex: 1; min-width: 0; }
         
-        .explorer-item-name-wrap {
+        .explorer-item:hover {
+            background: var(--bg-surface);
+            border-left: 3px solid var(--accent-cyan);
+            box-shadow: inset 0 0 20px rgba(139, 233, 253, 0.05);
+        }
+        
+        .explorer-item.selected {
+            background: rgba(139, 233, 253, 0.05);
+            border-left: 3px solid var(--accent-purple);
+        }
+        
+        .explorer-checkbox {
+            width: 24px;
+            height: 24px;
+            border: 2px solid var(--border-bright);
+            border-radius: 4px;
             display: flex;
             align-items: center;
-            gap: 4px;
-            flex-wrap: wrap;
+            justify-content: center;
+            transition: all 0.2s;
+            cursor: pointer;
+            flex-shrink: 0;
         }
-        .explorer-item-name-wrap.editing .explorer-item-name { display: none; }
-        .explorer-item-name-wrap.editing .rename-trigger { display: none; }
-        .explorer-item-name-wrap.editing .rename-form { display: flex !important; }
-
-        .explorer-item-name {
+        
+        .explorer-checkbox.checked {
+            background: var(--accent-purple);
+            border-color: var(--accent-purple);
+            box-shadow: var(--glow-purple);
+        }
+        
+        .explorer-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-dim);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+        
+        .explorer-icon.folder {
+            background: linear-gradient(135deg, rgba(241, 250, 140, 0.1), rgba(241, 250, 140, 0.05));
+            border-color: var(--accent-yellow);
+        }
+        
+        .explorer-info {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .explorer-name {
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 4px;
+        }
+        
+        .explorer-meta {
+            font-size: 11px;
+            font-family: 'Space Mono', monospace;
+            color: var(--text-dim);
+        }
+        
+        .explorer-item-actions {
+            display: flex;
+            gap: 8px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        
+        .explorer-item:hover .explorer-item-actions {
+            opacity: 1;
+        }
+        
+        @media (hover: none) {
+            .explorer-item-actions {
+                opacity: 1;
+            }
+        }
+        
+        /* Drop zone */
+        .drop-zone {
+            border: 2px dashed var(--border-bright);
+            border-radius: 12px;
+            padding: 48px 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: var(--bg-surface);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .drop-zone::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: var(--gradient-neon);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .drop-zone:hover::before,
+        .drop-zone.dragover::before {
+            opacity: 0.05;
+        }
+        
+        .drop-zone:hover,
+        .drop-zone.dragover {
+            border-color: var(--accent-cyan);
+            box-shadow: var(--glow-cyan);
+        }
+        
+        .drop-zone-content {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .drop-zone-icon {
+            width: 72px;
+            height: 72px;
+            margin: 0 auto 20px;
+            background: var(--gradient-cyber);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--glow-cyan);
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .drop-zone h3 {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            background: var(--gradient-cyber);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .drop-zone p {
+            color: var(--text-dim);
+            font-size: 14px;
+        }
+        
+        /* File list */
+        .file-grid {
+            display: grid;
+            gap: 12px;
+            margin-top: 20px;
+        }
+        
+        .file-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-dim);
+            border-radius: 8px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            transition: all 0.3s;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .file-card:hover {
+            border-color: var(--accent-cyan);
+            background: var(--bg-elevated);
+            box-shadow: var(--glow-cyan);
+        }
+        
+        .file-preview {
+            width: 56px;
+            height: 56px;
+            border-radius: 8px;
+            background: var(--bg-deep);
+            border: 1px solid var(--border-dim);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+        
+        .file-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .file-info {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .file-name {
             font-size: 14px;
             font-weight: 500;
-            color: var(--text);
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 4px;
+        }
+        
+        .file-path {
+            font-size: 11px;
+            font-family: 'Space Mono', monospace;
+            color: var(--text-dim);
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
-        .explorer-item-name.folder-link {
-            color: var(--accent);
-            cursor: pointer;
-        }
-        .explorer-item-name.folder-link:hover { text-decoration: underline; }
-        .explorer-item-meta {
-            font-size: 12px;
-            color: var(--text3);
-            font-family: 'JetBrains Mono', monospace;
-        }
-
-        .explorer-item-actions {
+        
+        /* Toast */
+        .toast-container {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            z-index: 9999;
             display: flex;
-            gap: 4px;
-            opacity: 0;
-            transition: opacity 0.15s;
+            flex-direction: column;
+            gap: 12px;
+            pointer-events: none;
+        }
+        
+        .toast {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-bright);
+            border-radius: 8px;
+            padding: 16px 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 320px;
+            max-width: 480px;
+            pointer-events: auto;
+            animation: toastSlide 0.3s ease;
+        }
+        
+        @keyframes toastSlide {
+            from {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .toast.success {
+            border-color: var(--accent-green);
+            box-shadow: 0 0 20px rgba(80, 250, 123, 0.3);
+        }
+        
+        .toast.error {
+            border-color: var(--accent-red);
+            box-shadow: 0 0 20px rgba(255, 85, 85, 0.3);
+        }
+        
+        .toast-icon {
+            font-size: 20px;
             flex-shrink: 0;
         }
-        .explorer-item:hover .explorer-item-actions { opacity: 1; }
-
-        /* Always show on touch */
-        @media (hover: none) {
-            .explorer-item-actions { opacity: 1; }
+        
+        .toast-text {
+            flex: 1;
+            font-size: 14px;
+            color: var(--text-primary);
         }
-
-        /* Delete confirm modal */
-        .modal-overlay {
+        
+        /* Progress */
+        .progress-wrapper {
+            margin-top: 20px;
+        }
+        
+        .progress-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            font-family: 'Space Mono', monospace;
+            font-size: 12px;
+        }
+        
+        .progress-bar {
+            height: 8px;
+            background: var(--bg-surface);
+            border-radius: 100px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .progress-bar::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: var(--gradient-cyber);
+            opacity: 0.2;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: var(--gradient-cyber);
+            border-radius: 100px;
+            transition: width 0.3s ease;
+            box-shadow: 0 0 10px var(--accent-cyan);
+        }
+        
+        /* Modal */
+        .modal {
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,0.55);
-            z-index: 500;
+            background: rgba(10, 14, 20, 0.9);
+            backdrop-filter: blur(8px);
+            z-index: 9998;
             align-items: center;
             justify-content: center;
             padding: 20px;
-            backdrop-filter: blur(4px);
         }
-        .modal-overlay.open { display: flex; }
-
-        .modal {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            box-shadow: var(--shadow-lg);
-            padding: 24px;
-            max-width: 380px;
-            width: 100%;
-            animation: modalIn 0.2s ease;
-        }
-        @keyframes modalIn {
-            from { opacity: 0; transform: scale(0.95) translateY(8px); }
-            to   { opacity: 1; transform: scale(1)    translateY(0); }
-        }
-
-        .modal-title {
-            font-size: 16px;
-            font-weight: 600;
-            color: var(--text);
-            margin-bottom: 8px;
+        
+        .modal.open {
             display: flex;
-            align-items: center;
-            gap: 8px;
         }
-        .modal-title svg { color: var(--red); }
-
-        .modal-body {
-            font-size: 14px;
-            color: var(--text2);
+        
+        .modal-content {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-bright);
+            border-radius: 12px;
+            padding: 32px;
+            max-width: 480px;
+            width: 100%;
+            box-shadow: 0 0 40px rgba(139, 233, 253, 0.2);
+            animation: modalZoom 0.3s ease;
+        }
+        
+        @keyframes modalZoom {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        
+        .modal-header {
             margin-bottom: 20px;
+        }
+        
+        .modal-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-primary);
+            font-family: 'Space Mono', monospace;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .modal-body {
+            margin-bottom: 24px;
+            color: var(--text-secondary);
             line-height: 1.6;
         }
-        .modal-body code {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 12px;
-            background: var(--surface2);
-            border: 1px solid var(--border);
-            padding: 1px 5px;
-            border-radius: 4px;
-            color: var(--text);
-            word-break: break-all;
+        
+        .modal-body input {
+            width: 100%;
+            margin-top: 12px;
         }
-
+        
         .modal-actions {
             display: flex;
-            gap: 8px;
+            gap: 12px;
             justify-content: flex-end;
         }
-
-        .btn-danger {
-            background: var(--red);
-            color: #fff;
-            padding: 9px 18px;
-            border: none;
-            border-radius: var(--radius-xs);
-            font-size: 14px;
-            font-family: inherit;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
+        
+        /* Spinner */
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--text-dim);
+            border-top-color: var(--accent-cyan);
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
         }
-        .btn-danger:hover { filter: brightness(1.1); }
-        .btn-danger:disabled { opacity: 0.5; cursor: not-allowed; }
-
-        /* ── MOBILE ── */
-        @media (max-width: 480px) {
-            .main { padding: 12px 10px 32px; }
-            .card-body { padding: 14px; }
-            .card-header { padding: 12px 14px; }
-            .drop-zone { padding: 28px 16px; }
-            .file-item { padding: 10px 12px; gap: 8px; }
-            .toast-container { top: 64px; right: 10px; left: 10px; }
-            .toast { max-width: 100%; }
-            .file-meta .file-size { display: none; }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Empty state */
+        .empty-state {
+            padding: 64px 24px;
+            text-align: center;
+            color: var(--text-dim);
+        }
+        
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+        
+        /* Destination indicator */
+        .destination-indicator {
+            padding: 12px 16px;
+            background: rgba(139, 233, 253, 0.05);
+            border: 1px solid var(--border-bright);
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-family: 'Space Mono', monospace;
+            font-size: 12px;
+        }
+        
+        .destination-indicator strong {
+            color: var(--accent-cyan);
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 16px;
+            }
+            
+            .explorer {
+                height: 400px;
+            }
+            
+            .toast {
+                min-width: auto;
+                max-width: calc(100vw - 48px);
+            }
+        }
+        
+        /* Safe area */
+        @supports (padding: env(safe-area-inset-top)) {
+            .app {
+                padding-top: calc(20px + env(safe-area-inset-top));
+                padding-bottom: calc(20px + env(safe-area-inset-bottom));
+            }
         }
     </style>
 </head>
 <body>
-
-<!-- HEADER -->
-<div class="header">
-    <div class="header-logo">
-        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/>
-        </svg>
-        GitHub Uploader
-    </div>
-    <div class="header-controls">
-        <button class="theme-btn" id="themeAuto" onclick="setTheme('auto')" title="Авто (системная тема)">
-            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
-            </svg>
-        </button>
-        <button class="theme-btn" id="themeLight" onclick="setTheme('light')" title="Светлая тема">
-            <svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24">
-                <circle cx="12" cy="12" r="4"/><path stroke="currentColor" stroke-width="2" d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
-            </svg>
-        </button>
-        <button class="theme-btn" id="themeDark" onclick="setTheme('dark')" title="Тёмная тема">
-            <svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-            </svg>
-        </button>
-    </div>
-</div>
-
-<!-- MAIN -->
-<div class="main">
-
-    <!-- SETTINGS -->
-    <div class="card">
-        <div class="card-header">
-            <div class="card-title">
-                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/>
-                </svg>
-                Подключение
+    <div class="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">GitUp</div>
+            <div class="status" id="statusBadge">
+                <span class="status-dot"></span>
+                <span>Не подключено</span>
             </div>
-        </div>
-        <div class="card-body">
-            <div class="form-grid">
-                <div class="form-group">
-                    <label>GitHub Token</label>
-                    <input type="password" id="token" placeholder="ghp_xxxxxxxxxxxx" autocomplete="off">
+        </header>
+
+        <!-- Main Grid -->
+        <div class="main-grid">
+            <!-- Left: Setup & Upload -->
+            <div style="display: flex; flex-direction: column; gap: 24px;">
+                <!-- Connection -->
+                <div class="card">
+                    <div class="card-header">
+                        <span>// Подключение</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label class="form-label">GitHub Токен</label>
+                            <input type="password" class="form-input" id="token" placeholder="ghp_xxxxxxxxxxxx" onkeypress="if(event.key==='Enter') connect()">
+                        </div>
+                        <button class="btn btn-primary" id="connectBtn" onclick="connect()" style="width: 100%;">
+                            <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                            </svg>
+                            Подключить
+                        </button>
+                        <div class="form-group" style="margin-top: 20px;">
+                            <label class="form-label">Репозиторий</label>
+                            <select class="form-select" id="repository">
+                                <option value="">Сначала подключитесь...</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label">Ветка</label>
+                            <select class="form-select" id="branch">
+                                <option value="main">main</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>Имя пользователя</label>
-                    <input type="text" id="username" placeholder="your-username" autocomplete="off">
+
+                <!-- Upload -->
+                <div class="card">
+                    <div class="card-header">
+                        <span>// Загрузка файлов</span>
+                        <span id="fileCount" style="color: var(--text-dim);"></span>
+                    </div>
+                    <div class="card-body">
+                        <div class="destination-indicator">
+                            📁 Папка: <strong id="destinationPath">root</strong>
+                        </div>
+                        
+                        <div class="drop-zone" id="dropZone">
+                            <input type="file" id="fileInput" multiple style="display: none;">
+                            <div class="drop-zone-content">
+                                <div class="drop-zone-icon">
+                                    <svg width="36" height="36" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+                                    </svg>
+                                </div>
+                                <h3>Перетащите файлы сюда</h3>
+                                <p>или нажмите для выбора</p>
+                            </div>
+                        </div>
+                        
+                        <div id="fileList" class="file-grid"></div>
+                        
+                        <div id="uploadProgress" style="display: none;" class="progress-wrapper">
+                            <div class="progress-info">
+                                <span id="progressLabel">Загрузка...</span>
+                                <span id="progressPct">0%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progressFill"></div>
+                            </div>
+                        </div>
+                        
+                        <button class="btn btn-success" id="uploadBtn" style="margin-top: 20px;">
+                            <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+                            </svg>
+                            Загрузить на GitHub
+                        </button>
+                    </div>
                 </div>
-                <div class="form-group full" style="align-items:flex-start">
-                    <button class="btn btn-primary" onclick="loadRepositories()">
-                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            </div>
+
+            <!-- Right: Explorer -->
+            <div class="explorer">
+                <div class="explorer-toolbar">
+                    <div class="breadcrumb" id="breadcrumb">
+                        <span class="breadcrumb-item current">/</span>
+                    </div>
+                    <button class="btn btn-secondary btn-icon" id="pasteBtn" style="display:none;" onclick="pasteItems()" title="Вставить">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+                            <rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
+                        </svg>
+                    </button>
+                    <button class="btn btn-secondary btn-icon" title="Обновить" onclick="refreshExplorer()">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
                         </svg>
-                        Загрузить репозитории
                     </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- CREATE REPO -->
-    <div class="card">
-        <div class="card-header" style="cursor:pointer" onclick="toggleCreateRepo()">
-            <div class="card-title">
-                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-                </svg>
-                Создать новый репозиторий
-            </div>
-            <svg id="createRepoChevron" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color:var(--text3);transition:transform 0.2s">
-                <polyline points="6 9 12 15 18 9"/>
-            </svg>
-        </div>
-        <div id="createRepoBody" style="display:none">
-            <div class="card-body">
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>Название репозитория</label>
-                        <input type="text" id="newRepoName" placeholder="my-new-repo" autocomplete="off">
-                    </div>
-                    <div class="form-group">
-                        <label>Видимость</label>
-                        <select id="newRepoVisibility">
-                            <option value="false">🌐 Public</option>
-                            <option value="true">🔒 Private</option>
-                        </select>
-                    </div>
-                    <div class="form-group full">
-                        <label>Описание <span style="color:var(--text3);font-weight:400">(необязательно)</span></label>
-                        <input type="text" id="newRepoDesc" placeholder="Описание репозитория">
-                    </div>
-                    <div class="form-group full" style="align-items:flex-start">
-                        <button class="btn btn-primary" onclick="createRepository()">
-                            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-                            </svg>
-                            Создать репозиторий
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- REPO SETTINGS -->
-    <div class="card">
-        <div class="card-header">
-            <div class="card-title">
-                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
-                </svg>
-                Репозиторий и папка
-            </div>
-        </div>
-        <div class="card-body">
-            <div class="form-grid">
-                <div class="form-group">
-                    <label>Репозиторий</label>
-                    <select id="repository" onchange="loadBranches()">
-                        <option value="">— выберите репозиторий —</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Ветка</label>
-                    <select id="branch">
-                        <option value="main">main</option>
-                    </select>
-                </div>
-                <div class="form-group full">
-                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-                        <label style="margin:0">Папка назначения</label>
-                        <button class="btn btn-ghost" style="padding:5px 10px;font-size:12px;gap:5px" onclick="toggleNewFolder()">
-                            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-                            </svg>
-                            Новая папка
-                        </button>
-                    </div>
-
-                    <!-- Форма создания папки -->
-                    <div id="newFolderForm" style="display:none;margin-bottom:8px;">
-                        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
-                            <span style="font-size:12px;color:var(--text3);font-family:'JetBrains Mono',monospace;white-space:nowrap" id="newFolderPrefix"></span>
-                            <input type="text" id="newFolderName" placeholder="название-папки"
-                                style="flex:1;min-width:140px;font-family:'JetBrains Mono',monospace;font-size:13px"
-                                onkeydown="onNewFolderKey(event)">
-                            <button class="icon-btn save" onclick="createFolder()" title="Создать (Enter)">
-                                <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-                            </button>
-                            <button class="icon-btn cancel" onclick="toggleNewFolder(false)" title="Отмена (Esc)">
-                                <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                            </button>
-                        </div>
-                        <div style="font-size:11px;color:var(--text3);margin-top:5px">
-                            Папка создаётся внутри выбранной. Путь: <span id="newFolderFullPath" style="color:var(--accent);font-family:'JetBrains Mono',monospace"></span>
-                        </div>
-                    </div>
-
-                    <div class="folder-tree" id="folderTree">
-                        <div class="loading-text">
-                            <span>Выберите репозиторий для загрузки структуры папок</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- FILE EXPLORER -->
-    <div class="card" id="explorerCard" style="display:none">
-        <div class="card-header" style="cursor:pointer" onclick="toggleExplorer()">
-            <div class="card-title">
-                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-                    <polyline points="9 22 9 12 15 12 15 22"/>
-                </svg>
-                Проводник
-            </div>
-            <div style="display:flex;align-items:center;gap:8px">
-                <button class="btn btn-ghost" style="padding:5px 10px;font-size:12px" onclick="refreshExplorer(); event.stopPropagation();">
-                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
-                    </svg>
-                    Обновить
-                </button>
-                <svg id="explorerChevron" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color:var(--text3);transition:transform 0.2s">
-                    <polyline points="6 9 12 15 18 9"/>
-                </svg>
-            </div>
-        </div>
-        <div id="explorerContent" style="display:none">
-            <!-- Breadcrumb -->
-            <div class="explorer-toolbar">
-                <div class="breadcrumb" id="explorerBreadcrumb">
-                    <span class="breadcrumb-item current">/ root</span>
-                </div>
-                <button class="btn btn-ghost" id="pasteBtn" style="padding:5px 10px;font-size:12px;gap:5px;display:none" onclick="pasteItems()">
-                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
-                        <rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
-                    </svg>
-                    <span id="pasteBtnText">Вставить</span>
-                </button>
-            </div>
-            <!-- Content -->
-            <div class="explorer-body" id="explorerBody">
-                <div class="loading-text"><span class="spin">⟳</span> Загрузка...</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- DELETE MODAL -->
-    <div class="modal-overlay" id="deleteModal">
-        <div class="modal">
-            <div class="modal-title">
-                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <polyline points="3 6 5 6 21 6"/>
-                    <path d="M19 6l-1 14H6L5 6"/>
-                    <path d="M10 11v6M14 11v6"/>
-                    <path d="M9 6V4h6v2"/>
-                </svg>
-                <span id="deleteModalTitle">Удалить?</span>
-            </div>
-            <div class="modal-body" id="deleteModalBody"></div>
-            <div class="modal-actions">
-                <button class="btn btn-ghost" onclick="closeDeleteModal()">Отмена</button>
-                <button class="btn-danger" id="deleteConfirmBtn" onclick="confirmDelete()">Удалить</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- FILES -->
-    <div class="card">
-        <div class="card-header">
-            <div class="card-title">
-                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                    <polyline points="14 2 14 8 20 8"/>
-                </svg>
-                Файлы
-            </div>
-            <span id="file-count" class="section-label"></span>
-        </div>
-        <div class="card-body" style="display:flex;flex-direction:column;gap:14px;">
-            <!-- Drop zone -->
-            <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
-                <div class="drop-zone-icon">
-                    <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
-                        <polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/>
-                        <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
-                    </svg>
-                </div>
-                <h3>Перетащите файлы сюда</h3>
-                <p>или нажмите для выбора</p>
-                <input type="file" id="fileInput" multiple style="display:none" onchange="handleFileSelect(event)">
-            </div>
-
-            <!-- File list -->
-            <div class="file-list" id="fileList"></div>
-
-            <!-- Progress -->
-            <div id="uploadProgress" style="display:none">
-                <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text2);margin-bottom:4px;">
-                    <span id="progressLabel">Загрузка...</span>
-                    <span id="progressPct">0%</span>
-                </div>
-                <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
-            </div>
-
-            <!-- Upload button -->
-            <button class="btn btn-success" id="uploadBtn" onclick="uploadFiles()">
-                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/>
-                    <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
-                </svg>
-                Загрузить в GitHub
-            </button>
-        </div>
-    </div>
-
-</div>
-
-<!-- TOASTS -->
-<div class="toast-container" id="toastContainer"></div>
-
-<script>
-    // ── THEME ──────────────────────────────────────────────
-    const saved = localStorage.getItem('gh-theme') || 'auto';
-    applyTheme(saved);
-
-    function setTheme(t) { localStorage.setItem('gh-theme', t); applyTheme(t); }
-
-    function applyTheme(t) {
-        document.documentElement.setAttribute('data-theme', t);
-        document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
-        const map = { auto: 'themeAuto', light: 'themeLight', dark: 'themeDark' };
-        document.getElementById(map[t])?.classList.add('active');
-
-        // Цвет статус-бара совпадает с шапкой
-        const isDark = t === 'dark' || (t === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-        document.getElementById('themeColorMeta').setAttribute('content', isDark ? '#161b22' : '#ffffff');
-    }
-
-    // Следим за системной темой в авто-режиме
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-        if ((localStorage.getItem('gh-theme') || 'auto') === 'auto') applyTheme('auto');
-    });
-
-    // ── STATE ──────────────────────────────────────────────
-    let selectedFiles = [];
-    let currentPath = '';
-    let folderStructure = [];
-    let isUploading = false;
-
-    // ── DRAG & DROP ────────────────────────────────────────
-    const dropZone = document.getElementById('dropZone');
-    dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
-    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
-    dropZone.addEventListener('drop', e => {
-        e.preventDefault();
-        dropZone.classList.remove('dragover');
-        handleFileSelect(e);
-    });
-
-    // ── CREATE REPOSITORY ─────────────────────────────────
-    function toggleCreateRepo() {
-        const body = document.getElementById('createRepoBody');
-        const chevron = document.getElementById('createRepoChevron');
-        const open = body.style.display === 'none';
-        body.style.display = open ? 'block' : 'none';
-        chevron.style.transform = open ? 'rotate(180deg)' : 'rotate(0deg)';
-    }
-
-    async function createRepository() {
-        const token = v('token');
-        const name = v('newRepoName');
-        const isPrivate = document.getElementById('newRepoVisibility').value === 'true';
-        const desc = v('newRepoDesc');
-
-        if (!token) { toast('Введите GitHub Token', 'error'); return; }
-        if (!name) { toast('Введите название репозитория', 'error'); return; }
-        if (!/^[a-zA-Z0-9_.-]+$/.test(name)) {
-            toast('Только буквы, цифры, дефис, точка и подчёркивание', 'error'); return;
-        }
-
-        const btn = event.target.closest('button');
-        btn.disabled = true;
-        btn.textContent = '⟳ Создание...';
-
-        try {
-            const r = await fetch('https://api.github.com/user/repos', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `token ${token}`,
-                    'Accept': 'application/vnd.github.v3+json',
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    name,
-                    description: desc,
-                    private: isPrivate,
-                    auto_init: true   // создаёт initial commit с README, иначе ветка пустая
-                })
-            });
-
-            if (!r.ok) {
-                const err = await r.json();
-                throw new Error(err.errors?.[0]?.message || err.message || 'Ошибка создания');
-            }
-
-            const repo = await r.json();
-
-            // Добавляем новый репозиторий в список и выбираем его
-            const sel = document.getElementById('repository');
-            const opt = document.createElement('option');
-            opt.value = repo.full_name;
-            opt.textContent = repo.full_name;
-            sel.appendChild(opt);
-            sel.value = repo.full_name;
-
-            // Загружаем ветки нового репо
-            await loadBranches();
-
-            // Сворачиваем панель создания
-            document.getElementById('createRepoBody').style.display = 'none';
-            document.getElementById('createRepoChevron').style.transform = 'rotate(0deg)';
-            document.getElementById('newRepoName').value = '';
-            document.getElementById('newRepoDesc').value = '';
-
-            toast(`Репозиторий «${repo.full_name}» создан и выбран`, 'success');
-        } catch(e) {
-            toast('Ошибка: ' + e.message, 'error');
-        } finally {
-            btn.disabled = false;
-            btn.innerHTML = `<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Создать репозиторий`;
-        }
-    }
-
-    // ── REPOSITORIES ──────────────────────────────────────
-    async function loadRepositories() {
-        const token = v('token'), username = v('username');
-        if (!token || !username) { toast('Введите токен и имя пользователя', 'error'); return; }
-        try {
-            const r = await ghFetch(`https://api.github.com/user/repos?per_page=100`, token);
-            const repos = await r.json();
-            const sel = document.getElementById('repository');
-            sel.innerHTML = '<option value="">— выберите репозиторий —</option>';
-            repos.forEach(repo => {
-                const o = document.createElement('option');
-                o.value = repo.full_name; o.textContent = repo.full_name;
-                sel.appendChild(o);
-            });
-            toast('Репозитории загружены', 'success');
-        } catch(e) { toast('Ошибка: ' + e.message, 'error'); }
-    }
-
-    async function loadBranches() {
-        const token = v('token'), repo = v('repository');
-        if (!repo) return;
-        try {
-            const r = await ghFetch(`https://api.github.com/repos/${repo}/branches`, token);
-            const branches = await r.json();
-            const sel = document.getElementById('branch');
-            sel.innerHTML = '';
-            branches.forEach(b => {
-                const o = document.createElement('option');
-                o.value = b.name; o.textContent = b.name;
-                sel.appendChild(o);
-            });
-            loadFolderStructure();
-            showExplorer();
-        } catch(e) { toast('Ошибка: ' + e.message, 'error'); }
-    }
-
-    // ── CREATE FOLDER ─────────────────────────────────────
-    function toggleNewFolder(forceClose) {
-        const form = document.getElementById('newFolderForm');
-        const open = forceClose === false ? false : form.style.display === 'none';
-        form.style.display = open ? 'block' : 'none';
-        if (open) {
-            updateNewFolderPreview();
-            const inp = document.getElementById('newFolderName');
-            inp.value = '';
-            inp.focus();
-        }
-    }
-
-    function updateNewFolderPreview() {
-        const prefix = currentPath ? currentPath + '/' : '/';
-        document.getElementById('newFolderPrefix').textContent = prefix;
-        const name = document.getElementById('newFolderName')?.value.trim() || '…';
-        document.getElementById('newFolderFullPath').textContent =
-            (currentPath ? currentPath + '/' : '') + name;
-    }
-
-    document.addEventListener('input', e => {
-        if (e.target.id === 'newFolderName') updateNewFolderPreview();
-    });
-
-    function onNewFolderKey(e) {
-        if (e.key === 'Enter') createFolder();
-        if (e.key === 'Escape') toggleNewFolder(false);
-    }
-
-    async function createFolder() {
-        const token = v('token');
-        const repo = v('repository');
-        const branch = v('branch');
-        const rawName = document.getElementById('newFolderName').value.trim();
-
-        if (!repo) { toast('Сначала выберите репозиторий', 'error'); return; }
-        if (!rawName) { toast('Введите название папки', 'error'); return; }
-        if (/[\\:*?"<>|]/.test(rawName)) { toast('Недопустимые символы в названии', 'error'); return; }
-
-        const folderPath = currentPath ? `${currentPath}/${rawName}` : rawName;
-        const filePath = `${folderPath}/.gitkeep`;
-
-        const btn = document.querySelector('#newFolderForm .icon-btn.save');
-        btn.disabled = true;
-
-        try {
-            const r = await fetch(`https://api.github.com/repos/${repo}/contents/${filePath}`, {
-                method: 'PUT',
-                headers: {
-                    'Authorization': `token ${token}`,
-                    'Accept': 'application/vnd.github.v3+json',
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    message: `Create folder ${folderPath}`,
-                    content: btoa(''),
-                    branch
-                })
-            });
-
-            if (!r.ok) {
-                const err = await r.json();
-                throw new Error(err.message || 'Ошибка создания папки');
-            }
-
-            folderStructure.push({ path: folderPath, type: 'tree' });
-            folderStructure.sort((a, b) => a.path.localeCompare(b.path));
-            displayFolderTree();
-
-            // Автоматически выбираем новую папку
-            const newEl = [...document.querySelectorAll('.folder-item')]
-                .find(el => el.dataset.path === folderPath);
-            if (newEl) selectFolder(folderPath, newEl);
-
-            toggleNewFolder(false);
-            toast(`Папка «${folderPath}» создана`, 'success');
-        } catch(e) {
-            toast('Ошибка: ' + e.message, 'error');
-        } finally {
-            btn.disabled = false;
-        }
-    }
-
-    async function loadFolderStructure() {
-        const token = v('token'), repo = v('repository'), branch = v('branch');
-        if (!repo) return;
-        const tree = document.getElementById('folderTree');
-        tree.innerHTML = '<div class="loading-text"><span class="spin">⟳</span> Загрузка папок...</div>';
-        try {
-            const r = await ghFetch(`https://api.github.com/repos/${repo}/git/trees/${branch}?recursive=1`, token);
-            const data = await r.json();
-            folderStructure = (data.tree || []).filter(i => i.type === 'tree');
-            displayFolderTree();
-        } catch(e) { tree.innerHTML = '<div class="loading-text">Ошибка загрузки папок</div>'; }
-    }
-
-    function displayFolderTree() {
-        const tree = document.getElementById('folderTree');
-        tree.innerHTML = '';
-        const mkItem = (path, label, depth) => {
-            const div = document.createElement('div');
-            div.className = 'folder-item' + (path === currentPath ? ' selected' : '');
-            div.style.paddingLeft = (12 + depth * 16) + 'px';
-            div.dataset.path = path;
-            div.innerHTML = `<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg> ${label}`;
-            div.onclick = () => selectFolder(path, div);
-            return div;
-        };
-        tree.appendChild(mkItem('', '/ Корневая папка', 0));
-        folderStructure.forEach(f => {
-            const depth = f.path.split('/').length;
-            const label = f.path.split('/').pop();
-            tree.appendChild(mkItem(f.path, label, depth));
-        });
-    }
-
-    function selectFolder(path, el) {
-        document.querySelectorAll('.folder-item').forEach(i => i.classList.remove('selected'));
-        el.classList.add('selected');
-        currentPath = path;
-        // Update paths for already-added files that haven't been manually renamed
-        selectedFiles.forEach(item => {
-            item.path = currentPath ? `${currentPath}/${item.displayName}` : item.displayName;
-        });
-        displayFileList();
-    }
-
-    // ── FILE HANDLING ──────────────────────────────────────
-    function handleFileSelect(e) {
-        if (isUploading) return;
-        const files = e.target?.files || e.dataTransfer?.files;
-        if (!files) return;
-        Array.from(files).forEach(file => {
-            selectedFiles.push({
-                id: Date.now() + Math.random(),
-                file,
-                displayName: file.name,
-                path: currentPath ? `${currentPath}/${file.name}` : file.name,
-                status: 'pending',
-                size: file.size
-            });
-        });
-        document.getElementById('fileInput').value = '';
-        displayFileList();
-    }
-
-    function displayFileList() {
-        const list = document.getElementById('fileList');
-        const countEl = document.getElementById('file-count');
-
-        if (selectedFiles.length === 0) {
-            list.innerHTML = '';
-            countEl.textContent = '';
-            return;
-        }
-        countEl.textContent = `${selectedFiles.length} ${pluralFiles(selectedFiles.length)}`;
-
-        list.innerHTML = '';
-        selectedFiles.forEach(item => {
-            const div = document.createElement('div');
-            div.className = `file-item ${item.status === 'success' ? 'success' : item.status === 'error' ? 'error' : item.status === 'uploading' ? 'uploading' : ''}`;
-            div.id = `fi-${item.id}`;
-
-            div.innerHTML = `
-                <div class="file-icon">${fileEmoji(item.displayName)}</div>
-                <div class="file-info">
-                    <div class="file-name-wrap" id="fnw-${item.id}">
-                        <span class="file-name-display" id="fnd-${item.id}">${esc(item.displayName)}</span>
-                        <button class="rename-trigger" onclick="startRename(${item.id})" title="Переименовать">
-                            <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                            </svg>
-                            Переименовать
-                        </button>
-                        <div class="rename-form" id="rf-${item.id}">
-                            <input class="rename-input" id="ri-${item.id}" type="text" value="${esc(item.displayName)}"
-                                onkeydown="onRenameKey(event,${item.id})"
-                                placeholder="новое имя файла">
-                            <div class="rename-actions">
-                                <button class="icon-btn save" onclick="saveRename(${item.id})" title="Сохранить (Enter)">
-                                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-                                </button>
-                                <button class="icon-btn cancel" onclick="cancelRename(${item.id})" title="Отмена (Esc)">
-                                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="file-path" id="fp-${item.id}">${esc(item.path)}</div>
-                </div>
-                <div class="file-meta">
-                    <span class="file-size">${formatSize(item.size)}</span>
-                    ${badgeHtml(item.status)}
-                    <button class="icon-btn remove" onclick="removeFile(${item.id})" title="Удалить">
-                        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/>
-                            <path d="M9 6V4h6v2"/>
+                    <button class="btn btn-secondary btn-icon" onclick="newFolder()" title="Новая папка">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
                         </svg>
                     </button>
                 </div>
-            `;
-            list.appendChild(div);
-        });
-    }
-
-    // ── RENAME ────────────────────────────────────────────
-    function startRename(id) {
-        const wrap = document.getElementById(`fnw-${id}`);
-        const rf = document.getElementById(`rf-${id}`);
-        wrap.classList.add('editing');
-        rf.classList.add('active');
-        const inp = document.getElementById(`ri-${id}`);
-        inp.focus();
-        // Select without extension
-        const name = inp.value;
-        const dot = name.lastIndexOf('.');
-        if (dot > 0) { inp.setSelectionRange(0, dot); }
-        else { inp.select(); }
-    }
-
-    function saveRename(id) {
-        const item = selectedFiles.find(f => f.id === id);
-        if (!item) return;
-        const newName = document.getElementById(`ri-${id}`).value.trim();
-        if (!newName) { toast('Имя файла не может быть пустым', 'error'); return; }
-
-        item.displayName = newName;
-        item.path = currentPath ? `${currentPath}/${newName}` : newName;
-
-        // Update DOM without full redraw — snappy UX
-        const wrap = document.getElementById(`fnw-${id}`);
-        const displayEl = document.getElementById(`fnd-${id}`);
-        const pathEl = document.getElementById(`fp-${id}`);
-        const iconEl = document.getElementById(`fi-${id}`)?.querySelector('.file-icon');
-
-        displayEl.textContent = newName;
-        pathEl.textContent = item.path;
-        if (iconEl) iconEl.textContent = fileEmoji(newName);
-
-        // Exit edit mode
-        wrap.classList.remove('editing');
-        document.getElementById(`rf-${id}`)?.classList.remove('active');
-
-        // Flash green
-        const fi = document.getElementById(`fi-${id}`);
-        fi.classList.add('rename-success');
-        setTimeout(() => fi.classList.remove('rename-success'), 1200);
-
-        toast(`Переименован в «${newName}»`, 'success');
-    }
-
-    function cancelRename(id) {
-        const item = selectedFiles.find(f => f.id === id);
-        const wrap = document.getElementById(`fnw-${id}`);
-        // Restore input value
-        const inp = document.getElementById(`ri-${id}`);
-        if (inp && item) inp.value = item.displayName;
-        wrap.classList.remove('editing');
-        document.getElementById(`rf-${id}`)?.classList.remove('active');
-    }
-
-    function onRenameKey(e, id) {
-        if (e.key === 'Enter') saveRename(id);
-        if (e.key === 'Escape') cancelRename(id);
-    }
-
-    // ── REMOVE ────────────────────────────────────────────
-    function removeFile(id) {
-        selectedFiles = selectedFiles.filter(f => f.id !== id);
-        displayFileList();
-    }
-
-    // ── UPLOAD ────────────────────────────────────────────
-    async function uploadFiles() {
-        if (isUploading) return;
-        const token = v('token'), repo = v('repository'), branch = v('branch');
-        if (!repo) { toast('Выберите репозиторий', 'error'); return; }
-        if (!selectedFiles.length) { toast('Добавьте файлы для загрузки', 'error'); return; }
-
-        isUploading = true;
-        document.getElementById('uploadBtn').disabled = true;
-        const progressWrap = document.getElementById('uploadProgress');
-        progressWrap.style.display = 'block';
-
-        try {
-            const commitRes = await ghFetch(`https://api.github.com/repos/${repo}/git/refs/heads/${branch}`, token);
-            if (!commitRes.ok) throw new Error('Ошибка получения ветки');
-            const commitData = await commitRes.json();
-            const currentCommitSha = commitData.object.sha;
-
-            const commitInfoRes = await ghFetch(`https://api.github.com/repos/${repo}/git/commits/${currentCommitSha}`, token);
-            if (!commitInfoRes.ok) throw new Error('Ошибка получения коммита');
-            const commitInfo = await commitInfoRes.json();
-            const baseTreeSha = commitInfo.tree.sha;
-
-            const fileBlobs = [];
-            let done = 0;
-
-            for (const item of selectedFiles) {
-                item.status = 'uploading';
-                updateFileStatus(item);
-                setProgress(done, selectedFiles.length, item.displayName);
-
-                try {
-                    const base64 = await fileToBase64(item.file);
-                    const blobRes = await ghPost(`https://api.github.com/repos/${repo}/git/blobs`, token, { content: base64, encoding: 'base64' });
-                    if (!blobRes.ok) throw new Error('Blob error');
-                    const blobData = await blobRes.json();
-                    fileBlobs.push({ path: item.path, mode: '100644', type: 'blob', sha: blobData.sha });
-                    item.status = 'success';
-                } catch {
-                    item.status = 'error';
-                }
-                done++;
-                updateFileStatus(item);
-                setProgress(done, selectedFiles.length, '');
-            }
-
-            const treeRes = await ghPost(`https://api.github.com/repos/${repo}/git/trees`, token, { base_tree: baseTreeSha, tree: fileBlobs });
-            if (!treeRes.ok) throw new Error('Ошибка создания дерева');
-            const treeData = await treeRes.json();
-
-            const newCommitRes = await ghPost(`https://api.github.com/repos/${repo}/git/commits`, token, {
-                message: `Upload ${selectedFiles.length} file(s) via GitHub Uploader`,
-                tree: treeData.sha,
-                parents: [currentCommitSha]
-            });
-            if (!newCommitRes.ok) throw new Error('Ошибка создания коммита');
-            const newCommit = await newCommitRes.json();
-
-            const updateRes = await fetch(`https://api.github.com/repos/${repo}/git/refs/heads/${branch}`, {
-                method: 'PATCH',
-                headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
-                body: JSON.stringify({ sha: newCommit.sha })
-            });
-            if (!updateRes.ok) throw new Error('Ошибка обновления ветки');
-
-            toast(`✅ ${fileBlobs.length} файл(ов) загружено в ${repo}`, 'success');
-            // Обновить проводник
-            explorerCache = {};
-            if (explorerPath !== undefined) loadExplorerPath(explorerPath);
-        } catch(e) {
-            toast('Ошибка: ' + e.message, 'error');
-        } finally {
-            isUploading = false;
-            document.getElementById('uploadBtn').disabled = false;
-            setTimeout(() => { progressWrap.style.display = 'none'; }, 2000);
-        }
-    }
-
-    function updateFileStatus(item) {
-        const fi = document.getElementById(`fi-${item.id}`);
-        if (!fi) return;
-        fi.className = `file-item ${item.status === 'success' ? 'success' : item.status === 'error' ? 'error' : item.status === 'uploading' ? 'uploading' : ''}`;
-        const meta = fi.querySelector('.file-meta');
-        const oldBadge = meta.querySelector('.badge');
-        if (oldBadge) oldBadge.outerHTML = badgeHtml(item.status);
-    }
-
-    function setProgress(done, total, name) {
-        const pct = total > 0 ? Math.round(done / total * 100) : 0;
-        document.getElementById('progressFill').style.width = pct + '%';
-        document.getElementById('progressPct').textContent = pct + '%';
-        document.getElementById('progressLabel').textContent = name ? `Загрузка: ${name}` : `Готово ${done} из ${total}`;
-    }
-
-    // ── FILE EXPLORER ─────────────────────────────────────
-    let explorerPath = '';          // текущий путь в проводнике
-    let explorerCache = {};         // кэш содержимого папок
-    let deleteTarget = null;        // { path, sha, type }
-    let explorerExpanded = false;   // состояние раскрытия
-    let clipboard = null;           // { items: [{path, sha, type, name}], action: 'copy'|'cut' }
-
-    function toggleExplorer() {
-        const content = document.getElementById('explorerContent');
-        const chevron = document.getElementById('explorerChevron');
-        explorerExpanded = !explorerExpanded;
-        content.style.display = explorerExpanded ? 'block' : 'none';
-        chevron.style.transform = explorerExpanded ? 'rotate(180deg)' : 'rotate(0deg)';
-    }
-
-    function showExplorer() {
-        const repo = v('repository');
-        if (!repo) return;
-        const card = document.getElementById('explorerCard');
-        card.style.display = 'block';
-        
-        // Don't auto-expand - user clicks to open
-        explorerPath = '';
-        explorerCache = {};
-        loadExplorerPath('');
-    }
-
-    async function refreshExplorer() {
-        explorerCache = {};
-        loadExplorerPath(explorerPath);
-    }
-
-    async function loadExplorerPath(path) {
-        explorerPath = path;
-        renderBreadcrumb(path);
-        updatePasteButton();
-
-        const body = document.getElementById('explorerBody');
-        body.innerHTML = '<div class="loading-text"><span class="spin">⟳</span> Загрузка...</div>';
-
-        // Check cache
-        if (explorerCache[path]) {
-            renderExplorerItems(explorerCache[path]);
-            return;
-        }
-
-        const token = v('token');
-        const repo  = v('repository');
-        const branch = v('branch');
-        const apiPath = path ? `contents/${path}` : 'contents';
-
-        try {
-            const r = await ghFetch(`https://api.github.com/repos/${repo}/${apiPath}?ref=${branch}`, token);
-            if (!r.ok) throw new Error('Ошибка загрузки');
-            const items = await r.json();
-            const sorted = items.sort((a, b) => {
-                if (a.type === b.type) return a.name.localeCompare(b.name);
-                return a.type === 'dir' ? -1 : 1;
-            });
-            explorerCache[path] = sorted;
-            renderExplorerItems(sorted);
-        } catch(e) {
-            body.innerHTML = `<div class="loading-text" style="color:var(--red)">Ошибка: ${e.message}</div>`;
-        }
-    }
-
-    function renderBreadcrumb(path) {
-        const el = document.getElementById('explorerBreadcrumb');
-        const parts = path ? path.split('/') : [];
-        let html = `<span class="breadcrumb-item" onclick="loadExplorerPath('')">root</span>`;
-        parts.forEach((part, i) => {
-            const subPath = parts.slice(0, i + 1).join('/');
-            const isCurrent = i === parts.length - 1;
-            html += `<span class="breadcrumb-sep">/</span>`;
-            html += `<span class="breadcrumb-item ${isCurrent ? 'current' : ''}"
-                ${isCurrent ? '' : `onclick="loadExplorerPath('${esc(subPath)}')"`}
-                >${esc(part)}</span>`;
-        });
-        el.innerHTML = html;
-    }
-
-    function renderExplorerItems(items) {
-        const body = document.getElementById('explorerBody');
-
-        if (items.length === 0) {
-            body.innerHTML = '<div class="loading-text" style="color:var(--text3)">Папка пуста</div>';
-            return;
-        }
-
-        body.innerHTML = '';
-        items.forEach(item => {
-            const isDir  = item.type === 'dir';
-            const ext    = item.name.split('.').pop().toLowerCase();
-            const emoji  = isDir ? '📁' : (fileEmoji(item.name));
-            const size   = item.size ? formatSize(item.size) : '';
-
-            const div = document.createElement('div');
-            div.className = 'explorer-item';
-            div.id = `exp-${item.sha}`;
-            div.innerHTML = `
-                <div class="explorer-item-icon ${isDir ? 'folder' : 'file'}">${emoji}</div>
-                <div class="explorer-item-info">
-                    <div class="explorer-item-name-wrap" id="exp-name-wrap-${item.sha}">
-                        <div class="explorer-item-name ${isDir ? 'folder-link' : ''}" 
-                            id="exp-name-display-${item.sha}"
-                            ${isDir ? `onclick="loadExplorerPath('${esc(item.path)}')"` : ''}
-                            title="${esc(item.path)}">${esc(item.name)}</div>
-                        <button class="rename-trigger" onclick="startExplorerRename('${item.sha}', '${esc(item.name)}', '${esc(item.path)}', '${item.type}')" 
-                            title="Переименовать" style="margin-left:6px;font-size:11px;padding:1px 5px">
-                            <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                            </svg>
-                        </button>
-                        <div class="rename-form" id="exp-rename-form-${item.sha}" style="display:none;width:100%">
-                            <input class="rename-input" id="exp-rename-input-${item.sha}" type="text" 
-                                value="${esc(item.name)}"
-                                onkeydown="onExplorerRenameKey(event, '${item.sha}', '${esc(item.path)}', '${item.type}')"
-                                style="max-width:100%;font-size:13px"
-                                placeholder="новое имя">
-                            <div class="rename-actions">
-                                <button class="icon-btn save" 
-                                    onclick="saveExplorerRename('${item.sha}', '${esc(item.path)}', '${item.type}')" 
-                                    title="Сохранить (Enter)">
-                                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                                        <polyline points="20 6 9 17 4 12"/>
-                                    </svg>
-                                </button>
-                                <button class="icon-btn cancel" 
-                                    onclick="cancelExplorerRename('${item.sha}')" 
-                                    title="Отмена (Esc)">
-                                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                                        <line x1="18" y1="6" x2="6" y2="18"/>
-                                        <line x1="6" y1="6" x2="18" y2="18"/>
-                                    </svg>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="explorer-item-meta">${isDir ? 'папка' : size}</div>
-                </div>
-                <div class="explorer-item-actions">
-                    <button class="icon-btn" onclick="copyItem('${esc(item.path)}', '${item.sha}', '${item.type}', '${esc(item.name)}')" title="Копировать">
-                        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                
+                <div class="explorer-actions-bar" id="explorerActions">
+                    <div class="explorer-selection-text" id="selectionText">Выбрано: 0</div>
+                    <button class="btn btn-secondary btn-icon" onclick="copySelected()" title="Копировать">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
                             <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
                         </svg>
                     </button>
-                    <button class="icon-btn" onclick="cutItem('${esc(item.path)}', '${item.sha}', '${item.type}', '${esc(item.name)}')" title="Вырезать">
-                        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/>
+                    <button class="btn btn-secondary btn-icon" onclick="cutSelected()" title="Вырезать">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <circle cx="6" cy="6" r="3"/>
+                            <circle cx="6" cy="18" r="3"/>
                             <line x1="20" y1="4" x2="8.12" y2="15.88"/>
                             <line x1="14.47" y1="14.48" x2="20" y2="20"/>
-                            <line x1="8.12" y1="8.12" x2="12" y2="12"/>
                         </svg>
                     </button>
-                    ${!isDir ? `
-                    <button class="icon-btn" onclick="useFileAsDestination('${esc(item.path)}')" title="Открыть папку для загрузки">
-                        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
-                        </svg>
-                    </button>` : `
-                    <button class="icon-btn" onclick="loadExplorerPath('${esc(item.path)}')" title="Открыть папку">
-                        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <polyline points="9 18 15 12 9 6"/>
-                        </svg>
-                    </button>`}
-                    <button class="icon-btn remove"
-                        onclick="openDeleteModal('${esc(item.path)}', '${item.sha || ''}', '${item.type}')"
-                        title="Удалить">
-                        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <button class="btn btn-danger btn-icon" onclick="deleteSelected()" title="Удалить">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <polyline points="3 6 5 6 21 6"/>
                             <path d="M19 6l-1 14H6L5 6"/>
-                            <path d="M9 6V4h6v2"/>
+                        </svg>
+                    </button>
+                    <button class="btn btn-secondary btn-icon" onclick="clearSelection()" title="Очистить">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <line x1="18" y1="6" x2="6" y2="18"/>
+                            <line x1="6" y1="6" x2="18" y2="18"/>
                         </svg>
                     </button>
                 </div>
-            `;
-            body.appendChild(div);
-        });
-    }
-
-    // ── EXPLORER RENAME ───────────────────────────────────
-    function startExplorerRename(sha, name, path, type) {
-        const wrap = document.getElementById(`exp-name-wrap-${sha}`);
-        const form = document.getElementById(`exp-rename-form-${sha}`);
-        const input = document.getElementById(`exp-rename-input-${sha}`);
-        
-        wrap.classList.add('editing');
-        form.style.display = 'flex';
-        input.focus();
-        
-        // Select name without extension for files
-        if (type !== 'dir') {
-            const dot = name.lastIndexOf('.');
-            if (dot > 0) input.setSelectionRange(0, dot);
-            else input.select();
-        } else {
-            input.select();
-        }
-    }
-
-    function cancelExplorerRename(sha) {
-        const wrap = document.getElementById(`exp-name-wrap-${sha}`);
-        const form = document.getElementById(`exp-rename-form-${sha}`);
-        wrap.classList.remove('editing');
-        form.style.display = 'none';
-    }
-
-    function onExplorerRenameKey(e, sha, path, type) {
-        if (e.key === 'Enter') saveExplorerRename(sha, path, type);
-        if (e.key === 'Escape') cancelExplorerRename(sha);
-    }
-
-    async function saveExplorerRename(sha, oldPath, type) {
-        const input = document.getElementById(`exp-rename-input-${sha}`);
-        const newName = input.value.trim();
-        
-        if (!newName) { toast('Имя не может быть пустым', 'error'); return; }
-        
-        const oldName = oldPath.includes('/') ? oldPath.split('/').pop() : oldPath;
-        if (newName === oldName) { cancelExplorerRename(sha); return; }
-        
-        // Validate
-        if (/[\\:*?"<>|]/.test(newName)) { toast('Недопустимые символы в имени', 'error'); return; }
-        
-        const token  = v('token');
-        const repo   = v('repository');
-        const branch = v('branch');
-        const btn    = document.querySelector(`#exp-rename-form-${sha} .icon-btn.save`);
-        
-        btn.disabled = true;
-        
-        try {
-            const parentPath = oldPath.includes('/') ? oldPath.split('/').slice(0, -1).join('/') : '';
-            const newPath = parentPath ? `${parentPath}/${newName}` : newName;
-            
-            if (type === 'dir') {
-                await renameFolderRecursive(token, repo, branch, oldPath, newPath);
-            } else {
-                await renameFile(token, repo, branch, oldPath, newPath, sha);
-            }
-            
-            // Update cache and UI
-            explorerCache = {};
-            cancelExplorerRename(sha);
-            await loadExplorerPath(explorerPath);
-            
-            // Flash success
-            const item = document.getElementById(`exp-${sha}`);
-            if (item) {
-                item.style.background = 'var(--green-bg)';
-                setTimeout(() => { item.style.background = ''; }, 1200);
-            }
-            
-            toast(`Переименовано в «${newName}»`, 'success');
-        } catch(e) {
-            toast('Ошибка переименования: ' + e.message, 'error');
-        } finally {
-            btn.disabled = false;
-        }
-    }
-
-    async function renameFile(token, repo, branch, oldPath, newPath, sha) {
-        // Get file content
-        const contentRes = await ghFetch(`https://api.github.com/repos/${repo}/contents/${oldPath}?ref=${branch}`, token);
-        if (!contentRes.ok) throw new Error('Не удалось получить файл');
-        const fileData = await contentRes.json();
-        
-        // Create new file
-        const createRes = await fetch(`https://api.github.com/repos/${repo}/contents/${newPath}`, {
-            method: 'PUT',
-            headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                message: `Rename ${oldPath} to ${newPath}`,
-                content: fileData.content,
-                branch
-            })
-        });
-        if (!createRes.ok) {
-            const err = await createRes.json();
-            throw new Error(err.message || 'Ошибка создания файла');
-        }
-        
-        // Delete old file
-        await deleteFile(token, repo, branch, oldPath, fileData.sha);
-    }
-
-    async function renameFolderRecursive(token, repo, branch, oldPath, newPath) {
-        // Get branch commit
-        const branchRef = await ghFetch(`https://api.github.com/repos/${repo}/git/refs/heads/${branch}`, token);
-        const branchData = await branchRef.json();
-        const commitSha  = branchData.object.sha;
-        
-        const commitInfo = await ghFetch(`https://api.github.com/repos/${repo}/git/commits/${commitSha}`, token);
-        const commitData = await commitInfo.json();
-        
-        // Get full tree
-        const treeRes = await ghFetch(`https://api.github.com/repos/${repo}/git/trees/${commitSha}?recursive=1`, token);
-        const treeData = await treeRes.json();
-        
-        // Rename: replace oldPath prefix with newPath
-        const updatedTree = treeData.tree
-            .filter(item => item.type === 'blob')
-            .map(item => {
-                if (item.path === oldPath || item.path.startsWith(oldPath + '/')) {
-                    return {
-                        path: item.path.replace(oldPath, newPath),
-                        mode: item.mode,
-                        type: item.type,
-                        sha: item.sha
-                    };
-                }
-                return { path: item.path, mode: item.mode, type: item.type, sha: item.sha };
-            });
-        
-        // Create new tree
-        const newTreeRes = await ghPost(`https://api.github.com/repos/${repo}/git/trees`, token, { tree: updatedTree });
-        if (!newTreeRes.ok) throw new Error('Ошибка создания дерева');
-        const newTree = await newTreeRes.json();
-        
-        const newCommitRes = await ghPost(`https://api.github.com/repos/${repo}/git/commits`, token, {
-            message: `Rename folder ${oldPath} to ${newPath}`,
-            tree: newTree.sha,
-            parents: [commitSha]
-        });
-        if (!newCommitRes.ok) throw new Error('Ошибка создания коммита');
-        const newCommit = await newCommitRes.json();
-        
-        const updateRes = await fetch(`https://api.github.com/repos/${repo}/git/refs/heads/${branch}`, {
-            method: 'PATCH',
-            headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
-            body: JSON.stringify({ sha: newCommit.sha })
-        });
-        if (!updateRes.ok) throw new Error('Ошибка обновления ветки');
-    }
-
-    // ── COPY / CUT / PASTE ────────────────────────────────
-    function copyItem(path, sha, type, name) {
-        clipboard = {
-            items: [{ path, sha, type, name }],
-            action: 'copy'
-        };
-        updatePasteButton();
-        toast(`Скопировано: ${name}`, 'success');
-    }
-
-    function cutItem(path, sha, type, name) {
-        clipboard = {
-            items: [{ path, sha, type, name }],
-            action: 'cut'
-        };
-        updatePasteButton();
-        toast(`Вырезано: ${name}`, 'success');
-    }
-
-    function updatePasteButton() {
-        const btn = document.getElementById('pasteBtn');
-        const text = document.getElementById('pasteBtnText');
-        if (clipboard && clipboard.items.length > 0) {
-            btn.style.display = 'flex';
-            const action = clipboard.action === 'cut' ? 'Переместить' : 'Вставить';
-            const count = clipboard.items.length;
-            text.textContent = `${action} (${count})`;
-        } else {
-            btn.style.display = 'none';
-        }
-    }
-
-    async function pasteItems() {
-        if (!clipboard || clipboard.items.length === 0) return;
-        
-        const token = v('token');
-        const repo  = v('repository');
-        const branch = v('branch');
-        const destPath = explorerPath;
-        const { items, action } = clipboard;
-        
-        const btn = document.getElementById('pasteBtn');
-        btn.disabled = true;
-        const origText = btn.innerHTML;
-        btn.innerHTML = '<span class="spin">⟳</span> Обработка...';
-
-        try {
-            for (const item of items) {
-                const newName = item.name;
-                const newPath = destPath ? `${destPath}/${newName}` : newName;
                 
-                // Check if already exists
+                <div class="explorer-content" id="explorerContent">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📁</div>
+                        <p>Connect to browse your repository</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Modal -->
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title" id="modalTitle">Confirm</div>
+            </div>
+            <div class="modal-body" id="modalBody"></div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeModal()">Отмена</button>
+                <button class="btn btn-danger" id="modalConfirm">Подтвердить</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State
+        let selectedFiles = [];
+        let explorerPath = '';
+        let explorerCache = {};
+        let selectedItems = new Set();
+        let clipboard = null;
+        let isUploading = false;
+
+        // Init
+        const savedToken = localStorage.getItem('gh-token') || '';
+        if (savedToken) {
+            document.getElementById('token').value = savedToken;
+            setTimeout(() => connect(), 100);
+        }
+
+        // Repository change
+        document.getElementById('repository').addEventListener('change', async (e) => {
+            const repo = e.target.value;
+            localStorage.setItem('gh-repo', repo);
+            if (repo) {
+                await loadBranches();
+                updateStatus(true);
+                loadExplorer('');
+            }
+        });
+
+        // Connect
+        async function connect() {
+            const token = document.getElementById('token').value.trim();
+            if (!token) {
+                toast('Введите GitHub токен', 'error');
+                return;
+            }
+
+            localStorage.setItem('gh-token', token);
+
+            const btn = document.getElementById('connectBtn');
+            const orig = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<div class="spinner"></div> Подключение...';
+
+            try {
+                const r = await fetch('https://api.github.com/user/repos?per_page=100&sort=updated', {
+                    headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+                });
+
+                if (!r.ok) throw new Error(r.status === 401 ? 'Неверный токен' : 'Ошибка подключения');
+
+                const repos = await r.json();
+                const sel = document.getElementById('repository');
+                sel.innerHTML = '<option value="">Выберите репозиторий...</option>';
+
+                repos.forEach(repo => {
+                    const opt = document.createElement('option');
+                    opt.value = repo.full_name;
+                    opt.textContent = repo.full_name;
+                    sel.appendChild(opt);
+                });
+
+                const saved = localStorage.getItem('gh-repo');
+                if (saved && repos.find(r => r.full_name === saved)) {
+                    sel.value = saved;
+                    await loadBranches();
+                    updateStatus(true);
+                    loadExplorer('');
+                }
+
+                toast(`Подключено! ${repos.length} репозиториев`, 'success');
+            } catch (e) {
+                toast(e.message, 'error');
+                updateStatus(false);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = orig;
+            }
+        }
+
+        async function loadBranches() {
+            const token = document.getElementById('token').value.trim();
+            const repo = document.getElementById('repository').value;
+            if (!repo) return;
+
+            try {
+                const r = await fetch(`https://api.github.com/repos/${repo}/branches`, {
+                    headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+                });
+
+                const branches = await r.json();
+                const sel = document.getElementById('branch');
+                sel.innerHTML = '';
+
+                branches.forEach(b => {
+                    const opt = document.createElement('option');
+                    opt.value = b.name;
+                    opt.textContent = b.name;
+                    sel.appendChild(opt);
+                });
+            } catch (e) {
+                toast('Не удалось загрузить ветки', 'error');
+            }
+        }
+
+        function updateStatus(connected) {
+            const badge = document.getElementById('statusBadge');
+            if (connected) {
+                badge.classList.add('connected');
+                badge.querySelector('span:last-child').textContent = 'Подключено';
+            } else {
+                badge.classList.remove('connected');
+                badge.querySelector('span:last-child').textContent = 'Не подключено';
+            }
+        }
+
+        // Explorer
+        async function loadExplorer(path) {
+            explorerPath = path;
+            selectedItems.clear();
+            updateSelectionUI();
+            updateBreadcrumb(path);
+            updateDestination();
+
+            const token = document.getElementById('token').value.trim();
+            const repo = document.getElementById('repository').value;
+            const branch = document.getElementById('branch').value;
+
+            if (!repo) {
+                document.getElementById('explorerContent').innerHTML = '<div class="empty-state"><div class="empty-state-icon">📁</div><p>Подключитесь для просмотра</p></div>';
+                return;
+            }
+
+            document.getElementById('explorerContent').innerHTML = '<div style="padding: 48px; text-align: center;"><div class="spinner" style="width: 24px; height: 24px;"></div></div>';
+
+            try {
+                const apiPath = path ? `contents/${path}` : 'contents';
+                const r = await fetch(`https://api.github.com/repos/${repo}/${apiPath}?ref=${branch}&_=${Date.now()}`, {
+                    headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+                });
+
+                if (!r.ok) throw new Error('Ошибка загрузки');
+
+                const items = await r.json();
+                const sorted = items.sort((a, b) => {
+                    if (a.type === b.type) return a.name.localeCompare(b.name);
+                    return a.type === 'dir' ? -1 : 1;
+                });
+
+                explorerCache[path] = sorted;
+                renderExplorer(sorted);
+            } catch (e) {
+                document.getElementById('explorerContent').innerHTML = `<div class="empty-state"><div class="empty-state-icon">⚠️</div><p>${e.message}</p></div>`;
+            }
+        }
+
+        function renderExplorer(items) {
+            const container = document.getElementById('explorerContent');
+
+            if (items.length === 0) {
+                container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📂</div><p>Пустая папка</p></div>';
+                return;
+            }
+
+            container.innerHTML = '';
+            items.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'explorer-item';
+                if (selectedItems.has(item.path)) div.classList.add('selected');
+
+                const isDir = item.type === 'dir';
+                const emoji = isDir ? '📁' : getFileEmoji(item.name);
+
+                div.innerHTML = `
+                    <div class="explorer-checkbox ${selectedItems.has(item.path) ? 'checked' : ''}" onclick="toggleSelect('${esc(item.path)}', event)">
+                        ${selectedItems.has(item.path) ? '<svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12" fill="none" stroke="currentColor" stroke-width="3"/></svg>' : ''}
+                    </div>
+                    <div class="explorer-icon ${isDir ? 'folder' : ''}">${emoji}</div>
+                    <div class="explorer-info" ${isDir ? `onclick="loadExplorer('${esc(item.path)}')"` : ''} style="${isDir ? 'cursor:pointer' : ''}">
+                        <div class="explorer-name">${esc(item.name)}</div>
+                        <div class="explorer-meta">${isDir ? 'Папка' : formatSize(item.size)}</div>
+                    </div>
+                    <div class="explorer-item-actions">
+                        <button class="btn btn-secondary btn-icon" onclick="renameItem('${esc(item.path)}', '${esc(item.name)}', '${item.type}', event)" title="Rename">
+                            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                            </svg>
+                        </button>
+                        <button class="btn btn-secondary btn-icon" onclick="deleteItem('${esc(item.path)}', '${item.type}', event)" title="Delete">
+                            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <polyline points="3 6 5 6 21 6"/>
+                                <path d="M19 6l-1 14H6L5 6"/>
+                            </svg>
+                        </button>
+                    </div>
+                `;
+
+                container.appendChild(div);
+            });
+        }
+
+        function updateBreadcrumb(path) {
+            const parts = path ? path.split('/') : [];
+            let html = '<span class="breadcrumb-item" onclick="loadExplorer(\'\');">/</span>';
+
+            parts.forEach((part, i) => {
+                const subPath = parts.slice(0, i + 1).join('/');
+                const isCurrent = i === parts.length - 1;
+                html += '<span class="breadcrumb-sep">/</span>';
+                html += `<span class="breadcrumb-item ${isCurrent ? 'current' : ''}" ${isCurrent ? '' : `onclick="loadExplorer('${esc(subPath)}')"`}>${esc(part)}</span>`;
+            });
+
+            document.getElementById('breadcrumb').innerHTML = html;
+        }
+
+        function updateDestination() {
+            document.getElementById('destinationPath').textContent = explorerPath || 'root';
+        }
+
+        function refreshExplorer() {
+            explorerCache = {};
+            loadExplorer(explorerPath);
+        }
+
+        // Selection
+        function toggleSelect(path, e) {
+            e.stopPropagation();
+            if (selectedItems.has(path)) {
+                selectedItems.delete(path);
+            } else {
+                selectedItems.add(path);
+            }
+            updateSelectionUI();
+            renderExplorer(explorerCache[explorerPath]);
+        }
+
+        function updateSelectionUI() {
+            const bar = document.getElementById('explorerActions');
+            const text = document.getElementById('selectionText');
+            const count = selectedItems.size;
+
+            if (count > 0) {
+                bar.classList.add('active');
+                text.textContent = `Selected: ${count}`;
+            } else {
+                bar.classList.remove('active');
+            }
+        }
+
+        function clearSelection() {
+            selectedItems.clear();
+            updateSelectionUI();
+            renderExplorer(explorerCache[explorerPath]);
+        }
+
+        function getSelected() {
+            const items = explorerCache[explorerPath] || [];
+            return items.filter(i => selectedItems.has(i.path));
+        }
+
+        function copySelected() {
+            const items = getSelected();
+            if (items.length === 0) return;
+            clipboard = { items, action: 'copy' };
+            updatePasteButton();
+            clearSelection();
+            toast(`Скопировано: ${items.length}`, 'success');
+        }
+
+        function cutSelected() {
+            const items = getSelected();
+            if (items.length === 0) return;
+            clipboard = { items, action: 'cut' };
+            updatePasteButton();
+            clearSelection();
+            toast(`Вырезано: ${items.length}`, 'success');
+        }
+
+        function updatePasteButton() {
+            const btn = document.getElementById('pasteBtn');
+            if (clipboard && clipboard.items.length > 0) {
+                btn.style.display = 'flex';
+                btn.title = `Вставить (${clipboard.items.length})`;
+            } else {
+                btn.style.display = 'none';
+            }
+        }
+
+        async function pasteItems() {
+            if (!clipboard || clipboard.items.length === 0) return;
+
+            const token = document.getElementById('token').value.trim();
+            const repo = document.getElementById('repository').value;
+            const branch = document.getElementById('branch').value;
+            const destPath = explorerPath;
+
+            for (const item of clipboard.items) {
+                const newPath = destPath ? `${destPath}/${item.name}` : item.name;
+
                 if (newPath === item.path) {
-                    toast(`${item.name} уже в этой папке`, 'error');
+                    toast(`${item.name} уже здесь`, 'error');
                     continue;
                 }
-                
+
                 if (item.type === 'dir') {
                     await copyFolderRecursive(token, repo, branch, item.path, newPath);
-                    if (action === 'cut') {
+                    if (clipboard.action === 'cut') {
                         await deleteFolderRecursive(token, repo, branch, item.path);
                     }
                 } else {
-                    await copyFile(token, repo, branch, item.path, newPath, item.sha);
-                    if (action === 'cut') {
+                    await copyFileContent(token, repo, branch, item.path, newPath, item.sha);
+                    if (clipboard.action === 'cut') {
                         await deleteFile(token, repo, branch, item.path, item.sha);
                     }
                 }
             }
-            
-            // Clear clipboard if cut
-            if (action === 'cut') {
+
+            if (clipboard.action === 'cut') {
                 clipboard = null;
                 updatePasteButton();
             }
-            
-            // Refresh
+
+            await new Promise(r => setTimeout(r, 800));
             explorerCache = {};
-            await loadExplorerPath(destPath);
-            
-            const verb = action === 'cut' ? 'перемещено' : 'скопировано';
-            toast(`✓ ${items.length} ${pluralFiles(items.length)} ${verb}`, 'success');
-        } catch(e) {
-            toast('Ошибка: ' + e.message, 'error');
-        } finally {
-            btn.disabled = false;
-            btn.innerHTML = origText;
+            await loadExplorer(explorerPath);
+            toast('Вставлено успешно', 'success');
         }
-    }
 
-    async function copyFile(token, repo, branch, sourcePath, destPath, sha) {
-        // Get file content
-        const contentRes = await ghFetch(`https://api.github.com/repos/${repo}/contents/${sourcePath}?ref=${branch}`, token);
-        if (!contentRes.ok) throw new Error('Не удалось получить файл');
-        const fileData = await contentRes.json();
-        
-        // Create new file
-        const createRes = await fetch(`https://api.github.com/repos/${repo}/contents/${destPath}`, {
-            method: 'PUT',
-            headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                message: `Copy ${sourcePath} to ${destPath}`,
-                content: fileData.content,
-                branch
-            })
-        });
-        if (!createRes.ok) {
-            const err = await createRes.json();
-            throw new Error(err.message || 'Ошибка копирования файла');
+        async function copyFileContent(token, repo, branch, oldPath, newPath, sha) {
+            const contentRes = await fetch(`https://api.github.com/repos/${repo}/contents/${oldPath}?ref=${branch}`, {
+                headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+            });
+            const fileData = await contentRes.json();
+
+            await fetch(`https://api.github.com/repos/${repo}/contents/${newPath}`, {
+                method: 'PUT',
+                headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: `Copy ${oldPath} to ${newPath}`, content: fileData.content, branch })
+            });
         }
-    }
 
-    async function copyFolderRecursive(token, repo, branch, sourcePath, destPath) {
-        // Get branch commit
-        const branchRef = await ghFetch(`https://api.github.com/repos/${repo}/git/refs/heads/${branch}`, token);
-        const branchData = await branchRef.json();
-        const commitSha  = branchData.object.sha;
-        
-        const commitInfo = await ghFetch(`https://api.github.com/repos/${repo}/git/commits/${commitSha}`, token);
-        const commitData = await commitInfo.json();
-        
-        // Get full tree
-        const treeRes = await ghFetch(`https://api.github.com/repos/${repo}/git/trees/${commitSha}?recursive=1`, token);
-        const treeData = await treeRes.json();
-        
-        // Copy: duplicate items from sourcePath to destPath
-        const existingTree = treeData.tree
-            .filter(item => item.type === 'blob')
-            .map(item => ({ path: item.path, mode: item.mode, type: item.type, sha: item.sha }));
-        
-        const copiedItems = treeData.tree
-            .filter(item => item.type === 'blob' && (item.path === sourcePath || item.path.startsWith(sourcePath + '/')))
-            .map(item => ({
-                path: item.path.replace(sourcePath, destPath),
-                mode: item.mode,
-                type: item.type,
-                sha: item.sha
-            }));
-        
-        const newTree = [...existingTree, ...copiedItems];
-        
-        // Create new tree
-        const newTreeRes = await ghPost(`https://api.github.com/repos/${repo}/git/trees`, token, { tree: newTree });
-        if (!newTreeRes.ok) throw new Error('Ошибка создания дерева');
-        const newTreeData = await newTreeRes.json();
-        
-        const newCommitRes = await ghPost(`https://api.github.com/repos/${repo}/git/commits`, token, {
-            message: `Copy folder ${sourcePath} to ${destPath}`,
-            tree: newTreeData.sha,
-            parents: [commitSha]
-        });
-        if (!newCommitRes.ok) throw new Error('Ошибка создания коммита');
-        const newCommit = await newCommitRes.json();
-        
-        const updateRes = await fetch(`https://api.github.com/repos/${repo}/git/refs/heads/${branch}`, {
-            method: 'PATCH',
-            headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
-            body: JSON.stringify({ sha: newCommit.sha })
-        });
-        if (!updateRes.ok) throw new Error('Ошибка обновления ветки');
-    }
+        async function copyFolderRecursive(token, repo, branch, oldPath, newPath) {
+            // Implementation for folder copy
+            const branchRef = await fetch(`https://api.github.com/repos/${repo}/git/refs/heads/${branch}`, {
+                headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+            });
+            const branchData = await branchRef.json();
+            const commitSha = branchData.object.sha;
 
-    // Выбрать папку файла как папку назначения
-    function useFileAsDestination(filePath) {
-        const dir = filePath.includes('/') ? filePath.split('/').slice(0, -1).join('/') : '';
-        // Найти элемент в дереве папок и выбрать его
-        const items = document.querySelectorAll('.folder-item');
-        let found = false;
-        items.forEach(el => {
-            if (el.dataset.path === dir) { selectFolder(dir, el); found = true; }
-        });
-        if (!found) { currentPath = dir; }
-        toast(`Папка назначения: ${dir || 'root'}`, 'success');
-        // Прокрутить к секции загрузки
-        document.getElementById('dropZone').scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
+            const treeRes = await fetch(`https://api.github.com/repos/${repo}/git/trees/${commitSha}?recursive=1`, {
+                headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+            });
+            const treeData = await treeRes.json();
 
-    // ── DELETE ────────────────────────────────────────────
-    function openDeleteModal(path, sha, type) {
-        deleteTarget = { path, sha, type };
-        const isDir = type === 'dir';
-        document.getElementById('deleteModalTitle').textContent = isDir ? 'Удалить папку?' : 'Удалить файл?';
-        document.getElementById('deleteModalBody').innerHTML =
-            isDir
-            ? `Папка <code>${path}</code> и всё её содержимое будут удалены навсегда. Это действие нельзя отменить.`
-            : `Файл <code>${path}</code> будет удалён навсегда. Это действие нельзя отменить.`;
-        document.getElementById('deleteModal').classList.add('open');
-    }
+            const copied = treeData.tree.filter(item => item.type === 'blob' && (item.path === oldPath || item.path.startsWith(oldPath + '/')))
+                .map(item => ({
+                    path: item.path.replace(oldPath, newPath),
+                    mode: item.mode,
+                    type: item.type,
+                    sha: item.sha
+                }));
 
-    function closeDeleteModal() {
-        document.getElementById('deleteModal').classList.remove('open');
-        deleteTarget = null;
-    }
+            const existing = treeData.tree.filter(item => item.type === 'blob')
+                .map(item => ({ path: item.path, mode: item.mode, type: item.type, sha: item.sha }));
 
-    // Клик вне модала — закрыть
-    document.getElementById('deleteModal').addEventListener('click', e => {
-        if (e.target === e.currentTarget) closeDeleteModal();
-    });
+            const merged = [...existing, ...copied];
 
-    async function confirmDelete() {
-        if (!deleteTarget) return;
-        const { path, sha, type } = deleteTarget;
-        const token  = v('token');
-        const repo   = v('repository');
-        const branch = v('branch');
-        const btn    = document.getElementById('deleteConfirmBtn');
+            const newTreeRes = await fetch(`https://api.github.com/repos/${repo}/git/trees`, {
+                method: 'POST',
+                headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+                body: JSON.stringify({ tree: merged })
+            });
+            const newTree = await newTreeRes.json();
 
-        btn.disabled = true;
-        btn.textContent = 'Удаление...';
+            const newCommitRes = await fetch(`https://api.github.com/repos/${repo}/git/commits`, {
+                method: 'POST',
+                headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: `Copy ${oldPath} to ${newPath}`, tree: newTree.sha, parents: [commitSha] })
+            });
+            const newCommit = await newCommitRes.json();
 
-        try {
-            if (type === 'dir') {
-                await deleteFolderRecursive(token, repo, branch, path);
-            } else {
-                await deleteFile(token, repo, branch, path, sha);
+            await fetch(`https://api.github.com/repos/${repo}/git/refs/heads/${branch}`, {
+                method: 'PATCH',
+                headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+                body: JSON.stringify({ sha: newCommit.sha })
+            });
+        }
+
+        async function deleteSelected() {
+            const items = getSelected();
+            if (items.length === 0) return;
+
+            openModal(
+                'Удалить выбранное?',
+                `Удалить ${items.length} элемент(ов)? Это действие нельзя отменить.`,
+                async () => {
+                    const token = document.getElementById('token').value.trim();
+                    const repo = document.getElementById('repository').value;
+                    const branch = document.getElementById('branch').value;
+
+                    for (const item of items) {
+                        if (item.type === 'dir') {
+                            await deleteFolderRecursive(token, repo, branch, item.path);
+                        } else {
+                            await deleteFile(token, repo, branch, item.path, item.sha);
+                        }
+                    }
+
+                    clearSelection();
+                    await new Promise(r => setTimeout(r, 800));
+                    explorerCache = {};
+                    await loadExplorer(explorerPath);
+                    toast('Удалено успешно', 'success');
+                }
+            );
+        }
+
+        async function deleteItem(path, type, e) {
+            e.stopPropagation();
+
+            openModal(
+                'Удалить?',
+                `Удалить ${path}? Это действие нельзя отменить.`,
+                async () => {
+                    const token = document.getElementById('token').value.trim();
+                    const repo = document.getElementById('repository').value;
+                    const branch = document.getElementById('branch').value;
+
+                    if (type === 'dir') {
+                        await deleteFolderRecursive(token, repo, branch, path);
+                    } else {
+                        const item = explorerCache[explorerPath].find(i => i.path === path);
+                        await deleteFile(token, repo, branch, path, item.sha);
+                    }
+
+                    await new Promise(r => setTimeout(r, 800));
+                    explorerCache = {};
+                    await loadExplorer(explorerPath);
+                    toast('Удалено успешно', 'success');
+                }
+            );
+        }
+
+        async function renameItem(path, name, type, e) {
+            e.stopPropagation();
+
+            openModal(
+                'Переименовать',
+                `<input type="text" class="form-input" id="renameInput" value="${esc(name)}">`,
+                async () => {
+                    const newName = document.getElementById('renameInput').value.trim();
+                    if (!newName || newName === name) return;
+
+                    const token = document.getElementById('token').value.trim();
+                    const repo = document.getElementById('repository').value;
+                    const branch = document.getElementById('branch').value;
+
+                    const parentPath = path.includes('/') ? path.split('/').slice(0, -1).join('/') : '';
+                    const newPath = parentPath ? `${parentPath}/${newName}` : newName;
+
+                    if (type === 'dir') {
+                        await renameFolderRecursive(token, repo, branch, path, newPath);
+                    } else {
+                        const item = explorerCache[explorerPath].find(i => i.path === path);
+                        await renameFile(token, repo, branch, path, newPath, item.sha);
+                    }
+
+                    await new Promise(r => setTimeout(r, 800));
+                    explorerCache = {};
+                    await loadExplorer(explorerPath);
+                    toast('Переименовано успешно', 'success');
+                }
+            );
+        }
+
+        function newFolder() {
+            openModal(
+                'Новая папка',
+                `<input type="text" class="form-input" id="folderInput" placeholder="название-папки">`,
+                async () => {
+                    const name = document.getElementById('folderInput').value.trim();
+                    if (!name) return;
+
+                    const token = document.getElementById('token').value.trim();
+                    const repo = document.getElementById('repository').value;
+                    const branch = document.getElementById('branch').value;
+
+                    const folderPath = explorerPath ? `${explorerPath}/${name}` : name;
+                    const filePath = `${folderPath}/.gitkeep`;
+
+                    await fetch(`https://api.github.com/repos/${repo}/contents/${filePath}`, {
+                        method: 'PUT',
+                        headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ message: `Create ${folderPath}`, content: btoa(''), branch })
+                    });
+
+                    await new Promise(r => setTimeout(r, 800));
+                    explorerCache = {};
+                    await loadExplorer(explorerPath);
+                    toast('Папка создана', 'success');
+                }
+            );
+        }
+
+        // File operations
+        async function deleteFile(token, repo, branch, path, sha) {
+            await fetch(`https://api.github.com/repos/${repo}/contents/${path}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: `Delete ${path}`, sha, branch })
+            });
+        }
+
+        async function deleteFolderRecursive(token, repo, branch, path) {
+            const branchRef = await fetch(`https://api.github.com/repos/${repo}/git/refs/heads/${branch}`, {
+                headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+            });
+            const branchData = await branchRef.json();
+            const commitSha = branchData.object.sha;
+
+            const commitInfo = await fetch(`https://api.github.com/repos/${repo}/git/commits/${commitSha}`, {
+                headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+            });
+            const commitData = await commitInfo.json();
+
+            const treeRes = await fetch(`https://api.github.com/repos/${repo}/git/trees/${commitSha}?recursive=1`, {
+                headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+            });
+            const treeData = await treeRes.json();
+
+            const kept = treeData.tree.filter(item => item.type === 'blob' && !item.path.startsWith(path + '/') && item.path !== path)
+                .map(item => ({ path: item.path, mode: item.mode, type: item.type, sha: item.sha }));
+
+            const newTreeRes = await fetch(`https://api.github.com/repos/${repo}/git/trees`, {
+                method: 'POST',
+                headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+                body: JSON.stringify({ tree: kept })
+            });
+            const newTree = await newTreeRes.json();
+
+            const newCommitRes = await fetch(`https://api.github.com/repos/${repo}/git/commits`, {
+                method: 'POST',
+                headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: `Delete ${path}`, tree: newTree.sha, parents: [commitSha] })
+            });
+            const newCommit = await newCommitRes.json();
+
+            await fetch(`https://api.github.com/repos/${repo}/git/refs/heads/${branch}`, {
+                method: 'PATCH',
+                headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+                body: JSON.stringify({ sha: newCommit.sha })
+            });
+        }
+
+        async function renameFile(token, repo, branch, oldPath, newPath, sha) {
+            const contentRes = await fetch(`https://api.github.com/repos/${repo}/contents/${oldPath}?ref=${branch}`, {
+                headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+            });
+            const fileData = await contentRes.json();
+
+            await fetch(`https://api.github.com/repos/${repo}/contents/${newPath}`, {
+                method: 'PUT',
+                headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: `Rename ${oldPath} to ${newPath}`, content: fileData.content, branch })
+            });
+
+            await deleteFile(token, repo, branch, oldPath, fileData.sha);
+        }
+
+        async function renameFolderRecursive(token, repo, branch, oldPath, newPath) {
+            const branchRef = await fetch(`https://api.github.com/repos/${repo}/git/refs/heads/${branch}`, {
+                headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+            });
+            const branchData = await branchRef.json();
+            const commitSha = branchData.object.sha;
+
+            const commitInfo = await fetch(`https://api.github.com/repos/${repo}/git/commits/${commitSha}`, {
+                headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+            });
+            const commitData = await commitInfo.json();
+
+            const treeRes = await fetch(`https://api.github.com/repos/${repo}/git/trees/${commitSha}?recursive=1`, {
+                headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+            });
+            const treeData = await treeRes.json();
+
+            const updatedTree = treeData.tree.filter(item => item.type === 'blob').map(item => {
+                if (item.path === oldPath || item.path.startsWith(oldPath + '/')) {
+                    return { path: item.path.replace(oldPath, newPath), mode: item.mode, type: item.type, sha: item.sha };
+                }
+                return { path: item.path, mode: item.mode, type: item.type, sha: item.sha };
+            });
+
+            const newTreeRes = await fetch(`https://api.github.com/repos/${repo}/git/trees`, {
+                method: 'POST',
+                headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+                body: JSON.stringify({ tree: updatedTree })
+            });
+            const newTree = await newTreeRes.json();
+
+            const newCommitRes = await fetch(`https://api.github.com/repos/${repo}/git/commits`, {
+                method: 'POST',
+                headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: `Rename ${oldPath} to ${newPath}`, tree: newTree.sha, parents: [commitSha] })
+            });
+            const newCommit = await newCommitRes.json();
+
+            await fetch(`https://api.github.com/repos/${repo}/git/refs/heads/${branch}`, {
+                method: 'PATCH',
+                headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+                body: JSON.stringify({ sha: newCommit.sha })
+            });
+        }
+
+        // File upload
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+
+        dropZone.onclick = () => fileInput.click();
+        dropZone.ondragover = (e) => { e.preventDefault(); dropZone.classList.add('dragover'); };
+        dropZone.ondragleave = () => dropZone.classList.remove('dragover');
+        dropZone.ondrop = (e) => { e.preventDefault(); dropZone.classList.remove('dragover'); handleFiles(e.dataTransfer.files); };
+        fileInput.onchange = (e) => { handleFiles(e.target.files); fileInput.value = ''; };
+
+        function handleFiles(files) {
+            Array.from(files).forEach(file => {
+                selectedFiles.push({
+                    id: Date.now() + Math.random(),
+                    file,
+                    name: file.name,
+                    path: explorerPath ? `${explorerPath}/${file.name}` : file.name,
+                    size: file.size
+                });
+            });
+            renderFileList();
+        }
+
+        function renderFileList() {
+            const container = document.getElementById('fileList');
+            const count = document.getElementById('fileCount');
+
+            if (selectedFiles.length === 0) {
+                container.innerHTML = '';
+                count.textContent = '';
+                return;
             }
-            // Очистить кэш и обновить проводник
-            explorerCache = {};
-            closeDeleteModal();
-            loadExplorerPath(explorerPath);
-            toast(`«${path}» удалено`, 'success');
-        } catch(e) {
-            toast('Ошибка удаления: ' + e.message, 'error');
-        } finally {
-            btn.disabled = false;
-            btn.textContent = 'Удалить';
+
+            count.textContent = `${selectedFiles.length} файл(ов)`;
+            container.innerHTML = '';
+
+            selectedFiles.forEach(file => {
+                const div = document.createElement('div');
+                div.className = 'file-card';
+
+                const preview = file.file.type.startsWith('image/')
+                    ? `<img src="${URL.createObjectURL(file.file)}" alt="">`
+                    : getFileEmoji(file.name);
+
+                div.innerHTML = `
+                    <div class="file-preview">${preview}</div>
+                    <div class="file-info">
+                        <div class="file-name">${esc(file.name)}</div>
+                        <div class="file-path">${esc(file.path)}</div>
+                    </div>
+                    <button class="btn btn-secondary btn-icon" onclick="renameUploadFile(${file.id})" title="Переименовать">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                        </svg>
+                    </button>
+                    <button class="btn btn-secondary btn-icon" onclick="removeFile(${file.id})" title="Удалить">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                        </svg>
+                    </button>
+                `;
+
+                container.appendChild(div);
+            });
         }
-    }
 
-    async function deleteFile(token, repo, branch, path, sha) {
-        // Если sha не известен — запросить
-        let fileSha = sha;
-        if (!fileSha) {
-            const r = await ghFetch(`https://api.github.com/repos/${repo}/contents/${path}?ref=${branch}`, token);
-            if (!r.ok) throw new Error('Не удалось получить SHA файла');
-            fileSha = (await r.json()).sha;
+        function renameUploadFile(id) {
+            const file = selectedFiles.find(f => f.id === id);
+            if (!file) return;
+
+            openModal(
+                'Переименовать файл',
+                `<input type="text" class="form-input" id="renameUploadInput" value="${esc(file.name)}">`,
+                () => {
+                    const newName = document.getElementById('renameUploadInput').value.trim();
+                    if (!newName || newName === file.name) return;
+
+                    file.name = newName;
+                    file.path = explorerPath ? `${explorerPath}/${newName}` : newName;
+                    renderFileList();
+                    toast('Файл переименован', 'success');
+                }
+            );
         }
-        const r = await fetch(`https://api.github.com/repos/${repo}/contents/${path}`, {
-            method: 'DELETE',
-            headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message: `Delete ${path}`, sha: fileSha, branch })
-        });
-        if (!r.ok) {
-            const err = await r.json();
-            throw new Error(err.message || 'Ошибка удаления');
+
+        function removeFile(id) {
+            selectedFiles = selectedFiles.filter(f => f.id !== id);
+            renderFileList();
         }
-    }
 
-    async function deleteFolderRecursive(token, repo, branch, path) {
-        // Получить все файлы в папке рекурсивно через tree API
-        const branchRef = await ghFetch(`https://api.github.com/repos/${repo}/git/refs/heads/${branch}`, token);
-        const branchData = await branchRef.json();
-        const commitSha  = branchData.object.sha;
+        // Upload
+        document.getElementById('uploadBtn').onclick = async () => {
+            if (isUploading || selectedFiles.length === 0) return;
 
-        const commitInfo = await ghFetch(`https://api.github.com/repos/${repo}/git/commits/${commitSha}`, token);
-        const commitData = await commitInfo.json();
-        const baseTree   = commitData.tree.sha;
+            const token = document.getElementById('token').value.trim();
+            const repo = document.getElementById('repository').value;
+            const branch = document.getElementById('branch').value;
 
-        // Получить всё дерево
-        const treeRes  = await ghFetch(`https://api.github.com/repos/${repo}/git/trees/${commitSha}?recursive=1`, token);
-        const treeData = await treeRes.json();
+            if (!repo) {
+                toast('Сначала выберите репозиторий', 'error');
+                return;
+            }
 
-        // Отфильтровать: всё что НЕ внутри удаляемой папки
-        const kept = treeData.tree
-            .filter(item => item.type === 'blob' && !item.path.startsWith(path + '/') && item.path !== path)
-            .map(item => ({ path: item.path, mode: item.mode, type: item.type, sha: item.sha }));
+            isUploading = true;
+            document.getElementById('uploadBtn').disabled = true;
+            document.getElementById('uploadProgress').style.display = 'block';
 
-        // Создать новое дерево без удалённой папки
-        const newTreeRes = await ghPost(`https://api.github.com/repos/${repo}/git/trees`, token, { tree: kept });
-        if (!newTreeRes.ok) throw new Error('Ошибка создания дерева');
-        const newTree = await newTreeRes.json();
+            try {
+                const r = await fetch(`https://api.github.com/repos/${repo}/git/refs/heads/${branch}`, {
+                    headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+                });
 
-        const newCommitRes = await ghPost(`https://api.github.com/repos/${repo}/git/commits`, token, {
-            message: `Delete folder ${path}`,
-            tree: newTree.sha,
-            parents: [commitSha]
-        });
-        if (!newCommitRes.ok) throw new Error('Ошибка создания коммита');
-        const newCommit = await newCommitRes.json();
+                const refData = await r.json();
+                const commitSha = refData.object.sha;
 
-        const updateRes = await fetch(`https://api.github.com/repos/${repo}/git/refs/heads/${branch}`, {
-            method: 'PATCH',
-            headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
-            body: JSON.stringify({ sha: newCommit.sha })
-        });
-        if (!updateRes.ok) throw new Error('Ошибка обновления ветки');
-    }
+                const commitRes = await fetch(`https://api.github.com/repos/${repo}/git/commits/${commitSha}`, {
+                    headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+                });
 
-    // ── HELPERS ───────────────────────────────────────────
-    function v(id) { return document.getElementById(id).value.trim(); }
-    function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+                const commitData = await commitRes.json();
+                const baseTree = commitData.tree.sha;
 
-    function ghFetch(url, token) {
-        return fetch(url, { headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' } });
-    }
-    function ghPost(url, token, body) {
-        return fetch(url, { method: 'POST', headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-    }
+                const blobs = [];
 
-    function fileToBase64(file) {
-        return new Promise((res, rej) => {
-            const r = new FileReader();
-            r.readAsDataURL(file);
-            r.onload = () => res(r.result.split(',')[1]);
-            r.onerror = rej;
-        });
-    }
+                for (let i = 0; i < selectedFiles.length; i++) {
+                    const file = selectedFiles[i];
+                    const pct = Math.round((i / selectedFiles.length) * 100);
 
-    function formatSize(bytes) {
-        if (!bytes) return '';
-        if (bytes < 1024) return bytes + ' B';
-        if (bytes < 1024*1024) return (bytes/1024).toFixed(1) + ' KB';
-        return (bytes/1024/1024).toFixed(1) + ' MB';
-    }
+                    document.getElementById('progressFill').style.width = pct + '%';
+                    document.getElementById('progressPct').textContent = pct + '%';
+                    document.getElementById('progressLabel').textContent = `Загрузка ${file.name}...`;
 
-    function fileEmoji(name) {
-        const ext = name.split('.').pop().toLowerCase();
-        const map = { jpg:'🖼', jpeg:'🖼', png:'🖼', gif:'🖼', svg:'🎨', webp:'🖼', mp4:'🎬', mov:'🎬', mp3:'🎵', wav:'🎵', pdf:'📄', zip:'📦', tar:'📦', gz:'📦', json:'📋', js:'📜', ts:'📜', jsx:'📜', tsx:'📜', html:'🌐', css:'🎨', md:'📝', txt:'📝', py:'🐍', sh:'⚙️', yml:'⚙️', yaml:'⚙️' };
-        return map[ext] || '📄';
-    }
+                    const base64 = await fileToBase64(file.file);
 
-    function pluralFiles(n) {
-        if (n % 10 === 1 && n % 100 !== 11) return 'файл';
-        if (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20)) return 'файла';
-        return 'файлов';
-    }
+                    const blobRes = await fetch(`https://api.github.com/repos/${repo}/git/blobs`, {
+                        method: 'POST',
+                        headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ content: base64, encoding: 'base64' })
+                    });
 
-    function badgeHtml(status) {
-        const map = {
-            pending: `<span class="badge badge-pending">ожидание</span>`,
-            uploading: `<span class="badge badge-uploading"><span class="spin">⟳</span> загрузка</span>`,
-            success: `<span class="badge badge-success">✓ готово</span>`,
-            error: `<span class="badge badge-error">✗ ошибка</span>`
+                    const blob = await blobRes.json();
+                    blobs.push({ path: file.path, mode: '100644', type: 'blob', sha: blob.sha });
+                }
+
+                const treeRes = await fetch(`https://api.github.com/repos/${repo}/git/trees`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ base_tree: baseTree, tree: blobs })
+                });
+
+                const tree = await treeRes.json();
+
+                const newCommitRes = await fetch(`https://api.github.com/repos/${repo}/git/commits`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: `Upload ${selectedFiles.length} file(s)`, tree: tree.sha, parents: [commitSha] })
+                });
+
+                const newCommit = await newCommitRes.json();
+
+                await fetch(`https://api.github.com/repos/${repo}/git/refs/heads/${branch}`, {
+                    method: 'PATCH',
+                    headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ sha: newCommit.sha })
+                });
+
+                toast(`Загружено ${selectedFiles.length} файл(ов)`, 'success');
+                selectedFiles = [];
+                renderFileList();
+
+                await new Promise(r => setTimeout(r, 1000));
+                refreshExplorer();
+            } catch (e) {
+                toast('Ошибка загрузки: ' + e.message, 'error');
+            } finally {
+                isUploading = false;
+                document.getElementById('uploadBtn').disabled = false;
+                setTimeout(() => {
+                    document.getElementById('uploadProgress').style.display = 'none';
+                }, 1500);
+            }
         };
-        return map[status] || '';
-    }
 
-    function toast(msg, type = 'success') {
-        const c = document.getElementById('toastContainer');
-        const t = document.createElement('div');
-        t.className = `toast toast-${type}`;
-        t.innerHTML = `
-            <div class="toast-icon">${type === 'success' ? '✓' : '✕'}</div>
-            <div class="toast-text">${msg}</div>`;
-        c.appendChild(t);
-        setTimeout(() => {
-            t.classList.add('hiding');
-            setTimeout(() => t.remove(), 250);
-        }, 3500);
-    }
-</script>
+        // Utilities
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result.split(',')[1]);
+                reader.onerror = reject;
+            });
+        }
+
+        function formatSize(bytes) {
+            if (!bytes) return '';
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / 1024 / 1024).toFixed(1) + ' MB';
+        }
+
+        function getFileEmoji(name) {
+            const ext = name.split('.').pop().toLowerCase();
+            const map = {
+                jpg: '🖼️', jpeg: '🖼️', png: '🖼️', gif: '🖼️', svg: '🎨', webp: '🖼️',
+                mp4: '🎬', mov: '🎬', mp3: '🎵', wav: '🎵',
+                pdf: '📄', zip: '📦', tar: '📦', gz: '📦',
+                json: '📋', js: '📜', ts: '📜', jsx: '📜', tsx: '📜',
+                html: '🌐', css: '🎨', md: '📝', txt: '📝',
+                py: '🐍', sh: '⚙️', yml: '⚙️', yaml: '⚙️'
+            };
+            return map[ext] || '📄';
+        }
+
+        function esc(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        function toast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+
+            const icon = type === 'success' ? '✓' : '⚠️';
+
+            toast.innerHTML = `
+                <div class="toast-icon">${icon}</div>
+                <div class="toast-text">${message}</div>
+            `;
+
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        // Modal
+        let modalCallback = null;
+
+        function openModal(title, body, onConfirm) {
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalBody').innerHTML = body;
+            modalCallback = onConfirm;
+            document.getElementById('modal').classList.add('open');
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.remove('open');
+            modalCallback = null;
+        }
+
+        document.getElementById('modalConfirm').onclick = async () => {
+            if (modalCallback) {
+                await modalCallback();
+                closeModal();
+            }
+        };
+
+        document.getElementById('modal').onclick = (e) => {
+            if (e.target.id === 'modal') closeModal();
+        };
+    </script>
 </body>
 </html>
