@@ -391,13 +391,20 @@
         
         /* Explorer */
         .explorer {
-            height: 600px;
             display: flex;
             flex-direction: column;
             background: var(--bg-deep);
             border: 1px solid var(--border-dim);
             border-radius: 12px;
             overflow: hidden;
+            min-height: 500px;
+        }
+        
+        @media (min-width: 1024px) {
+            .explorer {
+                height: calc(100vh - 200px);
+                max-height: 900px;
+            }
         }
         
         .explorer-toolbar {
@@ -462,13 +469,13 @@
         }
         
         .explorer-actions-bar {
-            padding: 12px 16px;
+            padding: 8px 16px;
             background: rgba(139, 233, 253, 0.05);
             border-bottom: 1px solid var(--accent-cyan);
             display: none;
             align-items: center;
-            gap: 12px;
-            flex-wrap: wrap;
+            gap: 8px;
+            flex-wrap: nowrap;
         }
         
         .explorer-actions-bar.active {
@@ -503,8 +510,8 @@
         .explorer-item {
             display: flex;
             align-items: center;
-            gap: 16px;
-            padding: 16px;
+            gap: 12px;
+            padding: 12px 16px;
             border-bottom: 1px solid var(--border-dim);
             transition: all 0.2s;
             cursor: pointer;
@@ -522,8 +529,8 @@
         }
         
         .explorer-checkbox {
-            width: 24px;
-            height: 24px;
+            width: 22px;
+            height: 22px;
             border: 2px solid var(--border-bright);
             border-radius: 4px;
             display: flex;
@@ -541,15 +548,15 @@
         }
         
         .explorer-icon {
-            width: 48px;
-            height: 48px;
+            width: 40px;
+            height: 40px;
             border-radius: 8px;
             background: var(--bg-surface);
             border: 1px solid var(--border-dim);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 24px;
+            font-size: 20px;
             flex-shrink: 0;
         }
         
@@ -872,6 +879,15 @@
             animation: modalZoom 0.3s ease;
         }
         
+        .modal-content.large {
+            max-width: 90vw;
+            max-height: 90vh;
+            padding: 0;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
         @keyframes modalZoom {
             from {
                 opacity: 0;
@@ -885,6 +901,15 @@
         
         .modal-header {
             margin-bottom: 20px;
+        }
+        
+        .modal-content.large .modal-header {
+            margin: 0;
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-dim);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
         
         .modal-title {
@@ -907,10 +932,130 @@
             margin-top: 12px;
         }
         
+        .modal-content.large .modal-body {
+            flex: 1;
+            margin: 0;
+            padding: 0;
+            overflow: auto;
+            background: var(--bg-deep);
+        }
+        
         .modal-actions {
             display: flex;
             gap: 12px;
             justify-content: flex-end;
+        }
+        
+        .modal-content.large .modal-actions {
+            padding: 16px 24px;
+            border-top: 1px solid var(--border-dim);
+        }
+        
+        /* File preview */
+        .file-preview-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+        
+        .file-preview-container img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            border-radius: 8px;
+        }
+        
+        .file-preview-container iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: white;
+            border-radius: 8px;
+        }
+        
+        .file-preview-container pre {
+            max-width: 100%;
+            max-height: 100%;
+            overflow: auto;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-dim);
+            border-radius: 8px;
+            padding: 20px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            color: var(--text-primary);
+        }
+        
+        .file-preview-loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+            color: var(--text-secondary);
+        }
+        
+        /* Context menu */
+        .context-menu {
+            position: fixed;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-bright);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-lg);
+            min-width: 180px;
+            z-index: 10000;
+            padding: 8px 0;
+            display: none;
+        }
+        
+        .context-menu.open {
+            display: block;
+            animation: menuSlide 0.2s ease;
+        }
+        
+        @keyframes menuSlide {
+            from {
+                opacity: 0;
+                transform: translateY(-8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .context-menu-item {
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            font-size: 14px;
+            color: var(--text-primary);
+            transition: all 0.2s;
+        }
+        
+        .context-menu-item:hover {
+            background: var(--bg-surface);
+        }
+        
+        .context-menu-item.danger {
+            color: var(--accent-red);
+        }
+        
+        .context-menu-item.danger:hover {
+            background: rgba(248, 81, 73, 0.1);
+        }
+        
+        .context-menu-icon {
+            width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         
         /* Spinner */
@@ -965,7 +1110,8 @@
             }
             
             .explorer {
-                height: 400px;
+                min-height: 70vh;
+                max-height: none;
             }
             
             .toast {
@@ -1019,6 +1165,21 @@
                             <select class="form-select" id="repository">
                                 <option value="">Сначала подключитесь...</option>
                             </select>
+                            <div style="display: flex; gap: 8px; margin-top: 8px;">
+                                <button class="btn btn-secondary" onclick="createRepository()" style="flex: 1;">
+                                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                                    </svg>
+                                    Создать
+                                </button>
+                                <button class="btn btn-danger" onclick="deleteRepository()" style="flex: 1;">
+                                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <polyline points="3 6 5 6 21 6"/>
+                                        <path d="M19 6l-1 14H6L5 6"/>
+                                    </svg>
+                                    Удалить
+                                </button>
+                            </div>
                         </div>
                         <div class="form-group" style="margin-bottom: 0;">
                             <label class="form-label">Ветка</label>
@@ -1141,6 +1302,11 @@
 
     <!-- Toast Container -->
     <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Context Menu -->
+    <div class="context-menu" id="contextMenu">
+        <!-- Menu items populated dynamically -->
+    </div>
 
     <!-- Modal -->
     <div class="modal" id="modal">
@@ -1332,21 +1498,16 @@
                         ${selectedItems.has(item.path) ? '<svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12" fill="none" stroke="currentColor" stroke-width="3"/></svg>' : ''}
                     </div>
                     <div class="explorer-icon ${isDir ? 'folder' : ''}">${emoji}</div>
-                    <div class="explorer-info" ${isDir ? `onclick="loadExplorer('${esc(item.path)}')"` : ''} style="${isDir ? 'cursor:pointer' : ''}">
+                    <div class="explorer-info" ${isDir ? `onclick="closeContextMenu(); loadExplorer('${esc(item.path)}')"` : ''} style="${isDir ? 'cursor:pointer' : ''}">
                         <div class="explorer-name">${esc(item.name)}</div>
                         <div class="explorer-meta">${isDir ? 'Папка' : formatSize(item.size)}</div>
                     </div>
                     <div class="explorer-item-actions">
-                        <button class="btn btn-secondary btn-icon" onclick="renameItem('${esc(item.path)}', '${esc(item.name)}', '${item.type}', event)" title="Rename">
-                            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                            </svg>
-                        </button>
-                        <button class="btn btn-secondary btn-icon" onclick="deleteItem('${esc(item.path)}', '${item.type}', event)" title="Delete">
-                            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <polyline points="3 6 5 6 21 6"/>
-                                <path d="M19 6l-1 14H6L5 6"/>
+                        <button class="btn btn-secondary btn-icon" onclick="showItemMenu('${esc(item.path)}', '${esc(item.name)}', '${item.type}', event)" title="Меню">
+                            <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+                                <circle cx="12" cy="5" r="2"/>
+                                <circle cx="12" cy="12" r="2"/>
+                                <circle cx="12" cy="19" r="2"/>
                             </svg>
                         </button>
                     </div>
@@ -1358,7 +1519,20 @@
 
         function updateBreadcrumb(path) {
             const parts = path ? path.split('/') : [];
-            let html = '<span class="breadcrumb-item" onclick="loadExplorer(\'\');">/</span>';
+            let html = '';
+            
+            // Add back button if not at root
+            if (path) {
+                const parentPath = parts.length > 1 ? parts.slice(0, -1).join('/') : '';
+                html += `<button class="btn btn-secondary btn-icon" onclick="loadExplorer('${esc(parentPath)}')" title="Назад" style="margin-right: 8px;">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <line x1="19" y1="12" x2="5" y2="12"/>
+                        <polyline points="12 19 5 12 12 5"/>
+                    </svg>
+                </button>`;
+            }
+            
+            html += '<span class="breadcrumb-item" onclick="loadExplorer(\'\');">/</span>';
 
             parts.forEach((part, i) => {
                 const subPath = parts.slice(0, i + 1).join('/');
@@ -1382,6 +1556,7 @@
         // Selection
         function toggleSelect(path, e) {
             e.stopPropagation();
+            closeContextMenu(); // Close any open context menu
             if (selectedItems.has(path)) {
                 selectedItems.delete(path);
             } else {
@@ -1543,6 +1718,138 @@
             });
         }
 
+        // Repository management
+        function createRepository() {
+            const token = document.getElementById('token').value.trim();
+            if (!token) {
+                toast('Сначала подключитесь', 'error');
+                return;
+            }
+
+            openModal(
+                'Создать репозиторий',
+                `
+                <div class="form-group">
+                    <label class="form-label">Название</label>
+                    <input type="text" class="form-input" id="repoName" placeholder="my-repository">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Описание (необязательно)</label>
+                    <input type="text" class="form-input" id="repoDescription" placeholder="Описание репозитория">
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" id="repoPrivate" style="width: 18px; height: 18px;">
+                        <span style="font-size: 13px; color: var(--text-secondary);">Приватный репозиторий</span>
+                    </label>
+                </div>
+                `,
+                async () => {
+                    const name = document.getElementById('repoName').value.trim();
+                    if (!name) {
+                        toast('Введите название', 'error');
+                        return;
+                    }
+
+                    const description = document.getElementById('repoDescription').value.trim();
+                    const isPrivate = document.getElementById('repoPrivate').checked;
+
+                    try {
+                        const r = await fetch('https://api.github.com/user/repos', {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': `token ${token}`,
+                                'Accept': 'application/vnd.github.v3+json',
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                name,
+                                description,
+                                private: isPrivate,
+                                auto_init: true
+                            })
+                        });
+
+                        if (!r.ok) {
+                            const err = await r.json();
+                            throw new Error(err.message || 'Ошибка создания');
+                        }
+
+                        const repo = await r.json();
+                        toast(`Репозиторий "${name}" создан`, 'success');
+
+                        // Reload repositories
+                        await connect();
+
+                        // Select new repo
+                        document.getElementById('repository').value = repo.full_name;
+                        await loadBranches();
+                        updateStatus(true);
+                        loadExplorer('');
+                    } catch (e) {
+                        toast('Ошибка: ' + e.message, 'error');
+                    }
+                }
+            );
+        }
+
+        function deleteRepository() {
+            const token = document.getElementById('token').value.trim();
+            const repo = document.getElementById('repository').value;
+
+            if (!repo) {
+                toast('Выберите репозиторий', 'error');
+                return;
+            }
+
+            openModal(
+                'Удалить репозиторий?',
+                `
+                <p style="margin-bottom: 16px;">Удалить <strong>${repo}</strong>?</p>
+                <p style="color: var(--accent-red); font-size: 13px;">
+                    ⚠️ Это действие необратимо! Все файлы, история коммитов, issues и pull requests будут удалены навсегда.
+                </p>
+                <p style="margin-top: 16px; font-size: 13px; color: var(--text-secondary);">
+                    Для подтверждения введите название репозитория:
+                </p>
+                <input type="text" class="form-input" id="confirmRepoName" placeholder="${repo.split('/')[1]}" style="margin-top: 8px;">
+                `,
+                async () => {
+                    const confirmName = document.getElementById('confirmRepoName').value.trim();
+                    const repoName = repo.split('/')[1];
+
+                    if (confirmName !== repoName) {
+                        toast('Название не совпадает', 'error');
+                        return;
+                    }
+
+                    try {
+                        const r = await fetch(`https://api.github.com/repos/${repo}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'Authorization': `token ${token}`,
+                                'Accept': 'application/vnd.github.v3+json'
+                            }
+                        });
+
+                        if (!r.ok) {
+                            throw new Error('Ошибка удаления');
+                        }
+
+                        toast(`Репозиторий "${repoName}" удалён`, 'success');
+
+                        // Reload repositories
+                        await connect();
+                        updateStatus(false);
+                        loadExplorer('');
+                    } catch (e) {
+                        toast('Ошибка: ' + e.message, 'error');
+                    }
+                }
+            );
+        }
+
+        // Selection and actions
         async function deleteSelected() {
             const items = getSelected();
             if (items.length === 0) return;
@@ -1628,6 +1935,302 @@
                     toast('Переименовано успешно', 'success');
                 }
             );
+        }
+
+        // Context menu
+        function showItemMenu(path, name, type, e) {
+            e.stopPropagation();
+            
+            const menu = document.getElementById('contextMenu');
+            const isDir = type === 'dir';
+            
+            let menuHTML = '';
+            
+            if (!isDir) {
+                menuHTML += `
+                    <div class="context-menu-item" onclick="viewFile('${esc(path)}', '${esc(name)}', event); closeContextMenu();">
+                        <div class="context-menu-icon">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                <circle cx="12" cy="12" r="3"/>
+                            </svg>
+                        </div>
+                        Просмотр
+                    </div>
+                    <div class="context-menu-item" onclick="downloadFile('${esc(path)}', '${esc(name)}', event); closeContextMenu();">
+                        <div class="context-menu-icon">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                <polyline points="7 10 12 15 17 10"/>
+                                <line x1="12" y1="15" x2="12" y2="3"/>
+                            </svg>
+                        </div>
+                        Скачать
+                    </div>
+                    <div class="context-menu-item" onclick="shareFile('${esc(path)}', '${esc(name)}', event); closeContextMenu();">
+                        <div class="context-menu-icon">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <circle cx="18" cy="5" r="3"/>
+                                <circle cx="6" cy="12" r="3"/>
+                                <circle cx="18" cy="19" r="3"/>
+                                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+                                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+                            </svg>
+                        </div>
+                        Поделиться
+                    </div>
+                `;
+            }
+            
+            menuHTML += `
+                <div class="context-menu-item" onclick="renameItem('${esc(path)}', '${esc(name)}', '${type}', event); closeContextMenu();">
+                    <div class="context-menu-icon">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                        </svg>
+                    </div>
+                    Переименовать
+                </div>
+                <div class="context-menu-item danger" onclick="deleteItem('${esc(path)}', '${type}', event); closeContextMenu();">
+                    <div class="context-menu-icon">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <polyline points="3 6 5 6 21 6"/>
+                            <path d="M19 6l-1 14H6L5 6"/>
+                        </svg>
+                    </div>
+                    Удалить
+                </div>
+            `;
+            
+            menu.innerHTML = menuHTML;
+            
+            // Position menu
+            const rect = e.target.closest('.btn').getBoundingClientRect();
+            menu.style.top = rect.bottom + 4 + 'px';
+            menu.style.left = Math.min(rect.left, window.innerWidth - 200) + 'px';
+            
+            menu.classList.add('open');
+        }
+        
+        function closeContextMenu() {
+            document.getElementById('contextMenu').classList.remove('open');
+        }
+        
+        // Close menu on outside click
+        document.addEventListener('click', (e) => {
+            const menu = document.getElementById('contextMenu');
+            if (!menu.contains(e.target) && !e.target.closest('.explorer-item-actions')) {
+                closeContextMenu();
+            }
+        });
+
+        // File viewer
+        let currentViewFile = null;
+
+        async function downloadFile(path, name, e) {
+            e.stopPropagation();
+
+            const token = document.getElementById('token').value.trim();
+            const repo = document.getElementById('repository').value;
+            const branch = document.getElementById('branch').value;
+
+            try {
+                const r = await fetch(`https://api.github.com/repos/${repo}/contents/${path}?ref=${branch}`, {
+                    headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+                });
+
+                if (!r.ok) throw new Error('Не удалось загрузить файл');
+
+                const fileData = await r.json();
+                const blob = base64ToBlob(fileData.content, 'application/octet-stream');
+                const url = URL.createObjectURL(blob);
+                
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = name;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                toast(`Файл "${name}" скачан`, 'success');
+            } catch (e) {
+                toast('Ошибка скачивания: ' + e.message, 'error');
+            }
+        }
+
+        async function shareFile(path, name, e) {
+            e.stopPropagation();
+
+            const token = document.getElementById('token').value.trim();
+            const repo = document.getElementById('repository').value;
+            const branch = document.getElementById('branch').value;
+
+            try {
+                const url = `https://github.com/${repo}/blob/${branch}/${path}`;
+
+                // Check if Web Share API is available
+                if (!navigator.share) {
+                    // Fallback: copy link to clipboard
+                    await navigator.clipboard.writeText(url);
+                    toast('Ссылка скопирована в буфер обмена', 'success');
+                    return;
+                }
+
+                // Try to share the file itself if it's an image or small file
+                const r = await fetch(`https://api.github.com/repos/${repo}/contents/${path}?ref=${branch}`, {
+                    headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+                });
+
+                if (r.ok) {
+                    const fileData = await r.json();
+                    const ext = name.split('.').pop().toLowerCase();
+                    const isImage = ['png', 'jpg', 'jpeg', 'gif', 'webp'].includes(ext);
+                    
+                    // If it's an image and small enough, share the actual file
+                    if (isImage && fileData.size < 5 * 1024 * 1024) { // < 5MB
+                        const blob = base64ToBlob(fileData.content, `image/${ext}`);
+                        const file = new File([blob], name, { type: `image/${ext}` });
+                        
+                        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                            await navigator.share({
+                                files: [file],
+                                title: name
+                            });
+                            toast('Файл отправлен', 'success');
+                            return;
+                        }
+                    }
+                }
+
+                // Otherwise share the GitHub URL (clean, without extra text)
+                await navigator.share({
+                    title: name,
+                    url: url
+                });
+                toast('Ссылка отправлена', 'success');
+            } catch (e) {
+                if (e.name === 'AbortError') {
+                    // User cancelled share
+                    return;
+                }
+                toast('Ошибка: ' + e.message, 'error');
+            }
+        }
+
+        async function viewFile(path, name, e) {
+            e.stopPropagation();
+
+            const token = document.getElementById('token').value.trim();
+            const repo = document.getElementById('repository').value;
+            const branch = document.getElementById('branch').value;
+
+            const ext = name.split('.').pop().toLowerCase();
+            const isImage = ['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp', 'bmp'].includes(ext);
+            const isPDF = ext === 'pdf';
+            const isText = ['md', 'txt', 'json', 'js', 'ts', 'jsx', 'tsx', 'css', 'html', 'xml', 'yaml', 'yml', 'sh', 'py', 'java', 'c', 'cpp', 'h', 'rs'].includes(ext);
+            const isMarkdown = ext === 'md';
+
+            if (!isImage && !isPDF && !isText) {
+                toast('Предпросмотр недоступен для этого типа файла', 'error');
+                return;
+            }
+
+            // Open modal with loading
+            const modal = document.getElementById('modal');
+            const content = modal.querySelector('.modal-content');
+            const title = document.getElementById('modalTitle');
+            const body = document.getElementById('modalBody');
+            const actions = modal.querySelector('.modal-actions');
+
+            content.classList.add('large');
+            title.innerHTML = `
+                <span>${name}</span>
+                <button class="btn btn-secondary btn-icon" onclick="downloadCurrentFile()" title="Скачать" style="margin-left: auto;">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="7 10 12 15 17 10"/>
+                        <line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                </button>
+                <button class="btn btn-secondary btn-icon" onclick="closeModal()" title="Закрыть">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            `;
+            body.innerHTML = '<div class="file-preview-loading"><div class="spinner" style="width: 32px; height: 32px;"></div><p>Загрузка...</p></div>';
+            actions.style.display = 'none';
+            modal.classList.add('open');
+
+            try {
+                const r = await fetch(`https://api.github.com/repos/${repo}/contents/${path}?ref=${branch}`, {
+                    headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+                });
+
+                if (!r.ok) throw new Error('Не удалось загрузить файл');
+
+                const fileData = await r.json();
+                currentViewFile = { path, name, content: fileData.content };
+                const content = atob(fileData.content);
+
+                let previewHTML = '';
+
+                if (isImage) {
+                    const blob = base64ToBlob(fileData.content, `image/${ext}`);
+                    const url = URL.createObjectURL(blob);
+                    previewHTML = `<div class="file-preview-container"><img src="${url}" alt="${esc(name)}"></div>`;
+                } else if (isPDF) {
+                    const blob = base64ToBlob(fileData.content, 'application/pdf');
+                    const url = URL.createObjectURL(blob);
+                    previewHTML = `<div class="file-preview-container"><iframe src="${url}"></iframe></div>`;
+                } else if (isMarkdown) {
+                    // Simple markdown rendering
+                    const html = content
+                        .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+                        .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+                        .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+                        .replace(/\*\*(.*)\*\*/gim, '<strong>$1</strong>')
+                        .replace(/\*(.*)\*/gim, '<em>$1</em>')
+                        .replace(/\n/gim, '<br>');
+                    previewHTML = `<div class="file-preview-container"><div style="max-width: 800px; padding: 24px; color: var(--text-primary); line-height: 1.8;">${html}</div></div>`;
+                } else if (isText) {
+                    previewHTML = `<div class="file-preview-container"><pre>${esc(content)}</pre></div>`;
+                }
+
+                body.innerHTML = previewHTML;
+            } catch (e) {
+                body.innerHTML = `<div class="file-preview-loading"><div class="empty-state-icon">⚠️</div><p>${e.message}</p></div>`;
+            }
+        }
+
+        function downloadCurrentFile() {
+            if (!currentViewFile) return;
+            
+            const blob = base64ToBlob(currentViewFile.content, 'application/octet-stream');
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = currentViewFile.name;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            toast(`Файл "${currentViewFile.name}" скачан`, 'success');
+        }
+
+        function base64ToBlob(base64, type) {
+            const byteCharacters = atob(base64);
+            const byteNumbers = new Array(byteCharacters.length);
+            for (let i = 0; i < byteCharacters.length; i++) {
+                byteNumbers[i] = byteCharacters.charCodeAt(i);
+            }
+            const byteArray = new Uint8Array(byteNumbers);
+            return new Blob([byteArray], { type });
         }
 
         function newFolder() {
@@ -2020,7 +2623,13 @@
         }
 
         function closeModal() {
-            document.getElementById('modal').classList.remove('open');
+            const modal = document.getElementById('modal');
+            const content = modal.querySelector('.modal-content');
+            const actions = modal.querySelector('.modal-actions');
+            modal.classList.remove('open');
+            content.classList.remove('large');
+            actions.style.display = 'flex';
+            currentViewFile = null;
             modalCallback = null;
         }
 
