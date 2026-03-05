@@ -1330,6 +1330,7 @@
         let selectedItems = new Set();
         let clipboard = null;
         let isUploading = false;
+        let currentLoadRequest = 0; // Track load requests to prevent race conditions
 
         // Init
         const savedToken = localStorage.getItem('gh-token') || '';
@@ -1427,14 +1428,75 @@
 
         function updateStatus(connected) {
             const badge = document.getElementById('statusBadge');
-            if (connected) {
+            
+            // Check online status
+            const isOnline = navigator.onLine;
+            
+            if (connected && isOnline) {
                 badge.classList.add('connected');
                 badge.querySelector('span:last-child').textContent = 'Подключено';
+            } else if (!isOnline) {
+                badge.classList.remove('connected');
+                badge.querySelector('span:last-child').textContent = 'Нет сети';
             } else {
                 badge.classList.remove('connected');
                 badge.querySelector('span:last-child').textContent = 'Не подключено';
             }
         }
+        
+        // Monitor online/offline status
+        window.addEventListener('online', () => {
+            const repo = document.getElementById('repository').value;
+            updateStatus(!!repo);
+            toast('✓ Соединение восстановлено', 'success');
+        });
+        
+        window.addEventListener('offline', () => {
+            updateStatus(false);
+            toast('⚠️ Нет подключения к интернету', 'error');
+        });
+        
+        // Warn before closing with unsaved files
+        window.addEventListener('beforeunload', (e) => {
+            if (selectedFiles.length > 0) {
+                e.preventDefault();
+                e.returnValue = 'У вас есть незагруженные файлы. Вы уверены что хотите уйти?';
+                return e.returnValue;
+            }
+        });
+        
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            // Escape - clear selection and close menus
+            if (e.key === 'Escape') {
+                clearSelection();
+                closeContextMenu();
+                closeModal();
+            }
+            
+            // Delete - delete selected items
+            if (e.key === 'Delete' && selectedItems.size > 0) {
+                e.preventDefault();
+                deleteSelected();
+            }
+            
+            // Ctrl+V - paste files from clipboard (if supported)
+            if ((e.ctrlKey || e.metaKey) && e.key === 'v' && !e.target.matches('input, textarea')) {
+                e.preventDefault();
+                if (clipboard && clipboard.items.length > 0) {
+                    pasteItems();
+                }
+            }
+            
+            // Ctrl+A - select all in explorer
+            if ((e.ctrlKey || e.metaKey) && e.key === 'a' && !e.target.matches('input, textarea')) {
+                e.preventDefault();
+                const items = explorerCache[explorerPath] || [];
+                items.forEach(item => selectedItems.add(item.path));
+                updateSelectionUI();
+                renderExplorer(items);
+            }
+        });
 
         // Explorer
         async function loadExplorer(path) {
@@ -1453,6 +1515,9 @@
                 return;
             }
 
+            // Increment request counter to track this load
+            const requestId = ++currentLoadRequest;
+
             document.getElementById('explorerContent').innerHTML = '<div style="padding: 48px; text-align: center;"><div class="spinner" style="width: 24px; height: 24px;"></div></div>';
 
             try {
@@ -1464,6 +1529,13 @@
                 if (!r.ok) throw new Error('Ошибка загрузки');
 
                 const items = await r.json();
+                
+                // Check if this is still the current request
+                if (requestId !== currentLoadRequest) {
+                    console.log('Ignoring stale request');
+                    return;
+                }
+
                 const sorted = items.sort((a, b) => {
                     if (a.type === b.type) return a.name.localeCompare(b.name);
                     return a.type === 'dir' ? -1 : 1;
@@ -1472,7 +1544,9 @@
                 explorerCache[path] = sorted;
                 renderExplorer(sorted);
             } catch (e) {
-                document.getElementById('explorerContent').innerHTML = `<div class="empty-state"><div class="empty-state-icon">⚠️</div><p>${e.message}</p></div>`;
+                if (requestId === currentLoadRequest) {
+                    document.getElementById('explorerContent').innerHTML = `<div class="empty-state"><div class="empty-state-icon">⚠️</div><p>${e.message}</p></div>`;
+                }
             }
         }
 
@@ -2383,7 +2457,23 @@
         fileInput.onchange = (e) => { handleFiles(e.target.files); fileInput.value = ''; };
 
         function handleFiles(files) {
+            const maxSize = 100 * 1024 * 1024; // 100MB - GitHub limit
+            const warnSize = 50 * 1024 * 1024; // 50MB - warning threshold
+            
+            let hasLargeFiles = false;
+            let hasTooLargeFiles = false;
+            
             Array.from(files).forEach(file => {
+                if (file.size > maxSize) {
+                    toast(`Файл "${file.name}" слишком большой (${formatSize(file.size)}). Максимум: 100MB`, 'error');
+                    hasTooLargeFiles = true;
+                    return;
+                }
+                
+                if (file.size > warnSize) {
+                    hasLargeFiles = true;
+                }
+                
                 selectedFiles.push({
                     id: Date.now() + Math.random(),
                     file,
@@ -2392,6 +2482,11 @@
                     size: file.size
                 });
             });
+            
+            if (hasLargeFiles && !hasTooLargeFiles) {
+                toast('⚠️ Есть большие файлы (>50MB). Загрузка может занять время', 'error');
+            }
+            
             renderFileList();
         }
 
