@@ -2079,9 +2079,14 @@
             
             menu.innerHTML = menuHTML;
             
-            // Position menu
+            // Position menu — open upward if not enough space below
             const rect = e.target.closest('.btn').getBoundingClientRect();
-            menu.style.top = rect.bottom + 4 + 'px';
+            const menuHeight = menu.children.length * 48 + 16; // ~48px per item + padding
+            const spaceBelow = window.innerHeight - rect.bottom;
+            const top = spaceBelow < menuHeight
+                ? Math.max(4, rect.top - menuHeight - 4)
+                : rect.bottom + 4;
+            menu.style.top = top + 'px';
             menu.style.left = Math.min(rect.left, window.innerWidth - 200) + 'px';
             
             menu.classList.add('open');
