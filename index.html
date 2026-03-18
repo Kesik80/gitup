@@ -408,37 +408,43 @@
         }
         
         .explorer-toolbar {
-            padding: 16px;
+            padding: 12px 16px 0;
             background: var(--bg-surface);
             border-bottom: 1px solid var(--border-dim);
             display: flex;
-            align-items: center;
-            gap: 12px;
-            flex-wrap: wrap;
+            flex-direction: column;
+            gap: 0;
         }
-        
+
+        .explorer-toolbar-btns {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding-bottom: 10px;
+        }
+
+        .explorer-toolbar-path {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            border-top: 1px solid var(--border-dim);
+            padding: 6px 0;
+        }
+
         .breadcrumb {
             flex: 1;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 4px;
             font-family: 'Space Mono', monospace;
-            font-size: 12px;
+            font-size: 11px;
             color: var(--text-secondary);
             min-width: 0;
             overflow-x: auto;
-            scrollbar-width: thin;
-            scrollbar-color: var(--accent-cyan) transparent;
+            scrollbar-width: none;
         }
-        
-        .breadcrumb::-webkit-scrollbar {
-            height: 4px;
-        }
-        
-        .breadcrumb::-webkit-scrollbar-thumb {
-            background: var(--accent-cyan);
-            border-radius: 4px;
-        }
+
+        .breadcrumb::-webkit-scrollbar { display: none; }
         
         .breadcrumb-item {
             color: var(--accent-cyan);
@@ -881,6 +887,8 @@
         
         .modal-content.large {
             max-width: 90vw;
+            width: 90vw;
+            height: 90vh;
             max-height: 90vh;
             padding: 0;
             overflow: hidden;
@@ -938,6 +946,31 @@
             padding: 0;
             overflow: auto;
             background: var(--bg-deep);
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        .file-editor-textarea {
+            width: 100%;
+            min-height: 300px;
+            background: var(--bg-deep);
+            color: var(--text-primary);
+            border: none;
+            outline: none;
+            padding: 20px;
+            font-family: 'Space Mono', monospace;
+            font-size: 13px;
+            line-height: 1.7;
+            resize: none;
+            box-sizing: border-box;
+            display: block;
+        }
+
+        .modal-content.large .modal-body .file-editor-textarea {
+            flex: 1;
+            min-height: 0;
+            height: 100%;
         }
         
         .modal-actions {
@@ -1086,6 +1119,102 @@
             opacity: 0.5;
         }
         
+        /* Sort dropdown */
+        .sort-dropdown { position: relative; }
+        .sort-menu {
+            position: absolute;
+            top: calc(100% + 4px);
+            right: 0;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-bright);
+            border-radius: 8px;
+            min-width: 160px;
+            z-index: 500;
+            padding: 6px 0;
+            display: none;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+        }
+        .sort-menu.open { display: block; animation: menuSlide 0.15s ease; }
+        .sort-menu-item {
+            padding: 9px 14px;
+            font-size: 13px;
+            color: var(--text-primary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.15s;
+        }
+        .sort-menu-item:hover { background: var(--bg-surface); }
+        .sort-menu-item.active { color: var(--accent-cyan); }
+
+        /* Folder badge */
+        .folder-badge {
+            font-size: 10px;
+            font-family: 'Space Mono', monospace;
+            color: var(--text-dim);
+            background: rgba(139, 233, 253, 0.08);
+            border: 1px solid var(--border-dim);
+            border-radius: 4px;
+            padding: 1px 5px;
+            margin-left: 6px;
+        }
+
+        /* Repo history */
+        .repo-history {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 8px;
+        }
+        .repo-history-chip {
+            font-size: 11px;
+            font-family: 'Space Mono', monospace;
+            color: var(--accent-cyan);
+            background: rgba(139, 233, 253, 0.07);
+            border: 1px solid rgba(139, 233, 253, 0.2);
+            border-radius: 4px;
+            padding: 3px 8px;
+            cursor: pointer;
+            transition: all 0.15s;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 180px;
+        }
+        .repo-history-chip:hover {
+            background: rgba(139, 233, 253, 0.15);
+            border-color: var(--accent-cyan);
+        }
+
+        /* File editor */
+        .editor-textarea {
+            width: 100%;
+            height: 100%;
+            min-height: 300px;
+            background: var(--bg-deep);
+            border: none;
+            color: var(--text-primary);
+            font-family: 'Space Mono', monospace;
+            font-size: 13px;
+            line-height: 1.7;
+            padding: 20px 24px;
+            resize: none;
+            outline: none;
+            tab-size: 2;
+        }
+        .editor-wrap { display: flex; flex-direction: column; height: 100%; }
+        .editor-statusbar {
+            padding: 6px 20px;
+            font-size: 11px;
+            font-family: 'Space Mono', monospace;
+            color: var(--text-dim);
+            background: var(--bg-surface);
+            border-top: 1px solid var(--border-dim);
+            display: flex;
+            gap: 20px;
+        }
+
         /* Destination indicator */
         .destination-indicator {
             padding: 12px 16px;
@@ -1165,6 +1294,7 @@
                             <select class="form-select" id="repository">
                                 <option value="">Сначала подключитесь...</option>
                             </select>
+                            <div class="repo-history" id="repoHistory"></div>
                             <div style="display: flex; gap: 8px; margin-top: 8px;">
                                 <button class="btn btn-secondary" onclick="createRepository()" style="flex: 1;">
                                     <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -1239,18 +1369,46 @@
             <!-- Right: Explorer -->
             <div class="explorer">
                 <div class="explorer-toolbar">
-                    <div class="breadcrumb" id="breadcrumb">
-                        <span class="breadcrumb-item current">/</span>
-                    </div>
+                    <div class="explorer-toolbar-btns">
+                    <button class="btn btn-secondary btn-icon" id="backBtn" style="display:none;flex-shrink:0;" title="Назад" onclick="goBack()">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <line x1="19" y1="12" x2="5" y2="12"/>
+                            <polyline points="12 19 5 12 12 5"/>
+                        </svg>
+                    </button>
                     <button class="btn btn-secondary btn-icon" id="pasteBtn" style="display:none;" onclick="pasteItems()" title="Вставить">
                         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
                             <rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
                         </svg>
                     </button>
+                    <div style="flex:1;"></div>
+                    <div class="sort-dropdown" id="sortDropdown">
+                        <button class="btn btn-secondary btn-icon" onclick="toggleSortMenu(event)" title="Сортировка">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/>
+                                <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+                            </svg>
+                        </button>
+                        <div class="sort-menu" id="sortMenu">
+                            <div class="sort-menu-item" onclick="event.stopPropagation();setSort('name','asc')">📋 По имени А→Я</div>
+                            <div class="sort-menu-item" onclick="event.stopPropagation();setSort('name','desc')">📋 По имени Я→А</div>
+                            <div class="sort-menu-item" onclick="event.stopPropagation();setSort('size','asc')">📦 По размеру ↑</div>
+                            <div class="sort-menu-item" onclick="event.stopPropagation();setSort('size','desc')">📦 По размеру ↓</div>
+                            <div class="sort-menu-item" onclick="event.stopPropagation();setSort('type','asc')">📁 Папки сначала</div>
+                            <div class="sort-menu-item" onclick="event.stopPropagation();setSort('ext','asc')">🔤 По расширению</div>
+                        </div>
+                    </div>
                     <button class="btn btn-secondary btn-icon" title="Обновить" onclick="refreshExplorer()">
                         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                        </svg>
+                    </button>
+                    <button class="btn btn-secondary btn-icon" onclick="newFile()" title="Новый файл">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                            <line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/>
                         </svg>
                     </button>
                     <button class="btn btn-secondary btn-icon" onclick="newFolder()" title="Новая папка">
@@ -1258,6 +1416,12 @@
                             <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
                         </svg>
                     </button>
+                    </div><!-- end explorer-toolbar-btns -->
+                    <div class="explorer-toolbar-path">
+                        <div class="breadcrumb" id="breadcrumb">
+                            <span class="breadcrumb-item current">/</span>
+                        </div>
+                    </div>
                 </div>
                 
                 <div class="explorer-actions-bar" id="explorerActions">
@@ -1331,6 +1495,12 @@
         let clipboard = null;
         let isUploading = false;
         let currentLoadRequest = 0; // Track load requests to prevent race conditions
+        let sortBy = 'type';   // 'type' | 'name' | 'size' | 'ext'
+        let sortDir = 'asc';   // 'asc' | 'desc'
+        let sortField = 'name'; // used by new sort functions
+        let sortAsc = true;
+        let folderChildCache = {}; // path -> count
+        let currentEditFile = null; // for editor
 
         // Init
         const savedToken = localStorage.getItem('gh-token') || '';
@@ -1338,12 +1508,49 @@
             document.getElementById('token').value = savedToken;
             setTimeout(() => connect(), 100);
         }
+        renderRepoHistory();
+
+        // Repo history helpers
+        function getRepoHistory() {
+            try { return JSON.parse(localStorage.getItem('gh-repo-history') || '[]'); } catch { return []; }
+        }
+        function addToRepoHistory(repo) {
+            if (!repo) return;
+            let h = getRepoHistory().filter(r => r !== repo);
+            h.unshift(repo);
+            if (h.length > 5) h = h.slice(0, 5);
+            localStorage.setItem('gh-repo-history', JSON.stringify(h));
+            renderRepoHistory();
+        }
+        function renderRepoHistory() {
+            const h = getRepoHistory();
+            const el = document.getElementById('repoHistory');
+            if (!el) return;
+            if (h.length === 0) { el.innerHTML = ''; return; }
+            el.innerHTML = h.map(r => {
+                const short = r.split('/')[1] || r;
+                return `<span class="repo-history-chip" title="${r}" onclick="selectRepoFromHistory('${r}')">${short}</span>`;
+            }).join('');
+        }
+        async function selectRepoFromHistory(repo) {
+            const sel = document.getElementById('repository');
+            if (sel.querySelector(`option[value="${repo}"]`)) {
+                sel.value = repo;
+                localStorage.setItem('gh-repo', repo);
+                await loadBranches();
+                updateStatus(true);
+                loadExplorer('');
+            } else {
+                toast('Сначала подключитесь к GitHub', 'error');
+            }
+        }
 
         // Repository change
         document.getElementById('repository').addEventListener('change', async (e) => {
             const repo = e.target.value;
             localStorage.setItem('gh-repo', repo);
             if (repo) {
+                saveRepoHistory(repo);
                 await loadBranches();
                 updateStatus(true);
                 loadExplorer('');
@@ -1536,13 +1743,8 @@
                     return;
                 }
 
-                const sorted = items.sort((a, b) => {
-                    if (a.type === b.type) return a.name.localeCompare(b.name);
-                    return a.type === 'dir' ? -1 : 1;
-                });
-
-                explorerCache[path] = sorted;
-                renderExplorer(sorted);
+                explorerCache[path] = items;
+                renderExplorer(applySortItems(items));
             } catch (e) {
                 if (requestId === currentLoadRequest) {
                     document.getElementById('explorerContent').innerHTML = `<div class="empty-state"><div class="empty-state-icon">⚠️</div><p>${e.message}</p></div>`;
@@ -1574,7 +1776,7 @@
                     <div class="explorer-icon ${isDir ? 'folder' : ''}">${emoji}</div>
                     <div class="explorer-info" ${isDir ? `onclick="closeContextMenu(); loadExplorer('${esc(item.path)}')"` : ''} style="${isDir ? 'cursor:pointer' : ''}">
                         <div class="explorer-name">${esc(item.name)}</div>
-                        <div class="explorer-meta">${isDir ? 'Папка' : formatSize(item.size)}</div>
+                        <div class="explorer-meta">${isDir ? `Папка <span class="folder-count" id="fc-${item.path.replace(/\//g,'-')}">...</span>` : formatSize(item.size)}</div>
                     </div>
                     <div class="explorer-item-actions">
                         <button class="btn btn-secondary btn-icon" onclick="showItemMenu('${esc(item.path)}', '${esc(item.name)}', '${item.type}', event)" title="Меню">
@@ -1589,25 +1791,273 @@
 
                 container.appendChild(div);
             });
+
+            // Load folder counts async
+            loadFolderCounts(items);
+        }
+
+        // ── Folder counts ─────────────────────────────────────────
+        async function loadFolderCounts(items) {
+            const token  = document.getElementById('token').value.trim();
+            const repo   = document.getElementById('repository').value;
+            const branch = document.getElementById('branch').value;
+            if (!token || !repo) return;
+            const dirs = items.filter(i => i.type === 'dir');
+            for (const dir of dirs) {
+                const badgeId = 'fc-' + dir.path.replace(/\//g, '-');
+                const badge = document.getElementById(badgeId);
+                if (!badge) continue;
+                try {
+                    const r = await fetch(`https://api.github.com/repos/${repo}/contents/${dir.path}?ref=${branch}`, {
+                        headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+                    });
+                    if (!r.ok) { badge.textContent = ''; continue; }
+                    const data = await r.json();
+                    badge.textContent = Array.isArray(data) ? data.length : '';
+                } catch { badge.textContent = ''; }
+            }
+        }
+
+        // ── Sort ──────────────────────────────────────────────────
+        function toggleSortMenu(e) {
+            e.stopPropagation();
+            const menu = document.getElementById('sortMenu');
+            menu.classList.toggle('open');
+        }
+
+        document.addEventListener('click', (e) => {
+            const menu = document.getElementById('sortMenu');
+            if (menu && !menu.contains(e.target) && !e.target.closest('#sortDropdown')) {
+                menu.classList.remove('open');
+            }
+        });
+
+        function applySortItems(items) {
+            const arr = [...items];
+            arr.sort((a, b) => {
+                if (sortField !== 'type' && sortField !== 'ext') {
+                    if (a.type !== b.type) return a.type === 'dir' ? -1 : 1;
+                }
+                let cmp = 0;
+                if (sortField === 'name') {
+                    cmp = a.name.localeCompare(b.name);
+                } else if (sortField === 'size') {
+                    cmp = (a.size || 0) - (b.size || 0);
+                } else if (sortField === 'type') {
+                    if (a.type !== b.type) return a.type === 'dir' ? -1 : 1;
+                    cmp = a.name.localeCompare(b.name);
+                } else if (sortField === 'ext') {
+                    const extA = a.type === 'dir' ? '' : a.name.split('.').pop().toLowerCase();
+                    const extB = b.type === 'dir' ? '' : b.name.split('.').pop().toLowerCase();
+                    cmp = extA.localeCompare(extB);
+                    if (cmp === 0) cmp = a.name.localeCompare(b.name);
+                }
+                return sortAsc ? cmp : -cmp;
+            });
+            return arr;
+        }
+
+        function setSort(field, dir) {
+            if (dir) {
+                sortField = field;
+                sortAsc = (dir === 'asc');
+            } else {
+                if (sortField === field) { sortAsc = !sortAsc; }
+                else { sortField = field; sortAsc = true; }
+            }
+            // Close sort menu
+            const menu = document.getElementById('sortMenu');
+            if (menu) menu.classList.remove('open');
+            // Highlight active item
+            document.querySelectorAll('.sort-menu-item').forEach(el => {
+                const onclick = el.getAttribute('onclick') || '';
+                el.classList.toggle('active', onclick.includes(`'${field}'`) && onclick.includes(`'${dir || ''}'`));
+            });
+            const cached = explorerCache[explorerPath];
+            if (cached) renderExplorer(applySortItems(cached));
+        }
+
+        // ── Repo history ──────────────────────────────────────────
+        function saveRepoHistory(repoName) {
+            if (!repoName) return;
+            let hist = JSON.parse(localStorage.getItem('gh-repo-history') || '[]');
+            hist = [repoName, ...hist.filter(r => r !== repoName)].slice(0, 5);
+            localStorage.setItem('gh-repo-history', JSON.stringify(hist));
+        }
+
+        function showRepoHistory() {
+            const hist = JSON.parse(localStorage.getItem('gh-repo-history') || '[]');
+            const list = document.getElementById('repoHistoryList');
+            if (!hist.length || !list) return;
+            list.innerHTML = hist.map(r =>
+                `<div class="repo-history-item" onclick="pickRepoHistory('${esc(r)}')">
+                    <span class="repo-hist-icon">⏱</span>${esc(r)}
+                </div>`
+            ).join('');
+            list.style.display = 'block';
+        }
+
+        function hideRepoHistory() {
+            setTimeout(() => {
+                const list = document.getElementById('repoHistoryList');
+                if (list) list.style.display = 'none';
+            }, 200);
+        }
+
+        async function pickRepoHistory(repoName) {
+            const sel = document.getElementById('repository');
+            const opt = Array.from(sel.options).find(o => o.value === repoName);
+            if (opt) {
+                sel.value = repoName;
+                sel.dispatchEvent(new Event('change'));
+            } else {
+                toast('Репозиторий не найден — сначала подключитесь', 'error');
+            }
+            const list = document.getElementById('repoHistoryList');
+            if (list) list.style.display = 'none';
+        }
+
+        // Attach history events after DOM ready
+        setTimeout(() => {
+            const sel = document.getElementById('repository');
+            if (sel) {
+                sel.addEventListener('focus', showRepoHistory);
+                sel.addEventListener('blur', hideRepoHistory);
+            }
+        }, 0);
+
+        // ── New File ──────────────────────────────────────────────
+        function newFile() {
+            const modal   = document.getElementById('modal');
+            const content = modal.querySelector('.modal-content');
+            const titleEl = document.getElementById('modalTitle');
+            const body    = document.getElementById('modalBody');
+            const actions = modal.querySelector('.modal-actions');
+            content.classList.remove('large');
+            titleEl.textContent = 'Новый файл';
+            body.innerHTML = `
+                <input type="text" class="form-input" id="newFileNameInput" placeholder="script.js, style.css, readme.md ..." style="margin-bottom:12px;">
+                <textarea class="file-editor-textarea" id="newFileContentInput" placeholder="Содержимое файла..." style="min-height:180px; border:1px solid var(--border-dim); border-radius:8px;"></textarea>
+            `;
+            actions.style.display = 'flex';
+            actions.innerHTML = `
+                <button class="btn btn-secondary" onclick="closeModal()">Отмена</button>
+                <button class="btn btn-primary" onclick="saveNewFile()">Создать</button>
+            `;
+            modal.classList.add('open');
+            setTimeout(() => document.getElementById('newFileNameInput').focus(), 100);
+        }
+
+        async function saveNewFile() {
+            const name    = document.getElementById('newFileNameInput').value.trim();
+            const content = document.getElementById('newFileContentInput').value;
+            if (!name) { toast('Введите имя файла', 'error'); return; }
+            const token  = document.getElementById('token').value.trim();
+            const repo   = document.getElementById('repository').value;
+            const branch = document.getElementById('branch').value;
+            const filePath = explorerPath ? `${explorerPath}/${name}` : name;
+            closeModal();
+            try {
+                const r = await fetch(`https://api.github.com/repos/${repo}/contents/${filePath}`, {
+                    method: 'PUT',
+                    headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: `Create ${name}`, content: btoa(unescape(encodeURIComponent(content))), branch })
+                });
+                if (!r.ok) throw new Error((await r.json()).message || 'Ошибка');
+                explorerCache = {};
+                await loadExplorer(explorerPath);
+                toast(`Файл "${name}" создан`, 'success');
+            } catch (e) {
+                toast('Ошибка создания: ' + e.message, 'error');
+            }
+        }
+
+        // ── File Editor ───────────────────────────────────────────
+        let editingFile = null;
+
+        async function editFile(path, name, e) {
+            if (e) e.stopPropagation();
+            const token  = document.getElementById('token').value.trim();
+            const repo   = document.getElementById('repository').value;
+            const branch = document.getElementById('branch').value;
+            const modal   = document.getElementById('modal');
+            const content = modal.querySelector('.modal-content');
+            const titleEl = document.getElementById('modalTitle');
+            const body    = document.getElementById('modalBody');
+            const actions = modal.querySelector('.modal-actions');
+            content.classList.add('large');
+            titleEl.innerHTML = `
+                <span>✏️ ${esc(name)}</span>
+                <button class="btn btn-secondary btn-icon" onclick="closeModal()" title="Закрыть">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>`;
+            body.innerHTML = '<div class="file-preview-loading"><div class="spinner" style="width:32px;height:32px;"></div><p>Загрузка...</p></div>';
+            actions.style.display = 'none';
+            modal.classList.add('open');
+            try {
+                const r = await fetch(`https://api.github.com/repos/${repo}/contents/${path}?ref=${branch}`, {
+                    headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+                });
+                if (!r.ok) throw new Error('Не удалось загрузить файл');
+                const fileData = await r.json();
+                const text = decodeURIComponent(escape(atob(fileData.content.replace(/\n/g,''))));
+                editingFile = { path, name, sha: fileData.sha };
+                body.innerHTML = `<textarea class="file-editor-textarea" id="editorTextarea">${esc(text)}</textarea>`;
+                actions.style.display = 'flex';
+                actions.innerHTML = `
+                    <button class="btn btn-secondary" onclick="closeModal()">Отмена</button>
+                    <button class="btn btn-primary" onclick="saveEditedFile()">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                            <polyline points="17 21 17 13 7 13 7 21"/>
+                        </svg>
+                        Сохранить в GitHub
+                    </button>`;
+            } catch (err) {
+                body.innerHTML = `<div class="file-preview-loading"><p>⚠️ ${err.message}</p></div>`;
+            }
+        }
+
+        async function saveEditedFile() {
+            if (!editingFile) return;
+            const token  = document.getElementById('token').value.trim();
+            const repo   = document.getElementById('repository').value;
+            const branch = document.getElementById('branch').value;
+            const text   = document.getElementById('editorTextarea').value;
+            const saveBtn = document.querySelector('.modal-actions .btn-primary');
+            if (saveBtn) { saveBtn.disabled = true; saveBtn.innerHTML = '<div class="spinner"></div> Сохранение...'; }
+            try {
+                const r = await fetch(`https://api.github.com/repos/${repo}/contents/${editingFile.path}`, {
+                    method: 'PUT',
+                    headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        message: `Edit ${editingFile.name}`,
+                        content: btoa(unescape(encodeURIComponent(text))),
+                        sha: editingFile.sha,
+                        branch
+                    })
+                });
+                if (!r.ok) throw new Error((await r.json()).message || 'Ошибка');
+                closeModal();
+                explorerCache = {};
+                loadExplorer(explorerPath);
+                toast(`"${editingFile.name}" сохранён`, 'success');
+            } catch (err) {
+                toast('Ошибка сохранения: ' + err.message, 'error');
+                if (saveBtn) { saveBtn.disabled = false; saveBtn.innerHTML = 'Сохранить в GitHub'; }
+            }
         }
 
         function updateBreadcrumb(path) {
             const parts = path ? path.split('/') : [];
-            let html = '';
-            
-            // Add back button if not at root
-            if (path) {
-                const parentPath = parts.length > 1 ? parts.slice(0, -1).join('/') : '';
-                html += `<button class="btn btn-secondary btn-icon" onclick="loadExplorer('${esc(parentPath)}')" title="Назад" style="margin-right: 8px;">
-                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <line x1="19" y1="12" x2="5" y2="12"/>
-                        <polyline points="12 19 5 12 12 5"/>
-                    </svg>
-                </button>`;
-            }
-            
-            html += '<span class="breadcrumb-item" onclick="loadExplorer(\'\');">/</span>';
 
+            // Show/hide back button separately
+            const backBtn = document.getElementById('backBtn');
+            if (backBtn) backBtn.style.display = path ? 'flex' : 'none';
+
+            let html = '<span class="breadcrumb-item" onclick="loadExplorer(\'\');">/</span>';
             parts.forEach((part, i) => {
                 const subPath = parts.slice(0, i + 1).join('/');
                 const isCurrent = i === parts.length - 1;
@@ -1616,6 +2066,15 @@
             });
 
             document.getElementById('breadcrumb').innerHTML = html;
+            // Auto-scroll breadcrumb to end
+            const bc = document.getElementById('breadcrumb');
+            if (bc) setTimeout(() => { bc.scrollLeft = bc.scrollWidth; }, 0);
+        }
+
+        function goBack() {
+            const parts = explorerPath ? explorerPath.split('/') : [];
+            const parentPath = parts.length > 1 ? parts.slice(0, -1).join('/') : '';
+            loadExplorer(parentPath);
         }
 
         function updateDestination() {
@@ -2021,6 +2480,8 @@
             let menuHTML = '';
             
             if (!isDir) {
+                const ext = name.split('.').pop().toLowerCase();
+                const isEditable = ['md','txt','json','js','ts','jsx','tsx','css','html','xml','yaml','yml','sh','py','java','c','cpp','h','rs','env','gitignore','svg'].includes(ext);
                 menuHTML += `
                     <div class="context-menu-item" onclick="viewFile('${esc(path)}', '${esc(name)}', event); closeContextMenu();">
                         <div class="context-menu-icon">
@@ -2030,7 +2491,8 @@
                             </svg>
                         </div>
                         Просмотр
-                    </div>
+                    </div>`;
+                menuHTML += `
                     <div class="context-menu-item" onclick="downloadFile('${esc(path)}', '${esc(name)}', event); closeContextMenu();">
                         <div class="context-menu-icon">
                             <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -2081,7 +2543,7 @@
             
             // Position menu — open upward if not enough space below
             const rect = e.target.closest('.btn').getBoundingClientRect();
-            const menuHeight = menu.children.length * 48 + 16; // ~48px per item + padding
+            const menuHeight = menu.children.length * 48 + 16;
             const spaceBelow = window.innerHeight - rect.bottom;
             const top = spaceBelow < menuHeight
                 ? Math.max(4, rect.top - menuHeight - 4)
@@ -2208,38 +2670,49 @@
             const ext = name.split('.').pop().toLowerCase();
             const isImage = ['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp', 'bmp'].includes(ext);
             const isPDF = ext === 'pdf';
-            const isText = ['md', 'txt', 'json', 'js', 'ts', 'jsx', 'tsx', 'css', 'html', 'xml', 'yaml', 'yml', 'sh', 'py', 'java', 'c', 'cpp', 'h', 'rs'].includes(ext);
+            const isText = ['md', 'txt', 'json', 'js', 'ts', 'jsx', 'tsx', 'css', 'html', 'xml', 'yaml', 'yml', 'sh', 'py', 'java', 'c', 'cpp', 'h', 'rs', 'env', 'toml', 'ini', 'cfg', 'svg'].includes(ext);
             const isMarkdown = ext === 'md';
+            const isEditable = isText;
 
             if (!isImage && !isPDF && !isText) {
                 toast('Предпросмотр недоступен для этого типа файла', 'error');
                 return;
             }
 
-            // Open modal with loading
             const modal = document.getElementById('modal');
-            const content = modal.querySelector('.modal-content');
-            const title = document.getElementById('modalTitle');
+            const modalContent = modal.querySelector('.modal-content');
+            const titleEl = document.getElementById('modalTitle');
             const body = document.getElementById('modalBody');
             const actions = modal.querySelector('.modal-actions');
 
-            content.classList.add('large');
-            title.innerHTML = `
-                <span>${name}</span>
-                <button class="btn btn-secondary btn-icon" onclick="downloadCurrentFile()" title="Скачать" style="margin-left: auto;">
-                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                        <polyline points="7 10 12 15 17 10"/>
-                        <line x1="12" y1="15" x2="12" y2="3"/>
-                    </svg>
-                </button>
-                <button class="btn btn-secondary btn-icon" onclick="closeModal()" title="Закрыть">
-                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <line x1="18" y1="6" x2="6" y2="18"/>
-                        <line x1="6" y1="6" x2="18" y2="18"/>
-                    </svg>
-                </button>
-            `;
+            modalContent.classList.add('large');
+
+            function renderViewHeader(editing) {
+                titleEl.innerHTML = `
+                    <span>${esc(name)}</span>
+                    <button class="btn btn-secondary btn-icon" onclick="downloadCurrentFile()" title="Скачать" style="margin-left: auto;">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="7 10 12 15 17 10"/>
+                            <line x1="12" y1="15" x2="12" y2="3"/>
+                        </svg>
+                    </button>
+                    ${isEditable ? `<button class="btn ${editing ? 'btn-primary' : 'btn-secondary'} btn-icon" id="editToggleBtn" onclick="toggleInlineEdit()" title="${editing ? 'Просмотр' : 'Редактировать'}" style="${editing ? 'background:var(--accent-cyan);color:#000;' : ''}">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                        </svg>
+                    </button>` : ''}
+                    <button class="btn btn-secondary btn-icon" onclick="closeModal()" title="Закрыть">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <line x1="18" y1="6" x2="6" y2="18"/>
+                            <line x1="6" y1="6" x2="18" y2="18"/>
+                        </svg>
+                    </button>
+                `;
+            }
+
+            renderViewHeader(false);
             body.innerHTML = '<div class="file-preview-loading"><div class="spinner" style="width: 32px; height: 32px;"></div><p>Загрузка...</p></div>';
             actions.style.display = 'none';
             modal.classList.add('open');
@@ -2248,38 +2721,111 @@
                 const r = await fetch(`https://api.github.com/repos/${repo}/contents/${path}?ref=${branch}`, {
                     headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
                 });
-
                 if (!r.ok) throw new Error('Не удалось загрузить файл');
 
                 const fileData = await r.json();
-                currentViewFile = { path, name, content: fileData.content };
-                const content = atob(fileData.content);
+                currentViewFile = { path, name, content: fileData.content, sha: fileData.sha };
+                const rawText = decodeURIComponent(escape(atob(fileData.content.replace(/\n/g, ''))));
 
-                let previewHTML = '';
+                let isEditMode = false;
 
-                if (isImage) {
-                    const blob = base64ToBlob(fileData.content, `image/${ext}`);
-                    const url = URL.createObjectURL(blob);
-                    previewHTML = `<div class="file-preview-container"><img src="${url}" alt="${esc(name)}"></div>`;
-                } else if (isPDF) {
-                    const blob = base64ToBlob(fileData.content, 'application/pdf');
-                    const url = URL.createObjectURL(blob);
-                    previewHTML = `<div class="file-preview-container"><iframe src="${url}"></iframe></div>`;
-                } else if (isMarkdown) {
-                    // Simple markdown rendering
-                    const html = content
-                        .replace(/^### (.*$)/gim, '<h3>$1</h3>')
-                        .replace(/^## (.*$)/gim, '<h2>$1</h2>')
-                        .replace(/^# (.*$)/gim, '<h1>$1</h1>')
-                        .replace(/\*\*(.*)\*\*/gim, '<strong>$1</strong>')
-                        .replace(/\*(.*)\*/gim, '<em>$1</em>')
-                        .replace(/\n/gim, '<br>');
-                    previewHTML = `<div class="file-preview-container"><div style="max-width: 800px; padding: 24px; color: var(--text-primary); line-height: 1.8;">${html}</div></div>`;
-                } else if (isText) {
-                    previewHTML = `<div class="file-preview-container"><pre>${esc(content)}</pre></div>`;
+                function showPreview() {
+                    isEditMode = false;
+                    renderViewHeader(false);
+                    actions.style.display = 'none';
+
+                    let previewHTML = '';
+                    if (isImage) {
+                        const blob = base64ToBlob(fileData.content, `image/${ext}`);
+                        const url = URL.createObjectURL(blob);
+                        previewHTML = `<div class="file-preview-container"><img src="${url}" alt="${esc(name)}"></div>`;
+                    } else if (isPDF) {
+                        const blob = base64ToBlob(fileData.content, 'application/pdf');
+                        const url = URL.createObjectURL(blob);
+                        previewHTML = `<div class="file-preview-container"><iframe src="${url}"></iframe></div>`;
+                    } else if (isMarkdown) {
+                        const html = rawText
+                            .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+                            .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+                            .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+                            .replace(/\*\*(.*)\*\*/gim, '<strong>$1</strong>')
+                            .replace(/\*(.*)\*/gim, '<em>$1</em>')
+                            .replace(/\n/gim, '<br>');
+                        previewHTML = `<div class="file-preview-container"><div style="max-width:800px;padding:24px;color:var(--text-primary);line-height:1.8;">${html}</div></div>`;
+                    } else {
+                        previewHTML = `<div class="file-preview-container"><pre>${esc(rawText)}</pre></div>`;
+                    }
+                    body.innerHTML = previewHTML;
                 }
 
-                body.innerHTML = previewHTML;
+                function showEditor() {
+                    isEditMode = true;
+                    renderViewHeader(true);
+                    const currentText = isEditMode && document.getElementById('inlineEditorTA')
+                        ? document.getElementById('inlineEditorTA').value
+                        : rawText;
+                    body.innerHTML = `<textarea class="file-editor-textarea" id="inlineEditorTA">${esc(rawText)}</textarea>`;
+                    actions.style.display = 'flex';
+                    actions.innerHTML = `
+                        <button class="btn btn-secondary btn-icon" id="inlineUndoBtn" onclick="document.getElementById('inlineEditorTA').focus(); document.execCommand('undo');" title="Отменить" disabled style="opacity:0.35;cursor:not-allowed;">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <polyline points="9 14 4 9 9 4"/>
+                                <path d="M20 20v-7a4 4 0 0 0-4-4H4"/>
+                            </svg>
+                        </button>
+                        <button class="btn btn-primary btn-icon" id="inlineSaveBtn" onclick="saveInlineEdit()" title="Сохранить в GitHub">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                                <polyline points="17 21 17 13 7 13 7 21"/>
+                            </svg>
+                        </button>`;
+                    const ta = document.getElementById('inlineEditorTA');
+                    ta.focus();
+                    ta.addEventListener('input', () => {
+                        const undoBtn = document.getElementById('inlineUndoBtn');
+                        if (!undoBtn) return;
+                        const changed = ta.value !== rawText;
+                        undoBtn.disabled = !changed;
+                        undoBtn.style.opacity = changed ? '1' : '0.35';
+                        undoBtn.style.cursor = changed ? 'pointer' : 'not-allowed';
+                    });
+                }
+
+                // Expose toggle to global scope
+                window.toggleInlineEdit = function() {
+                    if (isEditMode) showPreview(); else showEditor();
+                };
+
+                window.saveInlineEdit = async function() {
+                    const text = document.getElementById('inlineEditorTA').value;
+                    const btn = document.getElementById('inlineSaveBtn');
+                    btn.disabled = true;
+                    btn.innerHTML = '<div class="spinner"></div> Сохранение...';
+                    try {
+                        const res = await fetch(`https://api.github.com/repos/${repo}/contents/${path}`, {
+                            method: 'PUT',
+                            headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                message: `Edit ${name}`,
+                                content: btoa(unescape(encodeURIComponent(text))),
+                                sha: currentViewFile.sha,
+                                branch
+                            })
+                        });
+                        if (!res.ok) throw new Error((await res.json()).message || 'Ошибка');
+                        closeModal();
+                        explorerCache = {};
+                        loadExplorer(explorerPath);
+                        toast(`"${name}" сохранён`, 'success');
+                    } catch (err) {
+                        toast('Ошибка: ' + err.message, 'error');
+                        btn.disabled = false;
+                        btn.innerHTML = 'Сохранить в GitHub';
+                    }
+                };
+
+                showPreview();
+
             } catch (e) {
                 body.innerHTML = `<div class="file-preview-loading"><div class="empty-state-icon">⚠️</div><p>${e.message}</p></div>`;
             }
