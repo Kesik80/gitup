@@ -45,6 +45,160 @@
             --gradient-cyber: linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-purple) 100%);
             --gradient-neon: linear-gradient(135deg, var(--accent-pink) 0%, var(--accent-purple) 50%, var(--accent-cyan) 100%);
         }
+
+        /* Light theme */
+        [data-theme="light"] {
+            --bg-void: #f0f4f8;
+            --bg-deep: #e8edf3;
+            --bg-surface: #ffffff;
+            --bg-elevated: #f8fafc;
+
+            --border-dim: rgba(30, 80, 160, 0.12);
+            --border-bright: rgba(30, 80, 160, 0.3);
+
+            --text-primary: #1a2233;
+            --text-secondary: #1565c0;
+            --text-dim: #7a8aaa;
+
+            --accent-cyan: #1565c0;
+            --accent-pink: #c2185b;
+            --accent-purple: #6a1b9a;
+            --accent-green: #2e7d32;
+            --accent-yellow: #f57f17;
+            --accent-orange: #e65100;
+            --accent-red: #c62828;
+
+            --glow-cyan: 0 0 12px rgba(21, 101, 192, 0.2);
+            --glow-pink: 0 0 12px rgba(194, 24, 91, 0.2);
+            --glow-purple: 0 0 12px rgba(106, 27, 154, 0.2);
+
+            --gradient-cyber: linear-gradient(135deg, #1565c0 0%, #6a1b9a 100%);
+            --gradient-neon: linear-gradient(135deg, #c2185b 0%, #6a1b9a 50%, #1565c0 100%);
+        }
+
+        [data-theme="light"] body::before { opacity: 0.08; }
+        [data-theme="light"] body::after { opacity: 0; }
+
+        /* Theme toggle button */
+        .theme-toggle {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-dim);
+            border-radius: 100px;
+            padding: 6px 12px;
+            cursor: pointer;
+            font-size: 16px;
+            line-height: 1;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+        }
+        .theme-toggle:hover { border-color: var(--accent-cyan); }
+
+        /* Repo stats */
+        .repo-stats {
+            display: flex;
+            gap: 12px;
+            padding: 10px 0 4px;
+            flex-wrap: wrap;
+        }
+        .repo-stat {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-dim);
+            border-radius: 8px;
+            padding: 8px 6px;
+            min-width: 60px;
+        }
+        .repo-stat-value {
+            font-family: 'Space Mono', monospace;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--accent-cyan);
+        }
+        .repo-stat-label {
+            font-size: 9px;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 2px;
+            text-align: center;
+        }
+
+        /* Commits list */
+        .commits-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+        .commit-item {
+            padding: 9px 0;
+            border-bottom: 1px solid var(--border-dim);
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+        .commit-item:last-child { border-bottom: none; }
+        .commit-msg {
+            font-size: 12px;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .commit-meta {
+            font-family: 'Space Mono', monospace;
+            font-size: 10px;
+            color: var(--text-dim);
+            display: flex;
+            gap: 8px;
+        }
+        .commit-sha {
+            color: var(--accent-cyan);
+            opacity: 0.7;
+        }
+
+        /* Favorites */
+        .fav-list {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            margin-top: 8px;
+        }
+        .fav-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 10px;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-dim);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.15s;
+            font-size: 12px;
+            font-family: 'Space Mono', monospace;
+            color: var(--text-secondary);
+        }
+        .fav-item:hover { border-color: var(--accent-cyan); color: var(--accent-cyan); }
+        .fav-item-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .fav-remove {
+            background: none;
+            border: none;
+            color: var(--text-dim);
+            cursor: pointer;
+            font-size: 14px;
+            padding: 0 2px;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+        .fav-remove:hover { color: var(--accent-red); }
+        .fav-add-btn {
+            font-size: 11px;
+            padding: 5px 10px;
+            margin-top: 4px;
+        }
         
         body {
             font-family: 'Outfit', sans-serif;
@@ -474,6 +628,74 @@
             color: var(--text-dim);
         }
         
+        /* Search bar */
+        .explorer-search {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: var(--bg-deep);
+            border-bottom: 1px solid var(--border-dim);
+        }
+
+        .explorer-search-input {
+            flex: 1;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-dim);
+            border-radius: 6px;
+            padding: 7px 12px 7px 32px;
+            font-family: 'Space Mono', monospace;
+            font-size: 12px;
+            color: var(--text-primary);
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .explorer-search-input:focus {
+            border-color: var(--accent-cyan);
+        }
+
+        .explorer-search-input::placeholder {
+            color: var(--text-dim);
+        }
+
+        .explorer-search-wrap {
+            position: relative;
+            flex: 1;
+        }
+
+        .explorer-search-icon {
+            position: absolute;
+            left: 9px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-dim);
+            pointer-events: none;
+        }
+
+        .explorer-search-clear {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--text-dim);
+            cursor: pointer;
+            padding: 2px;
+            display: none;
+            line-height: 1;
+            font-size: 14px;
+        }
+
+        .explorer-search-clear:hover { color: var(--text-primary); }
+
+        .search-highlight {
+            background: rgba(139, 233, 253, 0.25);
+            border-radius: 2px;
+            color: var(--accent-cyan);
+        }
+
         .explorer-actions-bar {
             padding: 8px 16px;
             background: rgba(139, 233, 253, 0.05);
@@ -865,10 +1087,16 @@
             background: rgba(10, 14, 20, 0.9);
             backdrop-filter: blur(8px);
             z-index: 9998;
-            align-items: center;
+            
+            /* ИЗМЕНЕНИЯ ТУТ: */
+            display: none; /* Оставляем как было */
+            align-items: flex-start; /* Выравниваем по верхнему краю вместо center */
             justify-content: center;
             padding: 20px;
+            padding-top: 15vh; /* Добавляем отступ сверху (10% от высоты экрана) */
+            overflow-y: auto; /* На всякий случай, если контент не влезет */
         }
+
         
         .modal.open {
             display: flex;
@@ -1263,6 +1491,7 @@
         <!-- Header -->
         <header class="header">
             <div class="logo">GitUp</div>
+            <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Сменить тему">🌙</button>
             <div class="status" id="statusBadge">
                 <span class="status-dot"></span>
                 <span>Не подключено</span>
@@ -1320,6 +1549,34 @@
                     </div>
                 </div>
 
+                <!-- Stats + Commits + Favorites -->
+                <div class="card" id="repoInfoCard" style="display:none;">
+                    <div class="card-header">
+                        <span>// Репозиторий</span>
+                        <button class="btn btn-secondary fav-add-btn" id="favToggleBtn" onclick="toggleFavorite()" title="Добавить в избранное">⭐ В избранное</button>
+                    </div>
+                    <div class="card-body" style="padding-top: 8px;">
+                        <!-- Stats -->
+                        <div class="repo-stats" id="repoStats">
+                            <div class="repo-stat"><span class="repo-stat-value" id="statFiles">—</span><span class="repo-stat-label">Файлов</span></div>
+                            <div class="repo-stat"><span class="repo-stat-value" id="statSize">—</span><span class="repo-stat-label">Размер</span></div>
+                            <div class="repo-stat"><span class="repo-stat-value" id="statCommits">—</span><span class="repo-stat-label">Коммитов</span></div>
+                            <div class="repo-stat"><span class="repo-stat-value" id="statBranches">—</span><span class="repo-stat-label">Веток</span></div>
+                        </div>
+                        <!-- Last commits (collapsible) -->
+                        <div style="margin: 12px 0 0; display:flex; align-items:center; justify-content:space-between; cursor:pointer;" onclick="toggleCommits()">
+                            <div style="font-family:'Space Mono',monospace; font-size:10px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.5px;">Последние коммиты</div>
+                            <span id="commitsToggleIcon" style="font-size:11px; color:var(--text-dim);">▶</span>
+                        </div>
+                        <div class="commits-list" id="commitsList" style="display:none; margin-top:6px;">
+                            <div style="color:var(--text-dim);font-size:12px;padding:8px 0;">Загрузка...</div>
+                        </div>
+                        <!-- Favorites -->
+                        <div style="margin: 14px 0 6px; font-family:'Space Mono',monospace; font-size:10px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.5px;">Избранные</div>
+                        <div class="fav-list" id="favList"></div>
+                    </div>
+                </div>
+
                 <!-- Upload -->
                 <div class="card">
                     <div class="card-header">
@@ -1356,7 +1613,17 @@
                             </div>
                         </div>
                         
-                        <button class="btn btn-success" id="uploadBtn" style="margin-top: 20px;">
+                        <div class="form-group" style="margin-top: 16px; margin-bottom: 0;">
+                            <label class="form-label" style="display:flex; align-items:center; gap:6px;">
+                                <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <circle cx="12" cy="12" r="3"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/>
+                                </svg>
+                                Описание изменений
+                            </label>
+                            <input type="text" class="form-input" id="commitMessage" placeholder="Что изменилось?" style="font-family:'Space Mono',monospace; font-size:12px;">
+                        </div>
+
+                        <button class="btn btn-success" id="uploadBtn" style="margin-top: 12px;">
                             <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
                                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
                             </svg>
@@ -1454,6 +1721,16 @@
                     </button>
                 </div>
                 
+                <div class="explorer-search">
+                    <div class="explorer-search-wrap">
+                        <svg class="explorer-search-icon" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                        </svg>
+                        <input class="explorer-search-input" id="searchInput" type="text" placeholder="Поиск файлов..." oninput="onSearchInput(this.value)" autocomplete="off" autocorrect="off" spellcheck="false">
+                        <button class="explorer-search-clear" id="searchClear" onclick="clearSearch()">✕</button>
+                    </div>
+                </div>
+
                 <div class="explorer-content" id="explorerContent">
                     <div class="empty-state">
                         <div class="empty-state-icon">📁</div>
@@ -1554,6 +1831,9 @@
                 await loadBranches();
                 updateStatus(true);
                 loadExplorer('');
+                loadRepoInfo(repo);
+            } else {
+                document.getElementById('repoInfoCard').style.display = 'none';
             }
         });
 
@@ -1596,6 +1876,7 @@
                     await loadBranches();
                     updateStatus(true);
                     loadExplorer('');
+                    loadRepoInfo(saved);
                 }
 
                 toast(`Подключено! ${repos.length} репозиториев`, 'success');
@@ -1712,6 +1993,7 @@
             updateSelectionUI();
             updateBreadcrumb(path);
             updateDestination();
+            clearSearch();
 
             const token = document.getElementById('token').value.trim();
             const repo = document.getElementById('repository').value;
@@ -1755,19 +2037,27 @@
         function renderExplorer(items) {
             const container = document.getElementById('explorerContent');
 
-            if (items.length === 0) {
-                container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📂</div><p>Пустая папка</p></div>';
+            // Filter by search query
+            const filtered = searchQuery
+                ? items.filter(i => i.name.toLowerCase().includes(searchQuery))
+                : items;
+
+            if (filtered.length === 0) {
+                container.innerHTML = searchQuery
+                    ? `<div class="empty-state"><div class="empty-state-icon">🔍</div><p>Ничего не найдено: «${esc(searchQuery)}»</p></div>`
+                    : '<div class="empty-state"><div class="empty-state-icon">📂</div><p>Пустая папка</p></div>';
                 return;
             }
 
             container.innerHTML = '';
-            items.forEach(item => {
+            filtered.forEach(item => {
                 const div = document.createElement('div');
                 div.className = 'explorer-item';
                 if (selectedItems.has(item.path)) div.classList.add('selected');
 
                 const isDir = item.type === 'dir';
                 const emoji = isDir ? '📁' : getFileEmoji(item.name);
+                const nameHTML = highlightMatch(item.name, searchQuery);
 
                 div.innerHTML = `
                     <div class="explorer-checkbox ${selectedItems.has(item.path) ? 'checked' : ''}" onclick="toggleSelect('${esc(item.path)}', event)">
@@ -1775,7 +2065,7 @@
                     </div>
                     <div class="explorer-icon ${isDir ? 'folder' : ''}">${emoji}</div>
                     <div class="explorer-info" ${isDir ? `onclick="closeContextMenu(); loadExplorer('${esc(item.path)}')"` : ''} style="${isDir ? 'cursor:pointer' : ''}">
-                        <div class="explorer-name">${esc(item.name)}</div>
+                        <div class="explorer-name">${nameHTML}</div>
                         <div class="explorer-meta">${isDir ? `Папка <span class="folder-count" id="fc-${item.path.replace(/\//g,'-')}">...</span>` : formatSize(item.size)}</div>
                     </div>
                     <div class="explorer-item-actions">
@@ -1793,7 +2083,7 @@
             });
 
             // Load folder counts async
-            loadFolderCounts(items);
+            loadFolderCounts(filtered);
         }
 
         // ── Folder counts ─────────────────────────────────────────
@@ -1877,7 +2167,193 @@
             if (cached) renderExplorer(applySortItems(cached));
         }
 
+        // ── Search ────────────────────────────────────────────────
+        let searchQuery = '';
+
+        function onSearchInput(val) {
+            searchQuery = val.trim().toLowerCase();
+            const clearBtn = document.getElementById('searchClear');
+            if (clearBtn) clearBtn.style.display = searchQuery ? 'block' : 'none';
+            const cached = explorerCache[explorerPath];
+            if (cached) renderExplorer(applySortItems(cached));
+        }
+
+        function clearSearch() {
+            searchQuery = '';
+            const input = document.getElementById('searchInput');
+            if (input) input.value = '';
+            const clearBtn = document.getElementById('searchClear');
+            if (clearBtn) clearBtn.style.display = 'none';
+            const cached = explorerCache[explorerPath];
+            if (cached) renderExplorer(applySortItems(cached));
+        }
+
+        function highlightMatch(text, query) {
+            if (!query) return esc(text);
+            const idx = text.toLowerCase().indexOf(query);
+            if (idx === -1) return esc(text);
+            return esc(text.slice(0, idx))
+                + `<span class="search-highlight">${esc(text.slice(idx, idx + query.length))}</span>`
+                + esc(text.slice(idx + query.length));
+        }
+
         // ── Repo history ──────────────────────────────────────────
+        function toggleCommits() {
+            const list = document.getElementById('commitsList');
+            const icon = document.getElementById('commitsToggleIcon');
+            const open = list.style.display === 'none';
+            list.style.display = open ? 'flex' : 'none';
+            icon.textContent = open ? '▼' : '▶';
+        }
+
+        // ── Theme ─────────────────────────────────────────────────
+        function toggleTheme() {
+            const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+            const newTheme = isLight ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            document.getElementById('themeToggle').textContent = newTheme === 'light' ? '🌙' : '☀️';
+            localStorage.setItem('gh-theme', newTheme);
+        }
+
+        // Apply saved theme on load
+        (function() {
+            const saved = localStorage.getItem('gh-theme');
+            if (saved === 'light') {
+                document.documentElement.setAttribute('data-theme', 'light');
+                setTimeout(() => {
+                    const btn = document.getElementById('themeToggle');
+                    if (btn) btn.textContent = '🌙';
+                }, 0);
+            }
+        })();
+
+        // ── Repo stats & commits ──────────────────────────────────
+        async function loadRepoInfo(repo) {
+            const token = document.getElementById('token').value.trim();
+            const card = document.getElementById('repoInfoCard');
+            if (!repo || !token) { card.style.display = 'none'; return; }
+            card.style.display = '';
+
+            // Update favorite button
+            updateFavBtn(repo);
+            renderFavList();
+
+            try {
+                // Repo info
+                const [repoRes, commitsRes, branchesRes] = await Promise.all([
+                    fetch(`https://api.github.com/repos/${repo}`, { headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' } }),
+                    fetch(`https://api.github.com/repos/${repo}/commits?per_page=5`, { headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' } }),
+                    fetch(`https://api.github.com/repos/${repo}/branches`, { headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' } })
+                ]);
+
+                if (repoRes.ok) {
+                    const data = await repoRes.json();
+                    document.getElementById('statSize').textContent = formatSize(data.size * 1024);
+                    document.getElementById('statBranches').textContent = (await branchesRes.json()).length || '—';
+                }
+
+                if (commitsRes.ok) {
+                    const commits = await commitsRes.json();
+                    document.getElementById('statCommits').textContent = commits.length === 5 ? '5+' : commits.length;
+                    document.getElementById('commitsList').innerHTML = commits.map(c => {
+                        const date = new Date(c.commit.author.date);
+                        const ago = timeAgo(date);
+                        return `<div class="commit-item">
+                            <div class="commit-msg">${esc(c.commit.message.split('\n')[0])}</div>
+                            <div class="commit-meta">
+                                <span class="commit-sha">${c.sha.slice(0,7)}</span>
+                                <span>${esc(c.commit.author.name)}</span>
+                                <span>${ago}</span>
+                            </div>
+                        </div>`;
+                    }).join('');
+                }
+
+                // File count via tree
+                const branch = document.getElementById('branch').value || 'main';
+                const treeRes = await fetch(`https://api.github.com/repos/${repo}/git/trees/HEAD?recursive=1`, {
+                    headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+                });
+                if (treeRes.ok) {
+                    const tree = await treeRes.json();
+                    const files = (tree.tree || []).filter(i => i.type === 'blob');
+                    document.getElementById('statFiles').textContent = files.length;
+                }
+            } catch(e) { /* silent */ }
+        }
+
+        function timeAgo(date) {
+            const sec = Math.floor((Date.now() - date) / 1000);
+            if (sec < 60) return 'только что';
+            if (sec < 3600) return Math.floor(sec/60) + ' мин';
+            if (sec < 86400) return Math.floor(sec/3600) + ' ч';
+            if (sec < 2592000) return Math.floor(sec/86400) + ' дн';
+            return Math.floor(sec/2592000) + ' мес';
+        }
+
+        // ── Favorites ─────────────────────────────────────────────
+        function getFavorites() {
+            try { return JSON.parse(localStorage.getItem('gh-favorites') || '[]'); } catch { return []; }
+        }
+
+        function toggleFavorite() {
+            const repo = document.getElementById('repository').value;
+            if (!repo) return;
+            let favs = getFavorites();
+            if (favs.includes(repo)) {
+                favs = favs.filter(f => f !== repo);
+                toast(`Убрано из избранного`, 'success');
+            } else {
+                favs = [repo, ...favs].slice(0, 10);
+                toast(`Добавлено в избранное ⭐`, 'success');
+            }
+            localStorage.setItem('gh-favorites', JSON.stringify(favs));
+            updateFavBtn(repo);
+            renderFavList();
+        }
+
+        function updateFavBtn(repo) {
+            const btn = document.getElementById('favToggleBtn');
+            if (!btn) return;
+            const isFav = getFavorites().includes(repo);
+            btn.textContent = isFav ? '★ В избранном' : '⭐ В избранное';
+            btn.style.color = isFav ? 'var(--accent-yellow)' : '';
+        }
+
+        function renderFavList() {
+            const list = document.getElementById('favList');
+            if (!list) return;
+            const favs = getFavorites();
+            if (!favs.length) {
+                list.innerHTML = '<div style="font-size:12px;color:var(--text-dim);padding:4px 0;">Нет избранных</div>';
+                return;
+            }
+            list.innerHTML = favs.map(r => `
+                <div class="fav-item" title="${esc(r)}">
+                    <span style="opacity:0.6;">⭐</span>
+                    <span class="fav-item-name" onclick="pickRepoHistory('${esc(r)}')">${esc(r)}</span>
+                    <button class="fav-remove" onclick="removeFavorite('${esc(r)}')" title="Убрать">✕</button>
+                </div>
+            `).join('');
+        }
+
+        function removeFavorite(repo) {
+            let favs = getFavorites().filter(f => f !== repo);
+            localStorage.setItem('gh-favorites', JSON.stringify(favs));
+            const cur = document.getElementById('repository').value;
+            if (cur === repo) updateFavBtn(repo);
+            renderFavList();
+        }
+
+        // ── Copy path ─────────────────────────────────────────────
+        function copyFilePath(path) {
+            navigator.clipboard.writeText(path).then(() => {
+                toast(`Путь скопирован: ${path}`, 'success');
+            }).catch(() => {
+                toast(path, 'success');
+            });
+        }
+
         function saveRepoHistory(repoName) {
             if (!repoName) return;
             let hist = JSON.parse(localStorage.getItem('gh-repo-history') || '[]');
@@ -2519,6 +2995,15 @@
             }
             
             menuHTML += `
+                <div class="context-menu-item" onclick="copyFilePath('${esc(path)}'); closeContextMenu();">
+                    <div class="context-menu-icon">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                        </svg>
+                    </div>
+                    Копировать путь
+                </div>
                 <div class="context-menu-item" onclick="renameItem('${esc(path)}', '${esc(name)}', '${type}', event); closeContextMenu();">
                     <div class="context-menu-icon">
                         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -3174,7 +3659,7 @@
                 const newCommitRes = await fetch(`https://api.github.com/repos/${repo}/git/commits`, {
                     method: 'POST',
                     headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: `Upload ${selectedFiles.length} file(s)`, tree: tree.sha, parents: [commitSha] })
+                    body: JSON.stringify({ message: document.getElementById('commitMessage').value.trim() || `Upload ${selectedFiles.length} file(s)`, tree: tree.sha, parents: [commitSha] })
                 });
 
                 const newCommit = await newCommitRes.json();
