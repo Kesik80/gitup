@@ -267,6 +267,13 @@
             border-bottom: 2px solid var(--border-dim);
             position: relative;
         }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-left: auto;
+        }
         
         .header::after {
             content: '';
@@ -1461,9 +1468,16 @@
         /* Responsive */
         @media (max-width: 768px) {
             .header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 16px;
+                flex-direction: row;
+                align-items: center;
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+            .header-right {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                margin-left: auto;
             }
             
             .explorer {
@@ -1491,10 +1505,12 @@
         <!-- Header -->
         <header class="header">
             <div class="logo">GitUp</div>
-            <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Сменить тему">🌙</button>
-            <div class="status" id="statusBadge">
-                <span class="status-dot"></span>
-                <span>Не подключено</span>
+            <div class="header-right">
+                <div class="status" id="statusBadge">
+                    <span class="status-dot"></span>
+                    <span>Не подключено</span>
+                </div>
+                <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Сменить тему">🌙</button>
             </div>
         </header>
 
@@ -1584,20 +1600,38 @@
                         <span id="fileCount" style="color: var(--text-dim);"></span>
                     </div>
                     <div class="card-body">
-                        <div class="destination-indicator">
-                            📁 Папка: <strong id="destinationPath">root</strong>
+                        <div class="form-group" style="margin-bottom:16px;">
+                            <label class="form-label" style="display:flex;align-items:center;gap:6px;">
+                                <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+                                </svg>
+                                Путь назначения
+                            </label>
+                            <input type="text" class="form-input" id="uploadPathInput"
+                                placeholder="например: assets/icons/svg"
+                                autocomplete="off" autocorrect="off" spellcheck="false"
+                                style="font-family:'Space Mono',monospace;font-size:12px;">
+                            <div style="margin-top:6px;font-size:11px;color:var(--text-dim);line-height:1.5;">
+                                💡 Куда положить файлы. Оставьте пустым — загрузится в корень.<br>
+                                Используйте <span style="color:var(--accent-cyan);font-family:'Space Mono',monospace;">папка1/папка2/папка3</span> для вложенных папок — создадутся автоматически.
+                            </div>
                         </div>
-                        
+
                         <div class="drop-zone" id="dropZone">
                             <input type="file" id="fileInput" multiple style="display: none;">
+                            <input type="file" id="folderInput" webkitdirectory multiple style="display: none;">
                             <div class="drop-zone-content">
                                 <div class="drop-zone-icon">
                                     <svg width="36" height="36" fill="currentColor" viewBox="0 0 24 24">
                                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
                                     </svg>
                                 </div>
-                                <h3>Перетащите файлы сюда</h3>
-                                <p>или нажмите для выбора</p>
+                                <h3>Перетащите файлы или папку сюда</h3>
+                                <p style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+                                    <span onclick="event.stopPropagation();document.getElementById('fileInput').click()" style="cursor:pointer;color:var(--accent-cyan);text-decoration:underline;text-underline-offset:3px;">выбрать файлы</span>
+                                    <span style="color:var(--text-dim);">или</span>
+                                    <span onclick="event.stopPropagation();document.getElementById('folderInput').click()" style="cursor:pointer;color:var(--accent-pink);text-decoration:underline;text-underline-offset:3px;">выбрать папку</span>
+                                </p>
                             </div>
                         </div>
                         
@@ -2554,7 +2588,10 @@
         }
 
         function updateDestination() {
-            document.getElementById('destinationPath').textContent = explorerPath || 'root';
+            const input = document.getElementById('uploadPathInput');
+            if (input && input.dataset.userEdited !== 'true') {
+                input.value = explorerPath || '';
+            }
         }
 
         function refreshExplorer() {
@@ -3500,44 +3537,113 @@
         // File upload
         const dropZone = document.getElementById('dropZone');
         const fileInput = document.getElementById('fileInput');
+        const folderInput = document.getElementById('folderInput');
 
         dropZone.onclick = () => fileInput.click();
         dropZone.ondragover = (e) => { e.preventDefault(); dropZone.classList.add('dragover'); };
         dropZone.ondragleave = () => dropZone.classList.remove('dragover');
-        dropZone.ondrop = (e) => { e.preventDefault(); dropZone.classList.remove('dragover'); handleFiles(e.dataTransfer.files); };
-        fileInput.onchange = (e) => { handleFiles(e.target.files); fileInput.value = ''; };
+        dropZone.ondrop = (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            // Try folder drag via DataTransferItem API
+            const items = e.dataTransfer.items;
+            if (items && items.length > 0 && items[0].webkitGetAsEntry) {
+                const entries = Array.from(items).map(i => i.webkitGetAsEntry()).filter(Boolean);
+                readEntries(entries);
+            } else {
+                handleFiles(e.dataTransfer.files);
+            }
+        };
+        fileInput.onchange = (e) => { handleFiles(e.target.files, ''); fileInput.value = ''; };
+        folderInput.onchange = (e) => { handleFiles(e.target.files, null); folderInput.value = ''; };
 
-        function handleFiles(files) {
-            const maxSize = 100 * 1024 * 1024; // 100MB - GitHub limit
-            const warnSize = 50 * 1024 * 1024; // 50MB - warning threshold
-            
+        // Track manual edits to uploadPathInput so auto-sync stops
+        const uploadPathInput = document.getElementById("uploadPathInput");
+        uploadPathInput.addEventListener("input", () => {
+            uploadPathInput.dataset.userEdited = uploadPathInput.value.trim() !== explorerPath ? "true" : "false";
+        });
+        // Click on explorer folder → sync path field if not user-edited
+        // (handled via updateDestination called from loadExplorer)
+
+        // Recursively read FileSystemEntry items (drag & drop folder)
+        function readEntries(entries, basePath) {
+            basePath = basePath || '';
+            const promises = entries.map(entry => {
+                if (entry.isFile) {
+                    return new Promise(resolve => {
+                        entry.file(file => {
+                            const relPath = basePath ? `${basePath}/${file.name}` : file.name;
+                            addFileToQueue(file, relPath);
+                            resolve();
+                        });
+                    });
+                } else if (entry.isDirectory) {
+                    const dirPath = basePath ? `${basePath}/${entry.name}` : entry.name;
+                    const reader = entry.createReader();
+                    return new Promise(resolve => {
+                        const readAll = (acc) => {
+                            reader.readEntries(results => {
+                                if (!results.length) {
+                                    readEntries(acc, dirPath).then(resolve);
+                                } else {
+                                    readAll(acc.concat(Array.from(results)));
+                                }
+                            });
+                        };
+                        readAll([]);
+                    });
+                }
+                return Promise.resolve();
+            });
+            return Promise.all(promises).then(() => renderFileList());
+        }
+
+        function addFileToQueue(file, relPath) {
+            const maxSize = 100 * 1024 * 1024;
+            if (file.size > maxSize) {
+                toast(`Файл "${file.name}" слишком большой (${formatSize(file.size)}). Максимум: 100MB`, 'error');
+                return;
+            }
+            const basePath = (document.getElementById("uploadPathInput")?.value.trim().replace(/^\/+|\/+$/g, "")) || explorerPath || "";
+            const fullPath = basePath ? `${basePath}/${relPath}` : relPath;
+            selectedFiles.push({
+                id: Date.now() + Math.random(),
+                file,
+                name: relPath,   // show relative path in list
+                path: fullPath,
+                size: file.size
+            });
+        }
+
+        function handleFiles(files, basePathOverride) {
+            const maxSize = 100 * 1024 * 1024;
             let hasLargeFiles = false;
             let hasTooLargeFiles = false;
-            
+
             Array.from(files).forEach(file => {
                 if (file.size > maxSize) {
                     toast(`Файл "${file.name}" слишком большой (${formatSize(file.size)}). Максимум: 100MB`, 'error');
                     hasTooLargeFiles = true;
                     return;
                 }
-                
-                if (file.size > warnSize) {
-                    hasLargeFiles = true;
+                if (file.size > 50 * 1024 * 1024) hasLargeFiles = true;
+
+                // basePathOverride === null → use webkitRelativePath (folder input)
+                // basePathOverride === ''   → plain files, no subfolder
+                let relPath;
+                if (basePathOverride === null && file.webkitRelativePath) {
+                    relPath = file.webkitRelativePath;
+                } else {
+                    relPath = file.name;
                 }
-                
-                selectedFiles.push({
-                    id: Date.now() + Math.random(),
-                    file,
-                    name: file.name,
-                    path: explorerPath ? `${explorerPath}/${file.name}` : file.name,
-                    size: file.size
-                });
+
+                addFileToQueue(file, relPath);
             });
-            
+
             if (hasLargeFiles && !hasTooLargeFiles) {
                 toast('⚠️ Есть большие файлы (>50MB). Загрузка может занять время', 'error');
             }
-            
+
             renderFileList();
         }
 
