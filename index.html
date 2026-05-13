@@ -7,6 +7,10 @@
     <meta name="theme-color" content="#0a0e14">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="GitUp">
+    <meta name="mobile-web-app-capable" content="yes">
+    <link rel="manifest" href="/icons/manifest.json">
+    <link rel="apple-touch-icon" href="/icons/icon-192.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
@@ -1498,9 +1502,167 @@
                 padding-bottom: calc(20px + env(safe-area-inset-bottom));
             }
         }
+
+        /* ===== PWA Install Banner ===== */
+        #pwa-banner {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 99999;
+            display: none;
+            padding: 0 16px 16px;
+            padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+            animation: bannerSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        #pwa-banner.visible { display: block; }
+
+        @keyframes bannerSlideUp {
+            from { transform: translateY(100%); opacity: 0; }
+            to   { transform: translateY(0);    opacity: 1; }
+        }
+
+        .pwa-banner-inner {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-bright);
+            border-radius: 16px;
+            padding: 18px 20px;
+            box-shadow: 0 -4px 40px rgba(0,0,0,0.6), 0 0 0 1px rgba(139,233,253,0.08);
+            max-width: 520px;
+            margin: 0 auto;
+        }
+
+        .pwa-banner-top {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 14px;
+        }
+
+        .pwa-banner-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 12px;
+            flex-shrink: 0;
+        }
+
+        .pwa-banner-text { flex: 1; }
+
+        .pwa-banner-title {
+            font-family: 'Space Mono', monospace;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .pwa-banner-sub {
+            font-size: 12px;
+            color: var(--text-dim);
+            margin-top: 3px;
+            line-height: 1.4;
+        }
+
+        .pwa-banner-close {
+            background: none;
+            border: none;
+            color: var(--text-dim);
+            cursor: pointer;
+            font-size: 20px;
+            line-height: 1;
+            padding: 4px;
+            flex-shrink: 0;
+            transition: color 0.2s;
+        }
+        .pwa-banner-close:hover { color: var(--accent-red); }
+
+        .pwa-banner-btns {
+            display: flex;
+            gap: 10px;
+        }
+
+        .pwa-btn-install {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            background: var(--gradient-cyber);
+            color: var(--bg-void);
+            font-family: 'Space Mono', monospace;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            cursor: pointer;
+            box-shadow: var(--glow-cyan);
+            transition: all 0.2s;
+        }
+        .pwa-btn-install:hover { transform: translateY(-1px); }
+
+        .pwa-btn-later {
+            padding: 12px 18px;
+            border: 1px solid var(--border-bright);
+            border-radius: 10px;
+            background: var(--bg-surface);
+            color: var(--text-dim);
+            font-family: 'Space Mono', monospace;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .pwa-btn-later:hover { color: var(--text-primary); border-color: var(--accent-cyan); }
+
+        /* iOS instruction steps */
+        .ios-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .ios-step {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 14px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-dim);
+            border-radius: 10px;
+            font-size: 13px;
+            color: var(--text-primary);
+        }
+
+        .ios-step-num {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: var(--gradient-cyber);
+            color: var(--bg-void);
+            font-family: 'Space Mono', monospace;
+            font-size: 12px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .ios-step-emoji {
+            font-size: 18px;
+            flex-shrink: 0;
+        }
     </style>
 </head>
 <body>
+
+    <!-- ===== PWA Install Banner ===== -->
+    <div id="pwa-banner">
+        <div class="pwa-banner-inner" id="pwa-banner-inner">
+            <!-- Content injected by JS depending on platform -->
+        </div>
+    </div>
+
     <div class="app">
         <!-- Header -->
         <header class="header">
@@ -3895,6 +4057,124 @@
         document.getElementById('modal').onclick = (e) => {
             if (e.target.id === 'modal') closeModal();
         };
+
+        // ===== PWA Install Banner =====
+        (function () {
+            const DISMISS_KEY   = 'pwa-install-dismissed';
+            const COOLDOWN_MS   = 24 * 60 * 60 * 1000; // 24 часа
+
+            const banner    = document.getElementById('pwa-banner');
+            const inner     = document.getElementById('pwa-banner-inner');
+            const iconSrc   = '/icons/icon-192.png';
+
+            // Определяем платформу
+            const ua        = navigator.userAgent;
+            const isIOS     = /iphone|ipad|ipod/i.test(ua);
+            const isSafari  = /safari/i.test(ua) && !/crios|chrome|fxios/i.test(ua);
+            const isAndroid = /android/i.test(ua);
+
+            // Уже установлено как PWA?
+            const isStandalone =
+                window.matchMedia('(display-mode: standalone)').matches ||
+                window.navigator.standalone === true;
+
+            if (isStandalone) return; // уже запущено из домашнего экрана
+
+            // Проверяем cooldown
+            function shouldShow() {
+                const ts = localStorage.getItem(DISMISS_KEY);
+                if (!ts) return true;
+                return Date.now() - parseInt(ts, 10) > COOLDOWN_MS;
+            }
+
+            function dismiss() {
+                localStorage.setItem(DISMISS_KEY, String(Date.now()));
+                banner.style.animation = 'bannerSlideUp 0.3s reverse';
+                setTimeout(() => banner.classList.remove('visible'), 300);
+            }
+
+            // === Android: beforeinstallprompt ===
+            let deferredPrompt = null;
+
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                deferredPrompt = e;
+
+                if (!shouldShow()) return;
+
+                inner.innerHTML = `
+                    <div class="pwa-banner-top">
+                        <img class="pwa-banner-icon" src="${iconSrc}" alt="GitUp">
+                        <div class="pwa-banner-text">
+                            <div class="pwa-banner-title">Установить GitUp</div>
+                            <div class="pwa-banner-sub">Работает офлайн · Быстрый доступ с рабочего стола</div>
+                        </div>
+                        <button class="pwa-banner-close" id="pwa-close">✕</button>
+                    </div>
+                    <div class="pwa-banner-btns">
+                        <button class="pwa-btn-install" id="pwa-install">⬇ Установить</button>
+                        <button class="pwa-btn-later" id="pwa-later">Позже</button>
+                    </div>
+                `;
+
+                banner.classList.add('visible');
+
+                document.getElementById('pwa-close').onclick  = dismiss;
+                document.getElementById('pwa-later').onclick  = dismiss;
+                document.getElementById('pwa-install').onclick = async () => {
+                    dismiss();
+                    if (!deferredPrompt) return;
+                    deferredPrompt.prompt();
+                    const { outcome } = await deferredPrompt.userChoice;
+                    if (outcome === 'accepted') {
+                        localStorage.removeItem(DISMISS_KEY); // сбрасываем — уже установлено
+                    }
+                    deferredPrompt = null;
+                };
+            });
+
+            // === iOS Safari: показываем инструкцию ===
+            if (isIOS && isSafari && shouldShow()) {
+                // Небольшая задержка чтобы страница успела загрузиться
+                setTimeout(() => {
+                    inner.innerHTML = `
+                        <div class="pwa-banner-top">
+                            <img class="pwa-banner-icon" src="${iconSrc}" alt="GitUp">
+                            <div class="pwa-banner-text">
+                                <div class="pwa-banner-title">Установить GitUp</div>
+                                <div class="pwa-banner-sub">Добавьте на домашний экран за 3 шага</div>
+                            </div>
+                            <button class="pwa-banner-close" id="pwa-close">✕</button>
+                        </div>
+                        <div class="ios-steps">
+                            <div class="ios-step">
+                                <span class="ios-step-num">1</span>
+                                <span class="ios-step-emoji">⎋</span>
+                                <span>Нажмите кнопку <strong>«Поделиться»</strong> в нижней панели Safari</span>
+                            </div>
+                            <div class="ios-step">
+                                <span class="ios-step-num">2</span>
+                                <span class="ios-step-emoji">➕</span>
+                                <span>Выберите <strong>«На экран «Домой»»</strong></span>
+                            </div>
+                            <div class="ios-step">
+                                <span class="ios-step-num">3</span>
+                                <span class="ios-step-emoji">✅</span>
+                                <span>Нажмите <strong>«Добавить»</strong> в правом верхнем углу</span>
+                            </div>
+                        </div>
+                        <div class="pwa-banner-btns">
+                            <button class="pwa-btn-later" id="pwa-later" style="flex:1">Понятно</button>
+                        </div>
+                    `;
+
+                    banner.classList.add('visible');
+
+                    document.getElementById('pwa-close').onclick = dismiss;
+                    document.getElementById('pwa-later').onclick = dismiss;
+                }, 1500);
+            }
+        })();
     </script>
 </body>
 </html>
