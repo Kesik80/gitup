@@ -1909,11 +1909,6 @@
                             <path d="M19 6l-1 14H6L5 6"/>
                         </svg>
                     </button>
-                    <button class="btn btn-secondary btn-icon" title="Скопировать для Claude" onclick="copyForClaude()" style="color:var(--accent-purple);border-color:var(--accent-purple);" title="Скопировать для Claude">
-                        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                            <path d="M8 1C4.13 1 1 4.13 1 8s3.13 7 7 7 7-3.13 7-7-3.13-7-7-7zm0 1.5c3.03 0 5.5 2.47 5.5 5.5S11.03 13.5 8 13.5 2.5 11.03 2.5 8 4.97 2.5 8 2.5zM6.5 5v6l5-3-5-3z"/>
-                        </svg>
-                    </button>
                     <button class="btn btn-secondary btn-icon" onclick="clearSelection()" title="Очистить">
                         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <line x1="18" y1="6" x2="6" y2="18"/>
@@ -2803,100 +2798,7 @@
             return items.filter(i => selectedItems.has(i.path));
         }
 
-        // ── Копировать для Claude ─────────────────────────────────────────
-        const TEXT_EXTENSIONS = new Set([
-            'html','css','js','ts','jsx','tsx','json','md','txt','yml','yaml',
-            'xml','svg','sh','bash','py','rb','php','java','c','cpp','h','go',
-            'rs','swift','kt','vue','env','gitignore','prettierrc','eslintrc',
-            'toml','ini','cfg','conf','sql','graphql','gql','lock'
-        ]);
-
-        function isTextFile(name) {
-            const ext = name.split('.').pop().toLowerCase();
-            return TEXT_EXTENSIONS.has(ext);
-        }
-
-        async function fetchAllFilesInDir(path, results) {
-            const token = localStorage.getItem('gh-token');
-            const repo  = document.getElementById('repository').value;
-            const branch = document.getElementById('branch').value || 'main';
-            const url = `https://api.github.com/repos/${repo}/contents/${path}?ref=${branch}`;
-            const r = await fetch(url, {
-                headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
-            });
-            if (!r.ok) return;
-            const items = await r.json();
-            for (const item of items) {
-                if (item.type === 'dir') {
-                    await fetchAllFilesInDir(item.path, results);
-                } else if (item.type === 'file' && isTextFile(item.name)) {
-                    results.push(item);
-                }
-            }
-        }
-
-        async function copyForClaude() {
-            const selected = getSelected();
-            if (selected.length === 0) return;
-
-            const token  = localStorage.getItem('gh-token');
-            const repo   = document.getElementById('repository').value;
-            const branch = document.getElementById('branch').value || 'main';
-
-            if (!token || !repo) {
-                toast('Сначала подключитесь к GitHub', 'error');
-                return;
-            }
-
-            // Кнопка — показываем прогресс
-            const claudeBtn = document.querySelector('[onclick="copyForClaude()"]');
-            const origHTML = claudeBtn.innerHTML;
-            claudeBtn.disabled = true;
-            claudeBtn.innerHTML = '<div class="spinner" style="width:14px;height:14px;"></div>';
-
-            try {
-                // Собираем все файлы — рекурсивно раскрываем папки
-                const allFiles = [];
-                for (const item of selected) {
-                    if (item.type === 'dir') {
-                        await fetchAllFilesInDir(item.path, allFiles);
-                    } else if (isTextFile(item.name)) {
-                        allFiles.push(item);
-                    }
-                }
-
-                if (allFiles.length === 0) {
-                    toast('Нет текстовых файлов для копирования', 'warning');
-                    return;
-                }
-
-                // Читаем содержимое каждого файла
-                const parts = [];
-                parts.push(`Репозиторий: ${repo} (ветка: ${branch})\n`);
-
-                for (const file of allFiles) {
-                    const r = await fetch(
-                        `https://api.github.com/repos/${repo}/contents/${file.path}?ref=${branch}`,
-                        { headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' } }
-                    );
-                    if (!r.ok) continue;
-                    const data = await r.json();
-                    const content = decodeURIComponent(escape(atob(data.content.replace(/\n/g, ''))));
-                    parts.push(`\n${'─'.repeat(60)}\nФайл: ${file.path}\n${'─'.repeat(60)}\n${content}`);
-                }
-
-                const fullText = parts.join('');
-                await navigator.clipboard.writeText(fullText);
-                toast(`✅ Скопировано ${allFiles.length} файл(ов) для Claude — вставьте в чат`, 'success');
-
-            } catch (err) {
-                toast('Ошибка: ' + err.message, 'error');
-            } finally {
-                claudeBtn.disabled = false;
-                claudeBtn.innerHTML = origHTML;
-            }
-        }
-
+        function copySelected() {
             const items = getSelected();
             if (items.length === 0) return;
             clipboard = { items, action: 'copy' };
