@@ -3545,9 +3545,9 @@
         async function newFolder() {
             openModal(
                 'Новая папка',
-                `<input type="text" class="form-input" id="folderInput" placeholder="название-папки">`,
+                `<input type="text" class="form-input" id="newFolderNameInput" placeholder="название-папки">`,
                 async () => {
-                    const name = document.getElementById('folderInput').value.trim();
+                    const name = document.getElementById('newFolderNameInput').value.trim();
                     if (!name) return;
 
                     const token = document.getElementById('token').value.trim();
