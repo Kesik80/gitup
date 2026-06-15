@@ -1687,8 +1687,8 @@
                     </div>
                     <div class="card-body">
                         <div class="form-group">
-                            <label class="form-label">GitHub Токен</label>
-                            <input type="password" class="form-input" id="token" placeholder="ghp_xxxxxxxxxxxx" onkeypress="if(event.key==='Enter') connect()">
+                            <label class="form-label">Пароль</label>
+                            <input type="password" class="form-input" id="token" placeholder="Введите пароль..." onkeypress="if(event.key==='Enter') connect()">
                         </div>
                         <button class="btn btn-primary" id="connectBtn" onclick="connect()" style="width: 100%;">
                             <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
@@ -1909,6 +1909,13 @@
                             <path d="M19 6l-1 14H6L5 6"/>
                         </svg>
                     </button>
+                    <button class="btn btn-secondary btn-icon" onclick="copyForClaude()" title="Скопировать для Claude" style="color:#a855f7;border-color:#a855f7;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                            <path d="M2 17l10 5 10-5"/>
+                            <path d="M2 12l10 5 10-5"/>
+                        </svg>
+                    </button>
                     <button class="btn btn-secondary btn-icon" onclick="clearSelection()" title="Очистить">
                         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <line x1="18" y1="6" x2="6" y2="18"/>
@@ -1976,11 +1983,7 @@
         let currentEditFile = null; // for editor
 
         // Init
-        const savedToken = localStorage.getItem('gh-token') || '';
-        if (savedToken) {
-            document.getElementById('token').value = savedToken;
-            setTimeout(() => connect(), 100);
-        }
+        // Пароль не сохраняем — вводится каждую сессию
         renderRepoHistory();
 
         // Repo history helpers
@@ -2035,13 +2038,11 @@
 
         // Connect
         async function connect() {
-            const token = document.getElementById('token').value.trim();
-            if (!token) {
-                toast('Введите GitHub токен', 'error');
+            const password = document.getElementById('token').value.trim();
+            if (!password) {
+                toast('Введите пароль', 'error');
                 return;
             }
-
-            localStorage.setItem('gh-token', token);
 
             const btn = document.getElementById('connectBtn');
             const orig = btn.innerHTML;
@@ -2049,16 +2050,26 @@
             btn.innerHTML = '<div class="spinner"></div> Подключение...';
 
             try {
+                // Получаем токен с сервера по паролю
+                const authResp = await fetch('/api/github-token', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password })
+                });
+                const authData = await authResp.json();
+                if (!authData.ok) throw new Error(authData.error || 'Неверный пароль');
+
+                const token = authData.token;
+                sessionStorage.setItem('gh-token', token);
+
                 const r = await fetch('https://api.github.com/user/repos?per_page=100&sort=updated', {
                     headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
                 });
-
-                if (!r.ok) throw new Error(r.status === 401 ? 'Неверный токен' : 'Ошибка подключения');
+                if (!r.ok) throw new Error(r.status === 401 ? 'Неверный токен GitHub' : 'Ошибка подключения');
 
                 const repos = await r.json();
                 const sel = document.getElementById('repository');
                 sel.innerHTML = '<option value="">Выберите репозиторий...</option>';
-
                 repos.forEach(repo => {
                     const opt = document.createElement('option');
                     opt.value = repo.full_name;
@@ -2076,8 +2087,10 @@
                 }
 
                 toast(`Подключено! ${repos.length} репозиториев`, 'success');
+                console.log('GitUp: подключено успешно');
             } catch (e) {
                 toast(e.message, 'error');
+                console.error('GitUp connect error:', e.message);
                 updateStatus(false);
             } finally {
                 btn.disabled = false;
@@ -2086,7 +2099,7 @@
         }
 
         async function loadBranches() {
-            const token = document.getElementById('token').value.trim();
+            const token = sessionStorage.getItem('gh-token') || '';
             const repo = document.getElementById('repository').value;
             if (!repo) return;
 
@@ -2191,7 +2204,7 @@
             updateDestination();
             clearSearch();
 
-            const token = document.getElementById('token').value.trim();
+            const token = sessionStorage.getItem('gh-token') || '';
             const repo = document.getElementById('repository').value;
             const branch = document.getElementById('branch').value;
 
@@ -2284,7 +2297,7 @@
 
         // ── Folder counts ─────────────────────────────────────────
         async function loadFolderCounts(items) {
-            const token  = document.getElementById('token').value.trim();
+            const token = sessionStorage.getItem('gh-token') || '';
             const repo   = document.getElementById('repository').value;
             const branch = document.getElementById('branch').value;
             if (!token || !repo) return;
@@ -2425,7 +2438,7 @@
 
         // ── Repo stats & commits ──────────────────────────────────
         async function loadRepoInfo(repo) {
-            const token = document.getElementById('token').value.trim();
+            const token = sessionStorage.getItem('gh-token') || '';
             const card = document.getElementById('repoInfoCard');
             if (!repo || !token) { card.style.display = 'none'; return; }
             card.style.display = '';
@@ -2624,7 +2637,7 @@
             const name    = document.getElementById('newFileNameInput').value.trim();
             const content = document.getElementById('newFileContentInput').value;
             if (!name) { toast('Введите имя файла', 'error'); return; }
-            const token  = document.getElementById('token').value.trim();
+            const token = sessionStorage.getItem('gh-token') || '';
             const repo   = document.getElementById('repository').value;
             const branch = document.getElementById('branch').value;
             const filePath = explorerPath ? `${explorerPath}/${name}` : name;
@@ -2649,7 +2662,7 @@
 
         async function editFile(path, name, e) {
             if (e) e.stopPropagation();
-            const token  = document.getElementById('token').value.trim();
+            const token = sessionStorage.getItem('gh-token') || '';
             const repo   = document.getElementById('repository').value;
             const branch = document.getElementById('branch').value;
             const modal   = document.getElementById('modal');
@@ -2694,7 +2707,7 @@
 
         async function saveEditedFile() {
             if (!editingFile) return;
-            const token  = document.getElementById('token').value.trim();
+            const token = sessionStorage.getItem('gh-token') || '';
             const repo   = document.getElementById('repository').value;
             const branch = document.getElementById('branch').value;
             const text   = document.getElementById('editorTextarea').value;
@@ -2798,7 +2811,85 @@
             return items.filter(i => selectedItems.has(i.path));
         }
 
-        function copySelected() {
+        // ── Копировать для Claude ─────────────────────────────────────────
+        const CLAUDE_TEXT_EXT = new Set([
+            'html','css','js','ts','jsx','tsx','json','md','txt','yml','yaml',
+            'xml','svg','sh','bash','py','rb','php','java','c','cpp','h','go',
+            'rs','swift','kt','vue','env','gitignore','prettierrc','eslintrc',
+            'toml','ini','cfg','conf','sql','graphql','gql'
+        ]);
+
+        function isClaudeTextFile(name) {
+            const ext = name.split('.').pop().toLowerCase();
+            return CLAUDE_TEXT_EXT.has(ext) || name === '.gitkeep';
+        }
+
+        async function fetchDirFilesForClaude(path, results) {
+            const token  = sessionStorage.getItem('gh-token') || '';
+            const repo   = document.getElementById('repository').value;
+            const branch = document.getElementById('branch').value || 'main';
+            const r = await fetch(
+                `https://api.github.com/repos/${repo}/contents/${path}?ref=${branch}`,
+                { headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' } }
+            );
+            if (!r.ok) return;
+            const items = await r.json();
+            for (const item of items) {
+                if (item.type === 'dir') await fetchDirFilesForClaude(item.path, results);
+                else if (item.type === 'file' && isClaudeTextFile(item.name)) results.push(item);
+            }
+        }
+
+        async function copyForClaude() {
+            const selected = getSelected();
+            if (!selected.length) return;
+
+            const token  = sessionStorage.getItem('gh-token') || '';
+            const repo   = document.getElementById('repository').value;
+            const branch = document.getElementById('branch').value || 'main';
+
+            if (!token || !repo) { toast('Сначала подключитесь', 'error'); return; }
+
+            const btn = document.querySelector('[onclick="copyForClaude()"]');
+            const orig = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<div class="spinner" style="width:14px;height:14px;border-width:2px;"></div>';
+
+            try {
+                const allFiles = [];
+                for (const item of selected) {
+                    if (item.type === 'dir') await fetchDirFilesForClaude(item.path, allFiles);
+                    else if (isClaudeTextFile(item.name)) allFiles.push(item);
+                }
+
+                if (!allFiles.length) { toast('Нет текстовых файлов', 'warning'); return; }
+
+                const parts = [`Репозиторий: ${repo} (ветка: ${branch})\n`];
+                for (const file of allFiles) {
+                    const r = await fetch(
+                        `https://api.github.com/repos/${repo}/contents/${file.path}?ref=${branch}`,
+                        { headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' } }
+                    );
+                    if (!r.ok) continue;
+                    const data = await r.json();
+                    const content = decodeURIComponent(escape(atob(data.content.replace(/\n/g, ''))));
+                    parts.push(`\n${'─'.repeat(60)}\nФайл: ${file.path}\n${'─'.repeat(60)}\n${content}`);
+                }
+
+                await navigator.clipboard.writeText(parts.join(''));
+                toast(`✅ ${allFiles.length} файл(ов) скопировано — вставьте в чат Claude`, 'success');
+                console.log(`GitUp Claude: скопировано ${allFiles.length} файлов из ${repo}`);
+
+            } catch (err) {
+                toast('Ошибка: ' + err.message, 'error');
+                console.error('copyForClaude:', err);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = orig;
+            }
+        }
+
+
             const items = getSelected();
             if (items.length === 0) return;
             clipboard = { items, action: 'copy' };
@@ -2829,7 +2920,7 @@
         async function pasteItems() {
             if (!clipboard || clipboard.items.length === 0) return;
 
-            const token = document.getElementById('token').value.trim();
+            const token = sessionStorage.getItem('gh-token') || '';
             const repo = document.getElementById('repository').value;
             const branch = document.getElementById('branch').value;
             const destPath = explorerPath;
@@ -2928,7 +3019,7 @@
 
         // Repository management
         function createRepository() {
-            const token = document.getElementById('token').value.trim();
+            const token = sessionStorage.getItem('gh-token') || '';
             if (!token) {
                 toast('Сначала подключитесь', 'error');
                 return;
@@ -3002,7 +3093,7 @@
         }
 
         function deleteRepository() {
-            const token = document.getElementById('token').value.trim();
+            const token = sessionStorage.getItem('gh-token') || '';
             const repo = document.getElementById('repository').value;
 
             if (!repo) {
@@ -3066,7 +3157,7 @@
                 'Удалить выбранное?',
                 `Удалить ${items.length} элемент(ов)? Это действие нельзя отменить.`,
                 async () => {
-                    const token = document.getElementById('token').value.trim();
+                    const token = sessionStorage.getItem('gh-token') || '';
                     const repo = document.getElementById('repository').value;
                     const branch = document.getElementById('branch').value;
 
@@ -3094,7 +3185,7 @@
                 'Удалить?',
                 `Удалить ${path}? Это действие нельзя отменить.`,
                 async () => {
-                    const token = document.getElementById('token').value.trim();
+                    const token = sessionStorage.getItem('gh-token') || '';
                     const repo = document.getElementById('repository').value;
                     const branch = document.getElementById('branch').value;
 
@@ -3123,7 +3214,7 @@
                     const newName = document.getElementById('renameInput').value.trim();
                     if (!newName || newName === name) return;
 
-                    const token = document.getElementById('token').value.trim();
+                    const token = sessionStorage.getItem('gh-token') || '';
                     const repo = document.getElementById('repository').value;
                     const branch = document.getElementById('branch').value;
 
@@ -3256,7 +3347,7 @@
         async function downloadFile(path, name, e) {
             e.stopPropagation();
 
-            const token = document.getElementById('token').value.trim();
+            const token = sessionStorage.getItem('gh-token') || '';
             const repo = document.getElementById('repository').value;
             const branch = document.getElementById('branch').value;
 
@@ -3288,7 +3379,7 @@
         async function shareFile(path, name, e) {
             e.stopPropagation();
 
-            const token = document.getElementById('token').value.trim();
+            const token = sessionStorage.getItem('gh-token') || '';
             const repo = document.getElementById('repository').value;
             const branch = document.getElementById('branch').value;
 
@@ -3347,7 +3438,7 @@
         async function viewFile(path, name, e) {
             e.stopPropagation();
 
-            const token = document.getElementById('token').value.trim();
+            const token = sessionStorage.getItem('gh-token') || '';
             const repo = document.getElementById('repository').value;
             const branch = document.getElementById('branch').value;
 
@@ -3550,7 +3641,7 @@
                     const name = document.getElementById('newFolderNameInput').value.trim();
                     if (!name) return;
 
-                    const token = document.getElementById('token').value.trim();
+                    const token = sessionStorage.getItem('gh-token') || '';
                     const repo = document.getElementById('repository').value;
                     const branch = document.getElementById('branch').value;
 
@@ -3881,7 +3972,7 @@
         document.getElementById('uploadBtn').onclick = async () => {
             if (isUploading || selectedFiles.length === 0) return;
 
-            const token = document.getElementById('token').value.trim();
+            const token = sessionStorage.getItem('gh-token') || '';
             const repo = document.getElementById('repository').value;
             const branch = document.getElementById('branch').value;
 
