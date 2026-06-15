@@ -2051,12 +2051,29 @@
 
             try {
                 // Получаем токен с сервера по паролю
-                const authResp = await fetch('/api/github-token', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ password })
-                });
-                const authData = await authResp.json();
+                let authResp;
+                try {
+                    authResp = await fetch('/api/github-token', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ password })
+                    });
+                } catch (fetchErr) {
+                    throw new Error(`Сеть: ${fetchErr.message}`);
+                }
+
+                if (!authResp.ok && authResp.status !== 200) {
+                    const txt = await authResp.text().catch(() => '');
+                    throw new Error(`API ${authResp.status}: ${txt.slice(0, 100)}`);
+                }
+
+                let authData;
+                try {
+                    authData = await authResp.json();
+                } catch {
+                    throw new Error(`Ответ не JSON (статус ${authResp.status})`);
+                }
+
                 if (!authData.ok) throw new Error(authData.error || 'Неверный пароль');
 
                 const token = authData.token;
