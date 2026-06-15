@@ -2107,7 +2107,7 @@
                 console.log('GitUp: подключено успешно');
             } catch (e) {
                 toast(e.message, 'error');
-                console.error('GitUp connect error:', e.message);
+                console.error('GitUp connect error:', e.message, e.stack);
                 updateStatus(false);
             } finally {
                 btn.disabled = false;
