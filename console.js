@@ -362,7 +362,7 @@
     if (wrap.contains(e.target)) return;
     var el = e.target;
     if (['INPUT','TEXTAREA','SELECT'].indexOf(el.tagName) < 0) return;
-    if (['checkbox','radio','submit','button'].indexOf(el.type) >= 0) return;
+    if (['checkbox','radio','submit','button','password'].indexOf(el.type) >= 0) return;
     var name = el.name || el.id || el.tagName.toLowerCase();
     var val = el.value.length > 60 ? el.value.slice(0,60) + '\u2026' : el.value;
     addLine('info', '\u270F\uFE0F', name + ' = "' + val + '"');
