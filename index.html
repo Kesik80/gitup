@@ -3226,7 +3226,13 @@
 
             openModal(
                 'Переименовать',
-                `<input type="text" class="form-input" id="renameInput" value="${esc(name)}">`,
+                `<input type="text" class="form-input" id="renameInput" value="${esc(name)}">
+                <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;">
+                  ${['index.html'].map(n =>
+                    `<button onclick="document.getElementById('renameInput').value='${n}';this.parentNode.querySelectorAll('button').forEach(b=>b.style.opacity='0.5');this.style.opacity='1';"
+                      style="font:11px monospace;padding:3px 8px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);cursor:pointer;">${n}</button>`
+                  ).join('')}
+                </div>`,
                 async () => {
                     const newName = document.getElementById('renameInput').value.trim();
                     if (!newName || newName === name) return;
@@ -3967,7 +3973,13 @@
 
             openModal(
                 'Переименовать файл',
-                `<input type="text" class="form-input" id="renameUploadInput" value="${esc(file.name)}">`,
+                `<input type="text" class="form-input" id="renameUploadInput" value="${esc(file.name)}">
+                <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;">
+                  ${['index.html'].map(n =>
+                    `<button onclick="document.getElementById('renameUploadInput').value='${n}';this.parentNode.querySelectorAll('button').forEach(b=>b.style.opacity='0.5');this.style.opacity='1';"
+                      style="font:11px monospace;padding:3px 8px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);cursor:pointer;">${n}</button>`
+                  ).join('')}
+                </div>`,
                 () => {
                     const newName = document.getElementById('renameUploadInput').value.trim();
                     if (!newName || newName === file.name) return;
