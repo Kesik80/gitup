@@ -7,10 +7,6 @@
     <meta name="theme-color" content="#0a0e14">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="GitUp">
-    <meta name="mobile-web-app-capable" content="yes">
-    <link rel="manifest" href="/icons/manifest.json">
-    <link rel="apple-touch-icon" href="/icons/icon-192.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
@@ -256,19 +252,9 @@
         .app {
             position: relative;
             z-index: 1;
-            max-width: 1400px;
+            max-width: 1800px;
             margin: 0 auto;
-            padding: 12px 16px;
-        }
-
-        @media (min-width: 600px) {
-            .app { padding: 16px 24px; }
-        }
-        @media (min-width: 1024px) {
-            .app { padding: 24px 40px; }
-        }
-        @media (min-width: 1280px) {
-            .app { padding: 28px 60px; }
+            padding: 20px;
         }
         
         /* Header */
@@ -276,17 +262,10 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 14px 0;
-            margin-bottom: 16px;
+            padding: 24px 0;
+            margin-bottom: 32px;
             border-bottom: 2px solid var(--border-dim);
             position: relative;
-        }
-
-        @media (min-width: 768px) {
-            .header { padding: 18px 0; margin-bottom: 20px; }
-        }
-        @media (min-width: 1024px) {
-            .header { padding: 20px 0; margin-bottom: 24px; }
         }
 
         .header-right {
@@ -382,31 +361,12 @@
         .main-grid {
             display: grid;
             grid-template-columns: 1fr;
-            gap: 12px;
+            gap: 24px;
         }
-
-        /* Tablet: 2 columns, left panel fixed width */
-        @media (min-width: 768px) {
-            .main-grid {
-                grid-template-columns: 320px 1fr;
-                gap: 16px;
-                align-items: start;
-            }
-        }
-
-        /* Laptop */
+        
         @media (min-width: 1024px) {
             .main-grid {
-                grid-template-columns: 360px 1fr;
-                gap: 20px;
-            }
-        }
-
-        /* Desktop */
-        @media (min-width: 1280px) {
-            .main-grid {
-                grid-template-columns: 400px 1fr;
-                gap: 24px;
+                grid-template-columns: 420px 1fr;
             }
         }
         
@@ -436,7 +396,7 @@
         }
         
         .card-header {
-            padding: 12px 16px;
+            padding: 20px 24px;
             background: var(--bg-surface);
             border-bottom: 1px solid var(--border-dim);
             font-family: 'Space Mono', monospace;
@@ -450,24 +410,17 @@
         }
         
         .card-body {
-            padding: 14px;
-        }
-
-        @media (min-width: 768px) {
-            .card-body { padding: 18px; }
-        }
-        @media (min-width: 1024px) {
-            .card-body { padding: 20px; }
+            padding: 24px;
         }
         
         /* Form */
         .form-group {
-            margin-bottom: 14px;
+            margin-bottom: 20px;
         }
         
         .form-label {
             display: block;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
             font-family: 'Space Mono', monospace;
             font-size: 11px;
             letter-spacing: 1px;
@@ -478,13 +431,13 @@
         .form-input,
         .form-select {
             width: 100%;
-            padding: 9px 12px;
+            padding: 14px 16px;
             background: var(--bg-surface);
             border: 1px solid var(--border-dim);
             border-radius: 8px;
             color: var(--text-primary);
             font-family: 'Space Mono', monospace;
-            font-size: 13px;
+            font-size: 14px;
             transition: all 0.3s;
             outline: none;
         }
@@ -505,12 +458,12 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
-            padding: 9px 18px;
+            gap: 10px;
+            padding: 14px 24px;
             border: none;
             border-radius: 8px;
             font-family: 'Space Mono', monospace;
-            font-size: 11px;
+            font-size: 12px;
             font-weight: 700;
             letter-spacing: 1px;
             text-transform: uppercase;
@@ -565,8 +518,8 @@
             background: var(--accent-green);
             color: var(--bg-void);
             width: 100%;
-            padding: 11px;
-            font-size: 13px;
+            padding: 16px;
+            font-size: 14px;
             box-shadow: 0 0 20px rgba(80, 250, 123, 0.3);
         }
         
@@ -582,8 +535,8 @@
         }
         
         .btn-icon {
-            width: 36px;
-            height: 36px;
+            width: 44px;
+            height: 44px;
             padding: 0;
         }
         
@@ -885,110 +838,7 @@
             }
         }
         
-        /* Connection collapsed state */
-        .conn-collapsed-bar {
-            display: none;
-            align-items: center;
-            gap: 10px;
-            padding: 10px 16px;
-            background: var(--bg-elevated);
-            border-radius: 8px;
-            font-family: 'Space Mono', monospace;
-            font-size: 11px;
-            color: var(--text-dim);
-        }
-        .conn-collapsed-bar .conn-repo-label {
-            flex: 1;
-            color: var(--accent-cyan);
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-        .conn-collapsed-bar .btn {
-            flex-shrink: 0;
-        }
-        #connFields { transition: none; }
-
-        /* Drop zone compact when no files */
-        .drop-zone-hidden { display: none; }
-
-        /* ── Upload picker ─────────────────────────────────────── */
-        .upload-picker-phone  { display: block; }
-        .upload-picker-wide   { display: none; }
-
-        .upload-single-btn {
-            width: auto;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            margin: 0 auto;
-        }
-
-        #dropZoneTrigger .upload-picker-phone {
-            justify-content: center;
-        }
-
-        @media (min-width: 768px) {
-            #dropZoneTrigger .upload-picker-phone { display: none; }
-        }
-
-        /* Wide card style (tablet/desktop) */
-        .upload-picker-wide {
-            border: 2px dashed var(--border-bright);
-            border-radius: 12px;
-            padding: 28px 20px 24px;
-            text-align: center;
-            cursor: default;
-            transition: border-color 0.2s, background 0.2s;
-        }
-        .upload-picker-wide:hover,
-        .upload-picker-wide.drag-over {
-            border-color: var(--accent-cyan);
-            background: rgba(139,233,253,0.04);
-        }
-        .upload-picker-icon {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 56px;
-            height: 56px;
-            border-radius: 50%;
-            background: rgba(139,233,253,0.1);
-            color: var(--accent-cyan);
-            margin-bottom: 12px;
-        }
-        .upload-picker-title {
-            font-family: 'Space Mono', monospace;
-            font-size: 13px;
-            font-weight: 700;
-            color: var(--text-primary);
-            margin-bottom: 4px;
-        }
-        .upload-picker-sub {
-            font-size: 12px;
-            color: var(--text-dim);
-        }
-        .upload-picker-btn {
-            background: var(--bg-elevated);
-            border: 1px solid var(--border-bright);
-            color: var(--text-primary);
-            padding: 9px 18px;
-            gap: 7px;
-            font-size: 11px;
-            border-radius: 8px;
-            transition: all 0.2s;
-        }
-        .upload-picker-btn:hover {
-            border-color: var(--accent-cyan);
-            color: var(--accent-cyan);
-            background: rgba(139,233,253,0.07);
-        }
-
-        @media (min-width: 768px) {
-            .upload-picker-phone { display: none; }
-            .upload-picker-wide  { display: block; }
-        }
-
+        /* Drop zone */
         .drop-zone {
             border: 2px dashed var(--border-bright);
             border-radius: 12px;
@@ -1615,227 +1465,43 @@
             color: var(--accent-cyan);
         }
         
-        /* ── Responsive ──────────────────────────────────────────── */
-
-        /* Phone (default, < 600px) — already styled above */
-
-        /* Tablet (≥ 600px, single column but wider) */
-        @media (min-width: 600px) and (max-width: 767px) {
-            .header { flex-wrap: nowrap; }
-            .explorer { min-height: 60vh; }
-            .logo { font-size: 26px; }
-        }
-
-        /* Tablet landscape / small laptop (≥ 768px) — 2 columns kick in */
-        @media (min-width: 768px) {
-            .header { flex-direction: row; align-items: center; flex-wrap: nowrap; gap: 16px; }
-            .header-right { display: flex; align-items: center; gap: 10px; margin-left: auto; }
-            .logo { font-size: 26px; }
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: row;
+                align-items: center;
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+            .header-right {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                margin-left: auto;
+            }
+            
             .explorer {
-                /* Sticky right column */
-                position: sticky;
-                top: 16px;
-                height: calc(100vh - 120px);
+                min-height: 70vh;
                 max-height: none;
-                min-height: 400px;
             }
-            .status { font-size: 11px; padding: 7px 16px; }
-        }
-
-        /* Laptop (≥ 1024px) */
-        @media (min-width: 1024px) {
-            .logo { font-size: 28px; }
-            .explorer {
-                top: 20px;
-                height: calc(100vh - 140px);
+            
+            .toast {
+                min-width: auto;
+                max-width: calc(100vw - 48px);
             }
-            .form-input, .form-select { font-size: 13px; }
-            .btn { font-size: 11px; }
-        }
-
-        /* Desktop (≥ 1280px) */
-        @media (min-width: 1280px) {
-            .logo { font-size: 30px; }
-            .explorer {
-                top: 24px;
-                height: calc(100vh - 160px);
-            }
-            .card-header { font-size: 12px; letter-spacing: 2.5px; }
-        }
-
-        /* Max content width cap on ultra-wide */
-        @media (min-width: 1600px) {
-            .app { max-width: 1400px; }
         }
         
         /* Safe area */
         @supports (padding: env(safe-area-inset-top)) {
             .app {
-                padding-top: calc(12px + env(safe-area-inset-top));
-                padding-bottom: calc(12px + env(safe-area-inset-bottom));
+                padding-top: calc(20px + env(safe-area-inset-top));
+                padding-bottom: calc(20px + env(safe-area-inset-bottom));
             }
         }
-
-        /* ===== PWA Install Banner ===== */
-        #pwa-banner {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            z-index: 99999;
-            display: none;
-            padding: 0 16px 16px;
-            padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
-            animation: bannerSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        #pwa-banner.visible { display: block; }
-
-        @keyframes bannerSlideUp {
-            from { transform: translateY(100%); opacity: 0; }
-            to   { transform: translateY(0);    opacity: 1; }
-        }
-
-        .pwa-banner-inner {
-            background: var(--bg-elevated);
-            border: 1px solid var(--border-bright);
-            border-radius: 16px;
-            padding: 18px 20px;
-            box-shadow: 0 -4px 40px rgba(0,0,0,0.6), 0 0 0 1px rgba(139,233,253,0.08);
-            max-width: 520px;
-            margin: 0 auto;
-        }
-
-        .pwa-banner-top {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            margin-bottom: 14px;
-        }
-
-        .pwa-banner-icon {
-            width: 52px;
-            height: 52px;
-            border-radius: 12px;
-            flex-shrink: 0;
-        }
-
-        .pwa-banner-text { flex: 1; }
-
-        .pwa-banner-title {
-            font-family: 'Space Mono', monospace;
-            font-size: 14px;
-            font-weight: 700;
-            color: var(--text-primary);
-            letter-spacing: 1px;
-            text-transform: uppercase;
-        }
-
-        .pwa-banner-sub {
-            font-size: 12px;
-            color: var(--text-dim);
-            margin-top: 3px;
-            line-height: 1.4;
-        }
-
-        .pwa-banner-close {
-            background: none;
-            border: none;
-            color: var(--text-dim);
-            cursor: pointer;
-            font-size: 20px;
-            line-height: 1;
-            padding: 4px;
-            flex-shrink: 0;
-            transition: color 0.2s;
-        }
-        .pwa-banner-close:hover { color: var(--accent-red); }
-
-        .pwa-banner-btns {
-            display: flex;
-            gap: 10px;
-        }
-
-        .pwa-btn-install {
-            flex: 1;
-            padding: 12px;
-            border: none;
-            border-radius: 10px;
-            background: var(--gradient-cyber);
-            color: var(--bg-void);
-            font-family: 'Space Mono', monospace;
-            font-size: 12px;
-            font-weight: 700;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            cursor: pointer;
-            box-shadow: var(--glow-cyan);
-            transition: all 0.2s;
-        }
-        .pwa-btn-install:hover { transform: translateY(-1px); }
-
-        .pwa-btn-later {
-            padding: 12px 18px;
-            border: 1px solid var(--border-bright);
-            border-radius: 10px;
-            background: var(--bg-surface);
-            color: var(--text-dim);
-            font-family: 'Space Mono', monospace;
-            font-size: 12px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .pwa-btn-later:hover { color: var(--text-primary); border-color: var(--accent-cyan); }
-
-        /* iOS instruction steps */
-        .ios-steps {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin-bottom: 14px;
-        }
-
-        .ios-step {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 10px 14px;
-            background: var(--bg-surface);
-            border: 1px solid var(--border-dim);
-            border-radius: 10px;
-            font-size: 13px;
-            color: var(--text-primary);
-        }
-
-        .ios-step-num {
-            width: 26px;
-            height: 26px;
-            border-radius: 50%;
-            background: var(--gradient-cyber);
-            color: var(--bg-void);
-            font-family: 'Space Mono', monospace;
-            font-size: 12px;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-
-        .ios-step-emoji {
-            font-size: 18px;
-            flex-shrink: 0;
-        }
     </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
 <body>
-
-    <!-- ===== PWA Install Banner ===== -->
-    <div id="pwa-banner">
-        <div class="pwa-banner-inner" id="pwa-banner-inner">
-            <!-- Content injected by JS depending on platform -->
-        </div>
-    </div>
-
     <div class="app">
         <!-- Header -->
         <header class="header">
@@ -1852,24 +1518,16 @@
         <!-- Main Grid -->
         <div class="main-grid">
             <!-- Left: Setup & Upload -->
-            <div style="display: flex; flex-direction: column; gap: 14px;">
+            <div style="display: flex; flex-direction: column; gap: 24px;">
                 <!-- Connection -->
                 <div class="card">
                     <div class="card-header">
                         <span>// Подключение</span>
                     </div>
                     <div class="card-body">
-                        <!-- Collapsed bar (shown after connect) -->
-                        <div class="conn-collapsed-bar" id="connCollapsedBar">
-                            <span>🔗</span>
-                            <span class="conn-repo-label" id="connRepoLabel">—</span>
-                            <button class="btn btn-secondary" onclick="expandConn()" style="font-size:10px;padding:5px 10px;">Изменить</button>
-                        </div>
-                        <!-- Full fields (hidden after connect) -->
-                        <div id="connFields">
                         <div class="form-group">
-                            <label class="form-label" id="tokenLabel">Пароль</label>
-                            <input type="password" class="form-input" id="token" placeholder="Введите пароль..." onkeypress="if(event.key==='Enter') connect()">
+                            <label class="form-label">GitHub Токен</label>
+                            <input type="password" class="form-input" id="token" placeholder="ghp_xxxxxxxxxxxx" onkeypress="if(event.key==='Enter') connect()">
                         </div>
                         <button class="btn btn-primary" id="connectBtn" onclick="connect()" style="width: 100%;">
                             <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
@@ -1905,39 +1563,36 @@
                                 <option value="main">main</option>
                             </select>
                         </div>
-                        </div><!-- /connFields -->
-
-                        <!-- Repo info panel — shown inside conn card after connect -->
-                        <div id="repoInfoPanel" style="display:none; margin-top:10px; border-top:1px solid var(--border-dim); padding-top:10px;">
-                            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-                                <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;">Репозиторий</div>
-                                <div style="display:flex;align-items:center;gap:6px;">
-                                    <button class="btn btn-secondary fav-add-btn" id="favToggleBtn" onclick="toggleFavorite()" style="font-size:10px;padding:4px 8px;">⭐</button>
-                                    <span style="font-family:'Space Mono',monospace;font-size:10px;color:var(--text-dim);cursor:pointer;" onclick="toggleRepoCard()" id="repoCardToggleIcon">▶</span>
-                                </div>
-                            </div>
-                            <div id="repoCardBody" style="display:none;">
-                                <div class="repo-stats" id="repoStats">
-                                    <div class="repo-stat"><span class="repo-stat-value" id="statFiles">—</span><span class="repo-stat-label">Файлов</span></div>
-                                    <div class="repo-stat"><span class="repo-stat-value" id="statSize">—</span><span class="repo-stat-label">Размер</span></div>
-                                    <div class="repo-stat"><span class="repo-stat-value" id="statCommits">—</span><span class="repo-stat-label">Коммитов</span></div>
-                                    <div class="repo-stat"><span class="repo-stat-value" id="statBranches">—</span><span class="repo-stat-label">Веток</span></div>
-                                </div>
-                                <div style="margin:10px 0 0;display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="toggleCommits()">
-                                    <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px;">Последние коммиты</div>
-                                    <span id="commitsToggleIcon" style="font-size:11px;color:var(--text-dim);">▶</span>
-                                </div>
-                                <div class="commits-list" id="commitsList" style="display:none;margin-top:6px;">
-                                    <div style="color:var(--text-dim);font-size:12px;padding:8px 0;">Загрузка...</div>
-                                </div>
-                                <div style="margin:12px 0 4px;font-family:'Space Mono',monospace;font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px;">Избранные</div>
-                                <div class="fav-list" id="favList"></div>
-                            </div>
-                        </div>
                     </div>
                 </div>
 
-                <!-- (repo card removed — merged into conn card) -->
+                <!-- Stats + Commits + Favorites -->
+                <div class="card" id="repoInfoCard" style="display:none;">
+                    <div class="card-header">
+                        <span>// Репозиторий</span>
+                        <button class="btn btn-secondary fav-add-btn" id="favToggleBtn" onclick="toggleFavorite()" title="Добавить в избранное">⭐ В избранное</button>
+                    </div>
+                    <div class="card-body" style="padding-top: 8px;">
+                        <!-- Stats -->
+                        <div class="repo-stats" id="repoStats">
+                            <div class="repo-stat"><span class="repo-stat-value" id="statFiles">—</span><span class="repo-stat-label">Файлов</span></div>
+                            <div class="repo-stat"><span class="repo-stat-value" id="statSize">—</span><span class="repo-stat-label">Размер</span></div>
+                            <div class="repo-stat"><span class="repo-stat-value" id="statCommits">—</span><span class="repo-stat-label">Коммитов</span></div>
+                            <div class="repo-stat"><span class="repo-stat-value" id="statBranches">—</span><span class="repo-stat-label">Веток</span></div>
+                        </div>
+                        <!-- Last commits (collapsible) -->
+                        <div style="margin: 12px 0 0; display:flex; align-items:center; justify-content:space-between; cursor:pointer;" onclick="toggleCommits()">
+                            <div style="font-family:'Space Mono',monospace; font-size:10px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.5px;">Последние коммиты</div>
+                            <span id="commitsToggleIcon" style="font-size:11px; color:var(--text-dim);">▶</span>
+                        </div>
+                        <div class="commits-list" id="commitsList" style="display:none; margin-top:6px;">
+                            <div style="color:var(--text-dim);font-size:12px;padding:8px 0;">Загрузка...</div>
+                        </div>
+                        <!-- Favorites -->
+                        <div style="margin: 14px 0 6px; font-family:'Space Mono',monospace; font-size:10px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.5px;">Избранные</div>
+                        <div class="fav-list" id="favList"></div>
+                    </div>
+                </div>
 
                 <!-- Upload -->
                 <div class="card">
@@ -1954,118 +1609,30 @@
                                 Путь назначения
                             </label>
                             <input type="text" class="form-input" id="uploadPathInput"
-                                placeholder="например: icons/svg/"
+                                placeholder="например: assets/icons/svg"
                                 autocomplete="off" autocorrect="off" spellcheck="false"
                                 style="font-family:'Space Mono',monospace;font-size:12px;">
-                            <div style="margin-top:5px;font-size:11px;color:var(--text-dim);display:flex;align-items:center;gap:5px;">
-                                <span style="cursor:pointer;position:relative;" id="pathHintWrap"
-                                    onclick="document.getElementById('pathHintTooltip').style.display=document.getElementById('pathHintTooltip').style.display==='none'?'block':'none'">
-                                    ℹ️
-                                    <div id="pathHintTooltip" style="display:none;position:absolute;left:0;top:20px;z-index:99;background:var(--bg-elevated);border:1px solid var(--border-bright);border-radius:8px;padding:12px 14px;width:260px;font-size:11px;line-height:1.7;color:var(--text-primary);box-shadow:0 4px 20px rgba(0,0,0,0.5);">
-                                        Оставьте поле пустым — файлы загрузятся в корень репозитория.<br><br>
-                                        Хотите положить файл в папку? Укажите её название и закройте слешем:<br>
-                                        <span style="color:var(--accent-cyan);font-family:'Space Mono',monospace;">icons/</span> — файл попадёт в папку <b>icons</b><br><br>
-                                        Нужна папка внутри папки? Перечислите их через слеш:<br>
-                                        <span style="color:var(--accent-cyan);font-family:'Space Mono',monospace;">icons/svg/</span> — файл попадёт в <b>icons → svg</b><br><br>
-                                        Папок ещё не существует? Не страшно — GitHub создаст их автоматически.
-                                    </div>
-                                </span>
-                                <span>Куда положить файлы?</span>
+                            <div style="margin-top:6px;font-size:11px;color:var(--text-dim);line-height:1.5;">
+                                💡 Куда положить файлы. Оставьте пустым — загрузится в корень.<br>
+                                Используйте <span style="color:var(--accent-cyan);font-family:'Space Mono',monospace;">папка1/папка2/папка3</span> для вложенных папок — создадутся автоматически.
                             </div>
                         </div>
 
-                        <!-- Hidden file inputs -->
-                        <input type="file" id="fileInput" multiple style="display:none;">
-                        <input type="file" id="folderInput" webkitdirectory multiple style="display:none;">
-
-                        <!-- Upload picker (shown when no files selected) -->
-                        <div id="dropZoneTrigger"
-                            ondragover="event.preventDefault();showFullDropZone();"
-                            ondrop="event.preventDefault();showFullDropZone();">
-
-                            <!-- Phone: single button with dropdown -->
-                            <div class="upload-picker-phone" style="text-align:center;">
-                                <div style="position:relative;display:inline-block;">
-                                    <button class="btn btn-secondary upload-single-btn"
-                                        onclick="toggleUploadDropdown(event)">
-                                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
-                                        </svg>
-                                        Выбрать файл или папку
-                                        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                                            <polyline points="6 9 12 15 18 9"/>
-                                        </svg>
-                                    </button>
-                                    <div id="uploadDropdown" style="display:none;position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:50;background:var(--bg-elevated);border:1px solid var(--border-bright);border-radius:10px;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,0.4);">
-                                        <button onclick="document.getElementById('fileInput').click();closeUploadDropdown();"
-                                            style="width:100%;display:flex;align-items:center;gap:10px;padding:11px 14px;background:none;border:none;color:var(--text-primary);font-family:'Space Mono',monospace;font-size:12px;cursor:pointer;text-align:left;border-bottom:1px solid var(--border-dim);">
-                                            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
-                                            </svg>
-                                            Файлы
-                                        </button>
-                                        <button onclick="document.getElementById('folderInput').click();closeUploadDropdown();"
-                                            style="width:100%;display:flex;align-items:center;gap:10px;padding:11px 14px;background:none;border:none;color:var(--text-primary);font-family:'Space Mono',monospace;font-size:12px;cursor:pointer;text-align:left;">
-                                            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
-                                            </svg>
-                                            Папку
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Tablet/desktop: CloudConvert-style card -->
-                            <div class="upload-picker-wide"
-                                ondragover="event.preventDefault();this.classList.add('drag-over');"
-                                ondragleave="this.classList.remove('drag-over');"
-                                ondrop="event.preventDefault();this.classList.remove('drag-over');handleDrop(event);">
-                                <div class="upload-picker-icon">
-                                    <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                                        <polyline points="17 8 12 3 7 8"/>
-                                        <line x1="12" y1="3" x2="12" y2="15"/>
-                                    </svg>
-                                </div>
-                                <div class="upload-picker-title">Выберите файл для загрузки</div>
-                                <div class="upload-picker-sub">или перетащите сюда</div>
-                                <div style="display:flex;gap:10px;justify-content:center;margin-top:16px;flex-wrap:wrap;">
-                                    <button class="btn upload-picker-btn"
-                                        onclick="document.getElementById('fileInput').click()">
-                                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
-                                        </svg>
-                                        Файлы
-                                        <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                                            <polyline points="6 9 12 15 18 9"/>
-                                        </svg>
-                                    </button>
-                                    <button class="btn upload-picker-btn"
-                                        onclick="document.getElementById('folderInput').click()">
-                                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
-                                        </svg>
-                                        Папку
-                                        <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                                            <polyline points="6 9 12 15 18 9"/>
-                                        </svg>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Full drop zone (shown on dragover or when files present) -->
-                        <div class="drop-zone drop-zone-hidden" id="dropZone">
+                        <div class="drop-zone" id="dropZone">
+                            <input type="file" id="fileInput" multiple style="display: none;">
+                            <input type="file" id="folderInput" webkitdirectory multiple style="display: none;">
+                            <input type="file" id="zipInput" accept=".zip" style="display: none;">
                             <div class="drop-zone-content">
                                 <div class="drop-zone-icon">
                                     <svg width="36" height="36" fill="currentColor" viewBox="0 0 24 24">
                                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
                                     </svg>
                                 </div>
-                                <h3>Перетащите файлы или папку сюда</h3>
+                                <h3>Перетащите файлы, папку или ZIP сюда</h3>
                                 <p style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
                                     <span onclick="event.stopPropagation();document.getElementById('fileInput').click()" style="cursor:pointer;color:var(--accent-cyan);text-decoration:underline;text-underline-offset:3px;">выбрать файлы</span>
                                     <span style="color:var(--text-dim);">или</span>
+                                    <span onclick="event.stopPropagation();document.getElementById('zipInput').click()" style="cursor:pointer;color:#a78bfa;text-decoration:underline;text-underline-offset:3px;">распаковать ZIP</span>
                                     <span onclick="event.stopPropagation();document.getElementById('folderInput').click()" style="cursor:pointer;color:var(--accent-pink);text-decoration:underline;text-underline-offset:3px;">выбрать папку</span>
                                 </p>
                             </div>
@@ -2183,13 +1750,6 @@
                             <path d="M19 6l-1 14H6L5 6"/>
                         </svg>
                     </button>
-                    <button class="btn btn-secondary btn-icon" onclick="copyForClaude()" title="Скопировать для Claude" style="color:#a855f7;border-color:#a855f7;">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-                            <path d="M2 17l10 5 10-5"/>
-                            <path d="M2 12l10 5 10-5"/>
-                        </svg>
-                    </button>
                     <button class="btn btn-secondary btn-icon" onclick="clearSelection()" title="Очистить">
                         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <line x1="18" y1="6" x2="6" y2="18"/>
@@ -2257,7 +1817,11 @@
         let currentEditFile = null; // for editor
 
         // Init
-        // Пароль не сохраняем — вводится каждую сессию
+        const savedToken = localStorage.getItem('gh-token') || '';
+        if (savedToken) {
+            document.getElementById('token').value = savedToken;
+            setTimeout(() => connect(), 100);
+        }
         renderRepoHistory();
 
         // Repo history helpers
@@ -2299,9 +1863,6 @@
         document.getElementById('repository').addEventListener('change', async (e) => {
             const repo = e.target.value;
             localStorage.setItem('gh-repo', repo);
-            // Update collapsed bar label
-            const lbl = document.getElementById('connRepoLabel');
-            if (lbl) lbl.textContent = repo || '—';
             if (repo) {
                 saveRepoHistory(repo);
                 await loadBranches();
@@ -2309,29 +1870,19 @@
                 loadExplorer('');
                 loadRepoInfo(repo);
             } else {
-                document.getElementById('repoInfoPanel').style.display = 'none';
+                document.getElementById('repoInfoCard').style.display = 'none';
             }
         });
 
         // Connect
-        const isLocalMode = window.location.protocol === 'file:' ||
-            window.location.hostname === 'localhost' ||
-            window.location.hostname === '127.0.0.1';
-
-        // Adjust UI for local mode
-        if (isLocalMode) {
-            const lbl = document.getElementById('tokenLabel');
-            const inp = document.getElementById('token');
-            if (lbl) lbl.textContent = 'GitHub Token (локальный режим)';
-            if (inp) inp.placeholder = 'ghp_...';
-        }
-
         async function connect() {
-            const password = document.getElementById('token').value.trim();
-            if (!password) {
-                toast('Введите пароль', 'error');
+            const token = document.getElementById('token').value.trim();
+            if (!token) {
+                toast('Введите GitHub токен', 'error');
                 return;
             }
+
+            localStorage.setItem('gh-token', token);
 
             const btn = document.getElementById('connectBtn');
             const orig = btn.innerHTML;
@@ -2339,50 +1890,16 @@
             btn.innerHTML = '<div class="spinner"></div> Подключение...';
 
             try {
-                let token;
-
-                if (isLocalMode) {
-                    // Локальный режим: поле содержит GitHub токен напрямую
-                    token = password;
-                } else {
-                    // Продакшн: получаем токен с сервера по паролю
-                    let authResp;
-                    try {
-                        authResp = await fetch('/api/github-token', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ password })
-                        });
-                    } catch (fetchErr) {
-                        throw new Error(`Сеть: ${fetchErr.message}`);
-                    }
-
-                    if (!authResp.ok && authResp.status !== 200) {
-                        const txt = await authResp.text().catch(() => '');
-                        throw new Error(`API ${authResp.status}: ${txt.slice(0, 100)}`);
-                    }
-
-                    let authData;
-                    try {
-                        authData = await authResp.json();
-                    } catch {
-                        throw new Error(`Ответ не JSON (статус ${authResp.status})`);
-                    }
-
-                    if (!authData.ok) throw new Error(authData.error || 'Неверный пароль');
-                    token = authData.token;
-                }
-
-                sessionStorage.setItem('gh-token', token);
-
                 const r = await fetch('https://api.github.com/user/repos?per_page=100&sort=updated', {
                     headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
                 });
-                if (!r.ok) throw new Error(r.status === 401 ? 'Неверный токен GitHub' : 'Ошибка подключения');
+
+                if (!r.ok) throw new Error(r.status === 401 ? 'Неверный токен' : 'Ошибка подключения');
 
                 const repos = await r.json();
                 const sel = document.getElementById('repository');
                 sel.innerHTML = '<option value="">Выберите репозиторий...</option>';
+
                 repos.forEach(repo => {
                     const opt = document.createElement('option');
                     opt.value = repo.full_name;
@@ -2400,13 +1917,8 @@
                 }
 
                 toast(`Подключено! ${repos.length} репозиториев`, 'success');
-                console.log('GitUp: подключено успешно');
-                // Collapse connection panel
-                const connectedRepo = document.getElementById('repository').value || repos[0]?.full_name || '';
-                collapseConn(connectedRepo);
             } catch (e) {
                 toast(e.message, 'error');
-                console.error('GitUp connect error:', e.message, e.stack);
                 updateStatus(false);
             } finally {
                 btn.disabled = false;
@@ -2415,7 +1927,7 @@
         }
 
         async function loadBranches() {
-            const token = sessionStorage.getItem('gh-token') || '';
+            const token = document.getElementById('token').value.trim();
             const repo = document.getElementById('repository').value;
             if (!repo) return;
 
@@ -2511,48 +2023,6 @@
             }
         });
 
-        // ── Connection collapse ───────────────────────────────────
-        function collapseConn(repoName) {
-            document.getElementById('connCollapsedBar').style.display = 'flex';
-            document.getElementById('connRepoLabel').textContent = repoName || '—';
-            document.getElementById('connFields').style.display = 'none';
-        }
-
-        function expandConn() {
-            document.getElementById('connCollapsedBar').style.display = 'none';
-            document.getElementById('connFields').style.display = 'block';
-        }
-
-        // ── Drop zone visibility ──────────────────────────────────
-        function updateDropZoneVisibility() {
-            // Upload trigger button is always visible — lets user add more files anytime.
-            // Full drop-zone is only shown during an active drag, never based on file count.
-            const trigger = document.getElementById('dropZoneTrigger');
-            const dz = document.getElementById('dropZone');
-            if (trigger) trigger.style.display = '';
-            if (dz) dz.classList.add('drop-zone-hidden');
-        }
-
-        function showFullDropZone() {
-            // On tablet/desktop the wide picker handles its own drag-over highlight
-            // via bubbling (ondragover/ondragleave/ondrop on .upload-picker-wide).
-            const wide = document.querySelector('.upload-picker-wide');
-            if (wide && window.getComputedStyle(wide).display !== 'none') {
-                return;
-            }
-            // Phone fallback
-            document.getElementById('dropZoneTrigger').style.display = 'none';
-            const dz = document.getElementById('dropZone');
-            dz.classList.remove('drop-zone-hidden');
-            dz.addEventListener('dragleave', function handler(e) {
-                if (!dz.contains(e.relatedTarget)) {
-                    dz.classList.add('drop-zone-hidden');
-                    document.getElementById('dropZoneTrigger').style.display = '';
-                    dz.removeEventListener('dragleave', handler);
-                }
-            });
-        }
-
         // Explorer
         async function loadExplorer(path) {
             explorerPath = path;
@@ -2562,7 +2032,7 @@
             updateDestination();
             clearSearch();
 
-            const token = sessionStorage.getItem('gh-token') || '';
+            const token = document.getElementById('token').value.trim();
             const repo = document.getElementById('repository').value;
             const branch = document.getElementById('branch').value;
 
@@ -2626,28 +2096,23 @@
                 const emoji = isDir ? '📁' : getFileEmoji(item.name);
                 const nameHTML = highlightMatch(item.name, searchQuery);
 
-                const isPending = item.sha === 'pending';
-
                 div.innerHTML = `
-                    <div class="explorer-checkbox ${selectedItems.has(item.path) ? 'checked' : ''}" ${isPending ? '' : `onclick="toggleSelect('${esc(item.path)}', event)"`} style="${isPending ? 'opacity:0.3;pointer-events:none;' : ''}">
+                    <div class="explorer-checkbox ${selectedItems.has(item.path) ? 'checked' : ''}" onclick="toggleSelect('${esc(item.path)}', event)">
                         ${selectedItems.has(item.path) ? '<svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12" fill="none" stroke="currentColor" stroke-width="3"/></svg>' : ''}
                     </div>
                     <div class="explorer-icon ${isDir ? 'folder' : ''}">${emoji}</div>
-                    <div class="explorer-info" ${isDir && !isPending ? `onclick="closeContextMenu(); loadExplorer('${esc(item.path)}')"` : ''} style="${isDir && !isPending ? 'cursor:pointer' : ''} ${isPending ? 'opacity:0.6' : ''}">
+                    <div class="explorer-info" ${isDir ? `onclick="closeContextMenu(); loadExplorer('${esc(item.path)}')"` : ''} style="${isDir ? 'cursor:pointer' : ''}">
                         <div class="explorer-name">${nameHTML}</div>
-                        <div class="explorer-meta">${isPending ? 'Синхронизация...' : (isDir ? `Папка <span class="folder-count" id="fc-${item.path.replace(/\//g,'-')}">...</span>` : formatSize(item.size))}</div>
+                        <div class="explorer-meta">${isDir ? `Папка <span class="folder-count" id="fc-${item.path.replace(/\//g,'-')}">...</span>` : formatSize(item.size)}</div>
                     </div>
                     <div class="explorer-item-actions">
-                        ${isPending
-                            ? `<div class="spinner" style="width:14px;height:14px;margin:6px;"></div>`
-                            : `<button class="btn btn-secondary btn-icon" onclick="showItemMenu('${esc(item.path)}', '${esc(item.name)}', '${item.type}', event)" title="Меню">
-                                <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
-                                    <circle cx="12" cy="5" r="2"/>
-                                    <circle cx="12" cy="12" r="2"/>
-                                    <circle cx="12" cy="19" r="2"/>
-                                </svg>
-                            </button>`
-                        }
+                        <button class="btn btn-secondary btn-icon" onclick="showItemMenu('${esc(item.path)}', '${esc(item.name)}', '${item.type}', event)" title="Меню">
+                            <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+                                <circle cx="12" cy="5" r="2"/>
+                                <circle cx="12" cy="12" r="2"/>
+                                <circle cx="12" cy="19" r="2"/>
+                            </svg>
+                        </button>
                     </div>
                 `;
 
@@ -2660,7 +2125,7 @@
 
         // ── Folder counts ─────────────────────────────────────────
         async function loadFolderCounts(items) {
-            const token = sessionStorage.getItem('gh-token') || '';
+            const token  = document.getElementById('token').value.trim();
             const repo   = document.getElementById('repository').value;
             const branch = document.getElementById('branch').value;
             if (!token || !repo) return;
@@ -2770,31 +2235,6 @@
         }
 
         // ── Repo history ──────────────────────────────────────────
-        function toggleUploadDropdown(e) {
-            e.stopPropagation();
-            const dd = document.getElementById('uploadDropdown');
-            dd.style.display = dd.style.display === 'none' ? 'block' : 'none';
-        }
-        function closeUploadDropdown() {
-            const dd = document.getElementById('uploadDropdown');
-            if (dd) dd.style.display = 'none';
-        }
-
-        // Close upload dropdown on outside click
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('.upload-single-btn') && !e.target.closest('#uploadDropdown')) {
-                closeUploadDropdown();
-            }
-        });
-
-        function toggleRepoCard() {
-            const body = document.getElementById('repoCardBody');
-            const icon = document.getElementById('repoCardToggleIcon');
-            const collapsed = body.style.display === 'none';
-            body.style.display = collapsed ? 'block' : 'none';
-            icon.textContent = collapsed ? '▼' : '▶';
-        }
-
         function toggleCommits() {
             const list = document.getElementById('commitsList');
             const icon = document.getElementById('commitsToggleIcon');
@@ -2826,10 +2266,10 @@
 
         // ── Repo stats & commits ──────────────────────────────────
         async function loadRepoInfo(repo) {
-            const token = sessionStorage.getItem('gh-token') || '';
-            const card = document.getElementById('repoInfoPanel');
-            if (!repo || !token) { if (card) card.style.display = 'none'; return; }
-            if (card) card.style.display = 'block';
+            const token = document.getElementById('token').value.trim();
+            const card = document.getElementById('repoInfoCard');
+            if (!repo || !token) { card.style.display = 'none'; return; }
+            card.style.display = '';
 
             // Update favorite button
             updateFavBtn(repo);
@@ -3025,7 +2465,7 @@
             const name    = document.getElementById('newFileNameInput').value.trim();
             const content = document.getElementById('newFileContentInput').value;
             if (!name) { toast('Введите имя файла', 'error'); return; }
-            const token = sessionStorage.getItem('gh-token') || '';
+            const token  = document.getElementById('token').value.trim();
             const repo   = document.getElementById('repository').value;
             const branch = document.getElementById('branch').value;
             const filePath = explorerPath ? `${explorerPath}/${name}` : name;
@@ -3037,8 +2477,8 @@
                     body: JSON.stringify({ message: `Create ${name}`, content: btoa(unescape(encodeURIComponent(content))), branch })
                 });
                 if (!r.ok) throw new Error((await r.json()).message || 'Ошибка');
-                optimisticInsert(explorerPath, name, 'file', new Blob([content]).size);
-                scheduleExplorerRefresh(explorerPath);
+                explorerCache = {};
+                await loadExplorer(explorerPath);
                 toast(`Файл "${name}" создан`, 'success');
             } catch (e) {
                 toast('Ошибка создания: ' + e.message, 'error');
@@ -3050,7 +2490,7 @@
 
         async function editFile(path, name, e) {
             if (e) e.stopPropagation();
-            const token = sessionStorage.getItem('gh-token') || '';
+            const token  = document.getElementById('token').value.trim();
             const repo   = document.getElementById('repository').value;
             const branch = document.getElementById('branch').value;
             const modal   = document.getElementById('modal');
@@ -3095,7 +2535,7 @@
 
         async function saveEditedFile() {
             if (!editingFile) return;
-            const token = sessionStorage.getItem('gh-token') || '';
+            const token  = document.getElementById('token').value.trim();
             const repo   = document.getElementById('repository').value;
             const branch = document.getElementById('branch').value;
             const text   = document.getElementById('editorTextarea').value;
@@ -3157,60 +2597,9 @@
             }
         }
 
-        // Optimistically insert a freshly-created item into the current view
-        // immediately, without waiting for GitHub's API to reflect it. This
-        // makes new files/folders appear instantly; background refreshes from
-        // scheduleExplorerRefresh() will later reconcile with the real data.
-        function optimisticInsert(path, name, type, size) {
-            if (explorerPath !== path) return; // user navigated away — nothing to update
-            const itemPath = path ? `${path}/${name}` : name;
-            const list = explorerCache[path] ? [...explorerCache[path]] : [];
-            // Avoid duplicate if it already exists
-            if (list.some(i => i.path === itemPath)) return;
-            list.push({ name, path: itemPath, type, size: size || 0, sha: 'pending' });
-            explorerCache[path] = list;
-            renderExplorer(applySortItems(list));
-        }
-
         function refreshExplorer() {
             explorerCache = {};
             loadExplorer(explorerPath);
-        }
-
-        // Quietly re-fetch the current folder in the background and patch the
-        // already-visible list once, without showing a spinner or resetting
-        // scroll/selection — replaces the old triple-refresh that caused
-        // visible flicker.
-        let explorerRefreshToken = 0;
-        function scheduleExplorerRefresh(path) {
-            const myToken = ++explorerRefreshToken;
-            setTimeout(async () => {
-                if (myToken !== explorerRefreshToken) return;
-                if (explorerPath !== path) return;
-
-                const token = sessionStorage.getItem('gh-token') || '';
-                const repo = document.getElementById('repository').value;
-                const branch = document.getElementById('branch').value;
-                if (!token || !repo) return;
-
-                try {
-                    const apiPath = path ? `contents/${path}` : 'contents';
-                    const r = await fetch(`https://api.github.com/repos/${repo}/${apiPath}?ref=${branch}&_=${Date.now()}`, {
-                        headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
-                    });
-                    if (!r.ok) return;
-                    const items = await r.json();
-                    if (myToken !== explorerRefreshToken) return;
-                    if (explorerPath !== path) return;
-                    if (!Array.isArray(items)) return;
-
-                    explorerCache[path] = items;
-                    renderExplorer(applySortItems(items));
-                } catch {
-                    // Silent — a stale-but-correct optimistic view is fine; the
-                    // next manual refresh or navigation will pick up the truth.
-                }
-            }, 2500);
         }
 
         // Selection
@@ -3250,84 +2639,6 @@
             return items.filter(i => selectedItems.has(i.path));
         }
 
-        // ── Копировать для Claude ─────────────────────────────────────────
-        const CLAUDE_TEXT_EXT = new Set([
-            'html','css','js','ts','jsx','tsx','json','md','txt','yml','yaml',
-            'xml','svg','sh','bash','py','rb','php','java','c','cpp','h','go',
-            'rs','swift','kt','vue','env','gitignore','prettierrc','eslintrc',
-            'toml','ini','cfg','conf','sql','graphql','gql'
-        ]);
-
-        function isClaudeTextFile(name) {
-            const ext = name.split('.').pop().toLowerCase();
-            return CLAUDE_TEXT_EXT.has(ext) || name === '.gitkeep';
-        }
-
-        async function fetchDirFilesForClaude(path, results) {
-            const token  = sessionStorage.getItem('gh-token') || '';
-            const repo   = document.getElementById('repository').value;
-            const branch = document.getElementById('branch').value || 'main';
-            const r = await fetch(
-                `https://api.github.com/repos/${repo}/contents/${path}?ref=${branch}`,
-                { headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' } }
-            );
-            if (!r.ok) return;
-            const items = await r.json();
-            for (const item of items) {
-                if (item.type === 'dir') await fetchDirFilesForClaude(item.path, results);
-                else if (item.type === 'file' && isClaudeTextFile(item.name)) results.push(item);
-            }
-        }
-
-        async function copyForClaude() {
-            const selected = getSelected();
-            if (!selected.length) return;
-
-            const token  = sessionStorage.getItem('gh-token') || '';
-            const repo   = document.getElementById('repository').value;
-            const branch = document.getElementById('branch').value || 'main';
-
-            if (!token || !repo) { toast('Сначала подключитесь', 'error'); return; }
-
-            const btn = document.querySelector('[onclick="copyForClaude()"]');
-            const orig = btn.innerHTML;
-            btn.disabled = true;
-            btn.innerHTML = '<div class="spinner" style="width:14px;height:14px;border-width:2px;"></div>';
-
-            try {
-                const allFiles = [];
-                for (const item of selected) {
-                    if (item.type === 'dir') await fetchDirFilesForClaude(item.path, allFiles);
-                    else if (isClaudeTextFile(item.name)) allFiles.push(item);
-                }
-
-                if (!allFiles.length) { toast('Нет текстовых файлов', 'warning'); return; }
-
-                const parts = [`Репозиторий: ${repo} (ветка: ${branch})\n`];
-                for (const file of allFiles) {
-                    const r = await fetch(
-                        `https://api.github.com/repos/${repo}/contents/${file.path}?ref=${branch}`,
-                        { headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' } }
-                    );
-                    if (!r.ok) continue;
-                    const data = await r.json();
-                    const content = decodeURIComponent(escape(atob(data.content.replace(/\n/g, ''))));
-                    parts.push(`\n${'─'.repeat(60)}\nФайл: ${file.path}\n${'─'.repeat(60)}\n${content}`);
-                }
-
-                await navigator.clipboard.writeText(parts.join(''));
-                toast(`✅ ${allFiles.length} файл(ов) скопировано — вставьте в чат Claude`, 'success');
-                console.log(`GitUp Claude: скопировано ${allFiles.length} файлов из ${repo}`);
-
-            } catch (err) {
-                toast('Ошибка: ' + err.message, 'error');
-                console.error('copyForClaude:', err);
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = orig;
-            }
-        }
-
         function copySelected() {
             const items = getSelected();
             if (items.length === 0) return;
@@ -3359,7 +2670,7 @@
         async function pasteItems() {
             if (!clipboard || clipboard.items.length === 0) return;
 
-            const token = sessionStorage.getItem('gh-token') || '';
+            const token = document.getElementById('token').value.trim();
             const repo = document.getElementById('repository').value;
             const branch = document.getElementById('branch').value;
             const destPath = explorerPath;
@@ -3458,7 +2769,7 @@
 
         // Repository management
         function createRepository() {
-            const token = sessionStorage.getItem('gh-token') || '';
+            const token = document.getElementById('token').value.trim();
             if (!token) {
                 toast('Сначала подключитесь', 'error');
                 return;
@@ -3532,7 +2843,7 @@
         }
 
         function deleteRepository() {
-            const token = sessionStorage.getItem('gh-token') || '';
+            const token = document.getElementById('token').value.trim();
             const repo = document.getElementById('repository').value;
 
             if (!repo) {
@@ -3596,7 +2907,7 @@
                 'Удалить выбранное?',
                 `Удалить ${items.length} элемент(ов)? Это действие нельзя отменить.`,
                 async () => {
-                    const token = sessionStorage.getItem('gh-token') || '';
+                    const token = document.getElementById('token').value.trim();
                     const repo = document.getElementById('repository').value;
                     const branch = document.getElementById('branch').value;
 
@@ -3608,14 +2919,11 @@
                         }
                     }
 
-                    const deletedPaths = new Set(items.map(i => i.path));
                     clearSelection();
-                    // Remove deleted items from the current view immediately, no spinner
-                    const remaining = (explorerCache[explorerPath] || []).filter(i => !deletedPaths.has(i.path));
-                    explorerCache[explorerPath] = remaining;
-                    renderExplorer(applySortItems(remaining));
+                    await new Promise(r => setTimeout(r, 800));
+                    explorerCache = {};
+                    await loadExplorer(explorerPath);
                     toast('Удалено успешно', 'success');
-                    scheduleExplorerRefresh(explorerPath);
                 }
             );
         }
@@ -3627,7 +2935,7 @@
                 'Удалить?',
                 `Удалить ${path}? Это действие нельзя отменить.`,
                 async () => {
-                    const token = sessionStorage.getItem('gh-token') || '';
+                    const token = document.getElementById('token').value.trim();
                     const repo = document.getElementById('repository').value;
                     const branch = document.getElementById('branch').value;
 
@@ -3638,12 +2946,10 @@
                         await deleteFile(token, repo, branch, path, item.sha);
                     }
 
-                    // Remove deleted item from the current view immediately, no spinner
-                    const remaining = (explorerCache[explorerPath] || []).filter(i => i.path !== path);
-                    explorerCache[explorerPath] = remaining;
-                    renderExplorer(applySortItems(remaining));
+                    await new Promise(r => setTimeout(r, 800));
+                    explorerCache = {};
+                    await loadExplorer(explorerPath);
                     toast('Удалено успешно', 'success');
-                    scheduleExplorerRefresh(explorerPath);
                 }
             );
         }
@@ -3653,18 +2959,12 @@
 
             openModal(
                 'Переименовать',
-                `<input type="text" class="form-input" id="renameInput" value="${esc(name)}">
-                <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;">
-                  ${['index.html'].map(n =>
-                    `<button onclick="document.getElementById('renameInput').value='${n}';this.parentNode.querySelectorAll('button').forEach(b=>b.style.opacity='0.5');this.style.opacity='1';"
-                      style="font:11px monospace;padding:3px 8px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);cursor:pointer;">${n}</button>`
-                  ).join('')}
-                </div>`,
+                `<input type="text" class="form-input" id="renameInput" value="${esc(name)}">`,
                 async () => {
                     const newName = document.getElementById('renameInput').value.trim();
                     if (!newName || newName === name) return;
 
-                    const token = sessionStorage.getItem('gh-token') || '';
+                    const token = document.getElementById('token').value.trim();
                     const repo = document.getElementById('repository').value;
                     const branch = document.getElementById('branch').value;
 
@@ -3791,22 +3091,13 @@
             }
         });
 
-        // Close path hint tooltip on outside click
-        document.addEventListener('click', (e) => {
-            const wrap = document.getElementById('pathHintWrap');
-            const tooltip = document.getElementById('pathHintTooltip');
-            if (wrap && tooltip && !wrap.contains(e.target)) {
-                tooltip.style.display = 'none';
-            }
-        });
-
         // File viewer
         let currentViewFile = null;
 
         async function downloadFile(path, name, e) {
             e.stopPropagation();
 
-            const token = sessionStorage.getItem('gh-token') || '';
+            const token = document.getElementById('token').value.trim();
             const repo = document.getElementById('repository').value;
             const branch = document.getElementById('branch').value;
 
@@ -3838,7 +3129,7 @@
         async function shareFile(path, name, e) {
             e.stopPropagation();
 
-            const token = sessionStorage.getItem('gh-token') || '';
+            const token = document.getElementById('token').value.trim();
             const repo = document.getElementById('repository').value;
             const branch = document.getElementById('branch').value;
 
@@ -3897,7 +3188,7 @@
         async function viewFile(path, name, e) {
             e.stopPropagation();
 
-            const token = sessionStorage.getItem('gh-token') || '';
+            const token = document.getElementById('token').value.trim();
             const repo = document.getElementById('repository').value;
             const branch = document.getElementById('branch').value;
 
@@ -4095,12 +3386,12 @@
         async function newFolder() {
             openModal(
                 'Новая папка',
-                `<input type="text" class="form-input" id="newFolderNameInput" placeholder="название-папки">`,
+                `<input type="text" class="form-input" id="folderInput" placeholder="название-папки">`,
                 async () => {
-                    const name = document.getElementById('newFolderNameInput').value.trim();
+                    const name = document.getElementById('folderInput').value.trim();
                     if (!name) return;
 
-                    const token = sessionStorage.getItem('gh-token') || '';
+                    const token = document.getElementById('token').value.trim();
                     const repo = document.getElementById('repository').value;
                     const branch = document.getElementById('branch').value;
 
@@ -4125,8 +3416,9 @@
                             return;
                         }
 
-                        optimisticInsert(explorerPath, name, 'dir', 0);
-                        scheduleExplorerRefresh(explorerPath);
+                        await new Promise(r => setTimeout(r, 800));
+                        explorerCache = {};
+                        await loadExplorer(explorerPath);
                         toast('Папка создана', 'success');
                     } catch (e) {
                         toast('Ошибка: ' + e.message, 'error');
@@ -4255,24 +3547,55 @@
         dropZone.ondragleave = () => dropZone.classList.remove('dragover');
         dropZone.ondrop = (e) => {
             e.preventDefault();
-            dropZone.classList.remove('dragover');
+            dropZone.classList.remove("dragover");
+            const droppedFiles = e.dataTransfer.files;
+            // Single ZIP file dropped → unpack it
+            if (droppedFiles.length === 1 && droppedFiles[0].name.endsWith(".zip")) {
+                handleZip(droppedFiles[0]);
+                return;
+            }
             // Try folder drag via DataTransferItem API
             const items = e.dataTransfer.items;
             if (items && items.length > 0 && items[0].webkitGetAsEntry) {
                 const entries = Array.from(items).map(i => i.webkitGetAsEntry()).filter(Boolean);
                 readEntries(entries);
             } else {
-                handleFiles(e.dataTransfer.files);
+                handleFiles(droppedFiles);
             }
         };
+        fileInput.onchange = (e) => { handleFiles(e.target.files, ""); fileInput.value = ""; };
+        folderInput.onchange = (e) => { handleFiles(e.target.files, null); folderInput.value = ""; };
         fileInput.onchange = (e) => { handleFiles(e.target.files, ''); fileInput.value = ''; };
         folderInput.onchange = (e) => { handleFiles(e.target.files, null); folderInput.value = ''; };
+        const zipInput = document.getElementById("zipInput");
+        zipInput.onchange = (e) => { if (e.target.files[0]) handleZip(e.target.files[0]); zipInput.value = ""; };
+
+        async function handleZip(file) {
+            if (!file.name.endsWith(".zip")) { toast("Выберите ZIP-архив", "error"); return; }
+            toast("📦 Распаковываю архив...", "success");
+            try {
+                const zip = await JSZip.loadAsync(file);
+                const entries = Object.values(zip.files).filter(f => !f.dir);
+                if (!entries.length) { toast("ZIP пустой", "error"); return; }
+                // Filter out macOS metadata
+                const files = entries.filter(f => !f.name.startsWith("__MACOSX") && !f.name.includes("/.DS_Store") && !f.name.endsWith(".DS_Store"));
+                if (!files.length) { toast("ZIP не содержит файлов", "error"); return; }
+                for (const entry of files) {
+                    const blob = await entry.async("blob");
+                    const f = new File([blob], entry.name.split("/").pop(), { type: blob.type });
+                    addFileToQueue(f, entry.name);
+                }
+                renderFileList();
+                toast(`✅ Распаковано: ${files.length} файлов`, "success");
+            } catch (e) {
+                toast("Ошибка распаковки: " + e.message, "error");
+            }
+        }
 
         // Track manual edits to uploadPathInput so auto-sync stops
         const uploadPathInput = document.getElementById("uploadPathInput");
         uploadPathInput.addEventListener("input", () => {
             uploadPathInput.dataset.userEdited = uploadPathInput.value.trim() !== explorerPath ? "true" : "false";
-            if (selectedFiles.length > 0) renderFileList();
         });
         // Click on explorer folder → sync path field if not user-edited
         // (handled via updateDestination called from loadExplorer)
@@ -4316,12 +3639,13 @@
                 toast(`Файл "${file.name}" слишком большой (${formatSize(file.size)}). Максимум: 100MB`, 'error');
                 return;
             }
-            // path stored without base — will be resolved at upload time from uploadPathInput
+            const basePath = (document.getElementById("uploadPathInput")?.value.trim().replace(/^\/+|\/+$/g, "")) || explorerPath || "";
+            const fullPath = basePath ? `${basePath}/${relPath}` : relPath;
             selectedFiles.push({
                 id: Date.now() + Math.random(),
                 file,
-                name: relPath,
-                relPath: relPath,  // always relative, no base prefix
+                name: relPath,   // show relative path in list
+                path: fullPath,
                 size: file.size
             });
         }
@@ -4365,13 +3689,11 @@
             if (selectedFiles.length === 0) {
                 container.innerHTML = '';
                 count.textContent = '';
-                updateDropZoneVisibility();
                 return;
             }
 
             count.textContent = `${selectedFiles.length} файл(ов)`;
             container.innerHTML = '';
-            updateDropZoneVisibility();
 
             selectedFiles.forEach(file => {
                 const div = document.createElement('div');
@@ -4381,15 +3703,11 @@
                     ? `<img src="${URL.createObjectURL(file.file)}" alt="">`
                     : getFileEmoji(file.name);
 
-                const basePath = (document.getElementById("uploadPathInput")?.value.trim().replace(/^\/+|\/+$/g, "")) || explorerPath || "";
-                const relPath = file.relPath || file.name;
-                const displayPath = basePath ? `${basePath}/${relPath}` : relPath;
-
                 div.innerHTML = `
                     <div class="file-preview">${preview}</div>
                     <div class="file-info">
                         <div class="file-name">${esc(file.name)}</div>
-                        <div class="file-path">${esc(displayPath)}</div>
+                        <div class="file-path">${esc(file.path)}</div>
                     </div>
                     <button class="btn btn-secondary btn-icon" onclick="renameUploadFile(${file.id})" title="Переименовать">
                         <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -4414,19 +3732,13 @@
 
             openModal(
                 'Переименовать файл',
-                `<input type="text" class="form-input" id="renameUploadInput" value="${esc(file.name)}">
-                <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;">
-                  ${['index.html'].map(n =>
-                    `<button onclick="document.getElementById('renameUploadInput').value='${n}';this.parentNode.querySelectorAll('button').forEach(b=>b.style.opacity='0.5');this.style.opacity='1';"
-                      style="font:11px monospace;padding:3px 8px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);cursor:pointer;">${n}</button>`
-                  ).join('')}
-                </div>`,
+                `<input type="text" class="form-input" id="renameUploadInput" value="${esc(file.name)}">`,
                 () => {
                     const newName = document.getElementById('renameUploadInput').value.trim();
                     if (!newName || newName === file.name) return;
 
                     file.name = newName;
-                    file.relPath = newName;
+                    file.path = explorerPath ? `${explorerPath}/${newName}` : newName;
                     renderFileList();
                     toast('Файл переименован', 'success');
                 }
@@ -4442,7 +3754,7 @@
         document.getElementById('uploadBtn').onclick = async () => {
             if (isUploading || selectedFiles.length === 0) return;
 
-            const token = sessionStorage.getItem('gh-token') || '';
+            const token = document.getElementById('token').value.trim();
             const repo = document.getElementById('repository').value;
             const branch = document.getElementById('branch').value;
 
@@ -4469,10 +3781,8 @@
 
                 const commitData = await commitRes.json();
                 const baseTree = commitData.tree.sha;
-                const blobs = [];
 
-                // Compute destination path at upload time (not at file-add time)
-                const basePath = (document.getElementById("uploadPathInput")?.value.trim().replace(/^\/+|\/+$/g, "")) || explorerPath || "";
+                const blobs = [];
 
                 for (let i = 0; i < selectedFiles.length; i++) {
                     const file = selectedFiles[i];
@@ -4491,9 +3801,7 @@
                     });
 
                     const blob = await blobRes.json();
-                    const relPath = file.relPath || file.name;
-                    const fullPath = basePath ? `${basePath}/${relPath}` : relPath;
-                    blobs.push({ path: fullPath, mode: '100644', type: 'blob', sha: blob.sha });
+                    blobs.push({ path: file.path, mode: '100644', type: 'blob', sha: blob.sha });
                 }
 
                 const treeRes = await fetch(`https://api.github.com/repos/${repo}/git/trees`, {
@@ -4519,26 +3827,11 @@
                 });
 
                 toast(`Загружено ${selectedFiles.length} файл(ов)`, 'success');
-
-                // Optimistically show uploaded items immediately if the
-                // upload destination is the folder currently being viewed.
-                if (basePath === explorerPath) {
-                    const seenTopLevel = new Set();
-                    for (const b of blobs) {
-                        const rel = basePath ? b.path.slice(basePath.length + 1) : b.path;
-                        const firstSegment = rel.split('/')[0];
-                        const isNested = rel.includes('/');
-                        if (!seenTopLevel.has(firstSegment)) {
-                            seenTopLevel.add(firstSegment);
-                            optimisticInsert(explorerPath, firstSegment, isNested ? 'dir' : 'file', isNested ? 0 : undefined);
-                        }
-                    }
-                }
-
                 selectedFiles = [];
                 renderFileList();
 
-                scheduleExplorerRefresh(explorerPath);
+                await new Promise(r => setTimeout(r, 1000));
+                refreshExplorer();
             } catch (e) {
                 toast('Ошибка загрузки: ' + e.message, 'error');
             } finally {
@@ -4637,125 +3930,6 @@
         document.getElementById('modal').onclick = (e) => {
             if (e.target.id === 'modal') closeModal();
         };
-
-        // ===== PWA Install Banner =====
-        (function () {
-            const DISMISS_KEY   = 'pwa-install-dismissed';
-            const COOLDOWN_MS   = 24 * 60 * 60 * 1000; // 24 часа
-
-            const banner    = document.getElementById('pwa-banner');
-            const inner     = document.getElementById('pwa-banner-inner');
-            const iconSrc   = '/icons/icon-192.png';
-
-            // Определяем платформу
-            const ua        = navigator.userAgent;
-            const isIOS     = /iphone|ipad|ipod/i.test(ua);
-            const isSafari  = /safari/i.test(ua) && !/crios|chrome|fxios/i.test(ua);
-            const isAndroid = /android/i.test(ua);
-
-            // Уже установлено как PWA?
-            const isStandalone =
-                window.matchMedia('(display-mode: standalone)').matches ||
-                window.navigator.standalone === true;
-
-            if (isStandalone) return; // уже запущено из домашнего экрана
-
-            // Проверяем cooldown
-            function shouldShow() {
-                const ts = localStorage.getItem(DISMISS_KEY);
-                if (!ts) return true;
-                return Date.now() - parseInt(ts, 10) > COOLDOWN_MS;
-            }
-
-            function dismiss() {
-                localStorage.setItem(DISMISS_KEY, String(Date.now()));
-                banner.style.animation = 'bannerSlideUp 0.3s reverse';
-                setTimeout(() => banner.classList.remove('visible'), 300);
-            }
-
-            // === Android: beforeinstallprompt ===
-            let deferredPrompt = null;
-
-            window.addEventListener('beforeinstallprompt', (e) => {
-                e.preventDefault();
-                deferredPrompt = e;
-
-                if (!shouldShow()) return;
-
-                inner.innerHTML = `
-                    <div class="pwa-banner-top">
-                        <img class="pwa-banner-icon" src="${iconSrc}" alt="GitUp">
-                        <div class="pwa-banner-text">
-                            <div class="pwa-banner-title">Установить GitUp</div>
-                            <div class="pwa-banner-sub">Работает офлайн · Быстрый доступ с рабочего стола</div>
-                        </div>
-                        <button class="pwa-banner-close" id="pwa-close">✕</button>
-                    </div>
-                    <div class="pwa-banner-btns">
-                        <button class="pwa-btn-install" id="pwa-install">⬇ Установить</button>
-                        <button class="pwa-btn-later" id="pwa-later">Позже</button>
-                    </div>
-                `;
-
-                banner.classList.add('visible');
-
-                document.getElementById('pwa-close').onclick  = dismiss;
-                document.getElementById('pwa-later').onclick  = dismiss;
-                document.getElementById('pwa-install').onclick = async () => {
-                    dismiss();
-                    if (!deferredPrompt) return;
-                    deferredPrompt.prompt();
-                    const { outcome } = await deferredPrompt.userChoice;
-                    if (outcome === 'accepted') {
-                        localStorage.removeItem(DISMISS_KEY); // сбрасываем — уже установлено
-                    }
-                    deferredPrompt = null;
-                };
-            });
-
-            // === iOS Safari: показываем инструкцию ===
-            if (isIOS && isSafari && shouldShow()) {
-                // Небольшая задержка чтобы страница успела загрузиться
-                setTimeout(() => {
-                    inner.innerHTML = `
-                        <div class="pwa-banner-top">
-                            <img class="pwa-banner-icon" src="${iconSrc}" alt="GitUp">
-                            <div class="pwa-banner-text">
-                                <div class="pwa-banner-title">Установить Github Uploader</div>
-                                <div class="pwa-banner-sub">Добавьте на домашний экран за 3 шага</div>
-                            </div>
-                            <button class="pwa-banner-close" id="pwa-close">✕</button>
-                        </div>
-                        <div class="ios-steps">
-                            <div class="ios-step">
-                                <span class="ios-step-num">1</span>
-                                <span class="ios-step-emoji">⎋</span>
-                                <span>Нажмите кнопку <strong>«Поделиться»</strong> в нижней панели Safari</span>
-                            </div>
-                            <div class="ios-step">
-                                <span class="ios-step-num">2</span>
-                                <span class="ios-step-emoji">➕</span>
-                                <span>Выберите <strong>«На экран «Домой»»</strong></span>
-                            </div>
-                            <div class="ios-step">
-                                <span class="ios-step-num">3</span>
-                                <span class="ios-step-emoji">✅</span>
-                                <span>Нажмите <strong>«Добавить»</strong> в правом верхнем углу</span>
-                            </div>
-                        </div>
-                        <div class="pwa-banner-btns">
-                            <button class="pwa-btn-later" id="pwa-later" style="flex:1">Понятно</button>
-                        </div>
-                    `;
-
-                    banner.classList.add('visible');
-
-                    document.getElementById('pwa-close').onclick = dismiss;
-                    document.getElementById('pwa-later').onclick = dismiss;
-                }, 1500);
-            }
-        })();
     </script>
-<script src="console.js"></script>
 </body>
 </html>
