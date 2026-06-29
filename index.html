@@ -4322,6 +4322,7 @@
                 if (!files.length) { toast('ZIP не содержит файлов', 'error'); return; }
 
                 // Auto-detect common root folder and strip it
+                const allEntries = Object.values(zip.files);
                 const roots = new Set(files.map(f => f.name.split('/')[0]));
                 const autoPrefix = roots.size === 1 ? [...roots][0] + '/' : '';
 
@@ -4335,15 +4336,36 @@
                     const f = new File([blob], relPath.split('/').pop(), { type: blob.type });
                     addFileToQueue(f, relPath);
                 }
+
+                // Handle empty folders — add .gitkeep to each
+                const emptyDirs = allEntries.filter(e => e.dir);
+                const filePaths = files.map(e => e.name);
+                let gitkeepCount = 0;
+                for (const dir of emptyDirs) {
+                    const dirName = dir.name; // ends with /
+                    // Check if this dir has no files inside it
+                    const hasFiles = filePaths.some(p => p.startsWith(dirName) && p !== dirName);
+                    if (!hasFiles) {
+                        let relPath = dirName.replace(/\/$/, '') + '/.gitkeep';
+                        if (autoPrefix && relPath.startsWith(autoPrefix)) {
+                            relPath = relPath.slice(autoPrefix.length);
+                        }
+                        if (!relPath) continue;
+                        const f = new File([''], '.gitkeep', { type: 'text/plain' });
+                        addFileToQueue(f, relPath);
+                        gitkeepCount++;
+                    }
+                }
                 renderFileList();
+                const totalAdded = files.length + gitkeepCount;
+                const gitkeepNote = gitkeepCount ? ` + ${gitkeepCount} .gitkeep` : '';
                 if (autoPrefix) {
                     // Save original paths so user can restore prefix
-                    const addedIds = selectedFiles.slice(-files.length).map(f => f.id);
+                    const addedIds = selectedFiles.slice(-totalAdded).map(f => f.id);
                     toastWithAction(
-                        `📦 ${files.length} файлов. Папка «${autoPrefix.slice(0,-1)}» убрана`,
+                        `📦 ${files.length} файлов${gitkeepNote}. Папка «${autoPrefix.slice(0,-1)}» убрана`,
                         'Восстановить',
                         () => {
-                            // Restore prefix for the files just added
                             selectedFiles.forEach(f => {
                                 if (addedIds.includes(f.id)) {
                                     f.relPath = autoPrefix + f.relPath;
@@ -4357,7 +4379,7 @@
                         }
                     );
                 } else {
-                    toast(`✅ Распаковано: ${files.length} файлов`, 'success');
+                    toast(`✅ Распаковано: ${files.length} файлов${gitkeepNote}`, 'success');
                 }
             } catch (e) {
                 toast('Ошибка распаковки: ' + e.message, 'error');
