@@ -1826,6 +1826,7 @@
             flex-shrink: 0;
         }
     </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
 <body>
 
@@ -1977,6 +1978,7 @@
                         <!-- Hidden file inputs -->
                         <input type="file" id="fileInput" multiple style="display:none;">
                         <input type="file" id="folderInput" webkitdirectory multiple style="display:none;">
+                        <input type="file" id="zipInput" accept=".zip" style="display:none;">
 
                         <!-- Upload picker (shown when no files selected) -->
                         <div id="dropZoneTrigger"
@@ -2005,11 +2007,19 @@
                                             Файлы
                                         </button>
                                         <button onclick="document.getElementById('folderInput').click();closeUploadDropdown();"
-                                            style="width:100%;display:flex;align-items:center;gap:10px;padding:11px 14px;background:none;border:none;color:var(--text-primary);font-family:'Space Mono',monospace;font-size:12px;cursor:pointer;text-align:left;">
+                                            style="width:100%;display:flex;align-items:center;gap:10px;padding:11px 14px;background:none;border:none;color:var(--text-primary);font-family:'Space Mono',monospace;font-size:12px;cursor:pointer;text-align:left;border-bottom:1px solid var(--border-dim);">
                                             <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                                 <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
                                             </svg>
                                             Папку
+                                        </button>
+                                        <button onclick="document.getElementById('zipInput').click();closeUploadDropdown();"
+                                            style="width:100%;display:flex;align-items:center;gap:10px;padding:11px 14px;background:none;border:none;color:#a78bfa;font-family:'Space Mono',monospace;font-size:12px;cursor:pointer;text-align:left;">
+                                            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+                                                <line x1="9" y1="9" x2="9" y2="13"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="9" y1="11" x2="12" y2="11"/>
+                                            </svg>
+                                            ZIP-архив
                                         </button>
                                     </div>
                                 </div>
@@ -2050,6 +2060,13 @@
                                             <polyline points="6 9 12 15 18 9"/>
                                         </svg>
                                     </button>
+                                    <button class="btn upload-picker-btn" style="color:#a78bfa;border-color:#a78bfa33;"
+                                        onclick="document.getElementById('zipInput').click()">
+                                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                            <rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="9" y1="12" x2="15" y2="12"/>
+                                        </svg>
+                                        ZIP
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -2062,11 +2079,13 @@
                                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
                                     </svg>
                                 </div>
-                                <h3>Перетащите файлы или папку сюда</h3>
+                                <h3>Перетащите файлы, папку или ZIP сюда</h3>
                                 <p style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
                                     <span onclick="event.stopPropagation();document.getElementById('fileInput').click()" style="cursor:pointer;color:var(--accent-cyan);text-decoration:underline;text-underline-offset:3px;">выбрать файлы</span>
                                     <span style="color:var(--text-dim);">или</span>
                                     <span onclick="event.stopPropagation();document.getElementById('folderInput').click()" style="cursor:pointer;color:var(--accent-pink);text-decoration:underline;text-underline-offset:3px;">выбрать папку</span>
+                                    <span style="color:var(--text-dim);">или</span>
+                                    <span onclick="event.stopPropagation();document.getElementById('zipInput').click()" style="cursor:pointer;color:#a78bfa;text-decoration:underline;text-underline-offset:3px;">распаковать ZIP</span>
                                 </p>
                             </div>
                         </div>
@@ -2531,6 +2550,21 @@
             const dz = document.getElementById('dropZone');
             if (trigger) trigger.style.display = '';
             if (dz) dz.classList.add('drop-zone-hidden');
+        }
+
+        function handleDrop(e) {
+            const droppedFiles = e.dataTransfer.files;
+            if (droppedFiles.length === 1 && droppedFiles[0].name.endsWith('.zip')) {
+                handleZip(droppedFiles[0]);
+                return;
+            }
+            const items = e.dataTransfer.items;
+            if (items && items.length > 0 && items[0].webkitGetAsEntry) {
+                const entries = Array.from(items).map(i => i.webkitGetAsEntry()).filter(Boolean);
+                readEntries(entries);
+            } else {
+                handleFiles(droppedFiles);
+            }
         }
 
         function showFullDropZone() {
@@ -4255,18 +4289,48 @@
         dropZone.ondragleave = () => dropZone.classList.remove('dragover');
         dropZone.ondrop = (e) => {
             e.preventDefault();
-            dropZone.classList.remove('dragover');
-            // Try folder drag via DataTransferItem API
+            dropZone.classList.remove("dragover");
+            const droppedFiles = e.dataTransfer.files;
+            if (droppedFiles.length === 1 && droppedFiles[0].name.endsWith(".zip")) {
+                handleZip(droppedFiles[0]);
+                return;
+            }
             const items = e.dataTransfer.items;
             if (items && items.length > 0 && items[0].webkitGetAsEntry) {
                 const entries = Array.from(items).map(i => i.webkitGetAsEntry()).filter(Boolean);
                 readEntries(entries);
             } else {
-                handleFiles(e.dataTransfer.files);
+                handleFiles(droppedFiles);
             }
         };
         fileInput.onchange = (e) => { handleFiles(e.target.files, ''); fileInput.value = ''; };
         folderInput.onchange = (e) => { handleFiles(e.target.files, null); folderInput.value = ''; };
+
+        const zipInput = document.getElementById('zipInput');
+        zipInput.onchange = (e) => { if (e.target.files[0]) handleZip(e.target.files[0]); zipInput.value = ''; };
+
+        async function handleZip(file) {
+            toast('📦 Распаковываю архив...', 'success');
+            try {
+                const zip = await JSZip.loadAsync(file);
+                const entries = Object.values(zip.files).filter(f => !f.dir);
+                const files = entries.filter(f =>
+                    !f.name.startsWith('__MACOSX') &&
+                    !f.name.includes('/.DS_Store') &&
+                    !f.name.endsWith('.DS_Store')
+                );
+                if (!files.length) { toast('ZIP не содержит файлов', 'error'); return; }
+                for (const entry of files) {
+                    const blob = await entry.async('blob');
+                    const f = new File([blob], entry.name.split('/').pop(), { type: blob.type });
+                    addFileToQueue(f, entry.name);
+                }
+                renderFileList();
+                toast(`✅ Распаковано: ${files.length} файлов`, 'success');
+            } catch (e) {
+                toast('Ошибка распаковки: ' + e.message, 'error');
+            }
+        }
 
         // Track manual edits to uploadPathInput so auto-sync stops
         const uploadPathInput = document.getElementById("uploadPathInput");
