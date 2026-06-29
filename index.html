@@ -4320,13 +4320,45 @@
                     !f.name.endsWith('.DS_Store')
                 );
                 if (!files.length) { toast('ZIP не содержит файлов', 'error'); return; }
+
+                // Auto-detect common root folder and strip it
+                const roots = new Set(files.map(f => f.name.split('/')[0]));
+                const autoPrefix = roots.size === 1 ? [...roots][0] + '/' : '';
+
                 for (const entry of files) {
+                    let relPath = entry.name;
+                    if (autoPrefix && relPath.startsWith(autoPrefix)) {
+                        relPath = relPath.slice(autoPrefix.length);
+                    }
+                    if (!relPath) continue;
                     const blob = await entry.async('blob');
-                    const f = new File([blob], entry.name.split('/').pop(), { type: blob.type });
-                    addFileToQueue(f, entry.name);
+                    const f = new File([blob], relPath.split('/').pop(), { type: blob.type });
+                    addFileToQueue(f, relPath);
                 }
                 renderFileList();
-                toast(`✅ Распаковано: ${files.length} файлов`, 'success');
+                if (autoPrefix) {
+                    // Save original paths so user can restore prefix
+                    const addedIds = selectedFiles.slice(-files.length).map(f => f.id);
+                    toastWithAction(
+                        `📦 ${files.length} файлов. Папка «${autoPrefix.slice(0,-1)}» убрана`,
+                        'Восстановить',
+                        () => {
+                            // Restore prefix for the files just added
+                            selectedFiles.forEach(f => {
+                                if (addedIds.includes(f.id)) {
+                                    f.relPath = autoPrefix + f.relPath;
+                                    const basePath = (document.getElementById('uploadPathInput')?.value.trim().replace(/^\/+|\/+$/g, '')) || explorerPath || '';
+                                    f.path = basePath ? `${basePath}/${f.relPath}` : f.relPath;
+                                    f.name = f.relPath;
+                                }
+                            });
+                            renderFileList();
+                            toast(`↩️ Папка «${autoPrefix.slice(0,-1)}» восстановлена`, 'success');
+                        }
+                    );
+                } else {
+                    toast(`✅ Распаковано: ${files.length} файлов`, 'success');
+                }
             } catch (e) {
                 toast('Ошибка распаковки: ' + e.message, 'error');
             }
@@ -4668,6 +4700,36 @@
                 toast.style.opacity = '0';
                 setTimeout(() => toast.remove(), 300);
             }, 3500);
+        }
+
+        function toastWithAction(message, actionLabel, onAction, duration = 8000) {
+            const container = document.getElementById('toastContainer');
+            const t = document.createElement('div');
+            t.className = 'toast success';
+            t.style.cssText = 'display:flex;align-items:center;gap:10px;';
+            t.innerHTML = `
+                <div class="toast-icon">✓</div>
+                <div class="toast-text" style="flex:1;">${message}</div>
+                <button style="flex-shrink:0;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:#fff;border-radius:6px;padding:4px 10px;font-size:11px;font-family:'Space Mono',monospace;cursor:pointer;white-space:nowrap;" id="toastActionBtn">${actionLabel}</button>
+            `;
+            container.appendChild(t);
+
+            const btn = t.querySelector('#toastActionBtn');
+            let done = false;
+            btn.onclick = () => {
+                if (done) return;
+                done = true;
+                onAction();
+                t.style.opacity = '0';
+                setTimeout(() => t.remove(), 300);
+            };
+
+            setTimeout(() => {
+                if (!done) {
+                    t.style.opacity = '0';
+                    setTimeout(() => t.remove(), 300);
+                }
+            }, duration);
         }
 
         // Modal
