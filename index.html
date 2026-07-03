@@ -1912,9 +1912,11 @@
                         <div id="repoInfoPanel" style="display:none; margin-top:10px; border-top:1px solid var(--border-dim); padding-top:10px;">
                             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
                                 <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;">Репозиторий</div>
-                                <div style="display:flex;align-items:center;gap:6px;">
+                                <div style="display:flex;align-items:center;gap:14px;">
                                     <button class="btn btn-secondary fav-add-btn" id="favToggleBtn" onclick="toggleFavorite()" style="font-size:10px;padding:4px 8px;">⭐</button>
-                                    <span style="font-family:'Space Mono',monospace;font-size:10px;color:var(--text-dim);cursor:pointer;" onclick="toggleRepoCard()" id="repoCardToggleIcon">▶</span>
+                                    <button onclick="toggleRepoCard()" id="repoCardToggleIcon" aria-label="Развернуть" style="display:flex;align-items:center;justify-content:center;width:30px;height:30px;padding:0;border-radius:8px;background:transparent;border:none;color:var(--accent-cyan);cursor:pointer;flex-shrink:0;transition:transform .2s;">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                                    </button>
                                 </div>
                             </div>
                             <div id="repoCardBody" style="display:none;">
@@ -1924,9 +1926,25 @@
                                     <div class="repo-stat"><span class="repo-stat-value" id="statCommits">—</span><span class="repo-stat-label">Коммитов</span></div>
                                     <div class="repo-stat"><span class="repo-stat-value" id="statBranches">—</span><span class="repo-stat-label">Веток</span></div>
                                 </div>
+                                <div style="display:flex;gap:8px;margin-top:10px;">
+                                    <button class="btn btn-secondary" id="downloadRepoBtn" onclick="downloadRepoZip()" style="flex:1;font-size:11px;">
+                                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+                                        </svg>
+                                        Скачать .zip
+                                    </button>
+                                    <button class="btn btn-secondary" id="copyRepoBtn" onclick="copyRepository()" style="flex:1;font-size:11px;">
+                                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                            <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                                        </svg>
+                                        Копировать
+                                    </button>
+                                </div>
                                 <div style="margin:10px 0 0;display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="toggleCommits()">
                                     <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px;">Последние коммиты</div>
-                                    <span id="commitsToggleIcon" style="font-size:11px;color:var(--text-dim);">▶</span>
+                                    <span id="commitsToggleIcon" style="display:flex;align-items:center;justify-content:center;width:30px;height:30px;color:var(--text-dim);transition:transform .2s;">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                                    </span>
                                 </div>
                                 <div class="commits-list" id="commitsList" style="display:none;margin-top:6px;">
                                     <div style="color:var(--text-dim);font-size:12px;padding:8px 0;">Загрузка...</div>
@@ -2826,7 +2844,7 @@
             const icon = document.getElementById('repoCardToggleIcon');
             const collapsed = body.style.display === 'none';
             body.style.display = collapsed ? 'block' : 'none';
-            icon.textContent = collapsed ? '▼' : '▶';
+            icon.style.transform = collapsed ? 'rotate(90deg)' : 'rotate(0deg)';
         }
 
         function toggleCommits() {
@@ -2834,7 +2852,7 @@
             const icon = document.getElementById('commitsToggleIcon');
             const open = list.style.display === 'none';
             list.style.display = open ? 'flex' : 'none';
-            icon.textContent = open ? '▼' : '▶';
+            icon.style.transform = open ? 'rotate(90deg)' : 'rotate(0deg)';
         }
 
         // ── Theme ─────────────────────────────────────────────────
@@ -3490,6 +3508,199 @@
             });
         }
 
+        // ── Pool helper for limited-concurrency requests ────────────
+        async function runPool(items, limit, worker) {
+            let i = 0;
+            const results = new Array(items.length);
+            async function next() {
+                while (i < items.length) {
+                    const idx = i++;
+                    results[idx] = await worker(items[idx], idx);
+                }
+            }
+            await Promise.all(Array.from({ length: Math.min(limit, items.length) }, next));
+            return results;
+        }
+
+        // ── Download whole repository as .zip ───────────────────────
+        async function downloadRepoZip() {
+            const token = sessionStorage.getItem('gh-token') || '';
+            const repo = document.getElementById('repository').value;
+            const branch = document.getElementById('branch').value;
+            if (!token || !repo) { toast('Сначала подключитесь', 'error'); return; }
+
+            const btn = document.getElementById('downloadRepoBtn');
+            const originalHtml = btn ? btn.innerHTML : '';
+            if (btn) { btn.disabled = true; btn.innerHTML = 'Архивирую 0%...'; }
+
+            const headers = { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' };
+
+            try {
+                const refRes = await fetch(`https://api.github.com/repos/${repo}/git/refs/heads/${branch}`, { headers });
+                if (!refRes.ok) throw new Error('Не удалось получить ветку');
+                const refData = await refRes.json();
+                const commitSha = refData.object.sha;
+
+                const treeRes = await fetch(`https://api.github.com/repos/${repo}/git/trees/${commitSha}?recursive=1`, { headers });
+                if (!treeRes.ok) throw new Error('Не удалось получить дерево файлов');
+                const treeData = await treeRes.json();
+
+                const blobs = treeData.tree.filter(i => i.type === 'blob');
+                if (blobs.length === 0) throw new Error('Репозиторий пуст');
+
+                const zip = new JSZip();
+                let done = 0;
+
+                await runPool(blobs, 4, async (item) => {
+                    const r = await fetch(`https://api.github.com/repos/${repo}/git/blobs/${item.sha}`, { headers });
+                    if (r.ok) {
+                        const data = await r.json();
+                        zip.file(item.path, data.content.replace(/\n/g, ''), { base64: true });
+                    }
+                    done++;
+                    if (btn) btn.innerHTML = `Архивирую ${Math.round(done / blobs.length * 100)}%...`;
+                });
+
+                if (treeData.truncated) toast('Внимание: репозиторий очень большой, часть файлов могла быть пропущена', 'error');
+
+                if (btn) btn.innerHTML = 'Сборка архива...';
+                const zipBlob = await zip.generateAsync({ type: 'blob' });
+                const url = URL.createObjectURL(zipBlob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${repo.split('/')[1]}-${branch}.zip`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+
+                toast(`Репозиторий скачан (${blobs.length} файлов)`, 'success');
+            } catch (e) {
+                toast('Ошибка скачивания: ' + e.message, 'error');
+            } finally {
+                if (btn) { btn.disabled = false; btn.innerHTML = originalHtml; }
+            }
+        }
+
+        // ── Copy whole repository into a new repository ─────────────
+        function copyRepository() {
+            const token = sessionStorage.getItem('gh-token') || '';
+            const repo = document.getElementById('repository').value;
+            const branch = document.getElementById('branch').value;
+            if (!token || !repo) { toast('Сначала подключитесь', 'error'); return; }
+
+            const suggestedName = repo.split('/')[1] + '-copy';
+
+            openModal(
+                'Копировать репозиторий',
+                `
+                <div class="form-group">
+                    <label class="form-label">Название нового репозитория</label>
+                    <input type="text" class="form-input" id="copyRepoName" value="${esc(suggestedName)}">
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" id="copyRepoPrivate" style="width: 18px; height: 18px;">
+                        <span style="font-size: 13px; color: var(--text-secondary);">Приватный репозиторий</span>
+                    </label>
+                </div>
+                `,
+                async () => {
+                    const newName = document.getElementById('copyRepoName').value.trim();
+                    if (!newName) { toast('Введите название', 'error'); return; }
+                    const isPrivate = document.getElementById('copyRepoPrivate').checked;
+
+                    const headers = { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' };
+                    const headersJson = { ...headers, 'Content-Type': 'application/json' };
+
+                    try {
+                        toast('Создание репозитория...', 'success');
+
+                        const createRes = await fetch('https://api.github.com/user/repos', {
+                            method: 'POST',
+                            headers: headersJson,
+                            body: JSON.stringify({ name: newName, private: isPrivate, auto_init: true })
+                        });
+                        if (!createRes.ok) {
+                            const err = await createRes.json();
+                            throw new Error(err.message || 'Ошибка создания репозитория');
+                        }
+                        const newRepoData = await createRes.json();
+                        const newRepo = newRepoData.full_name;
+                        const newDefaultBranch = newRepoData.default_branch || 'main';
+
+                        // Source tree
+                        const refRes = await fetch(`https://api.github.com/repos/${repo}/git/refs/heads/${branch}`, { headers });
+                        if (!refRes.ok) throw new Error('Не удалось получить ветку источника');
+                        const refData = await refRes.json();
+                        const srcCommitSha = refData.object.sha;
+
+                        const treeRes = await fetch(`https://api.github.com/repos/${repo}/git/trees/${srcCommitSha}?recursive=1`, { headers });
+                        if (!treeRes.ok) throw new Error('Не удалось получить дерево файлов источника');
+                        const treeData = await treeRes.json();
+                        const blobs = treeData.tree.filter(i => i.type === 'blob');
+
+                        toast(`Копирование 0/${blobs.length} файлов...`, 'success');
+                        let done = 0;
+
+                        const newEntries = await runPool(blobs, 4, async (item) => {
+                            const contentRes = await fetch(`https://api.github.com/repos/${repo}/git/blobs/${item.sha}`, { headers });
+                            const contentData = await contentRes.json();
+
+                            const newBlobRes = await fetch(`https://api.github.com/repos/${newRepo}/git/blobs`, {
+                                method: 'POST',
+                                headers: headersJson,
+                                body: JSON.stringify({ content: contentData.content, encoding: contentData.encoding || 'base64' })
+                            });
+                            const newBlobData = await newBlobRes.json();
+
+                            done++;
+                            if (done % 5 === 0 || done === blobs.length) {
+                                toast(`Копирование ${done}/${blobs.length} файлов...`, 'success');
+                            }
+
+                            return { path: item.path, mode: item.mode, type: 'blob', sha: newBlobData.sha };
+                        });
+
+                        // New repo's current branch head (created by auto_init)
+                        const newRefRes = await fetch(`https://api.github.com/repos/${newRepo}/git/refs/heads/${newDefaultBranch}`, { headers });
+                        const newRefData = await newRefRes.json();
+                        const baseCommitSha = newRefData.object.sha;
+
+                        const newTreeRes = await fetch(`https://api.github.com/repos/${newRepo}/git/trees`, {
+                            method: 'POST',
+                            headers: headersJson,
+                            body: JSON.stringify({ tree: newEntries })
+                        });
+                        const newTreeData = await newTreeRes.json();
+
+                        const newCommitRes = await fetch(`https://api.github.com/repos/${newRepo}/git/commits`, {
+                            method: 'POST',
+                            headers: headersJson,
+                            body: JSON.stringify({ message: `Copy of ${repo}@${branch}`, tree: newTreeData.sha, parents: [baseCommitSha] })
+                        });
+                        const newCommitData = await newCommitRes.json();
+
+                        await fetch(`https://api.github.com/repos/${newRepo}/git/refs/heads/${newDefaultBranch}`, {
+                            method: 'PATCH',
+                            headers: headersJson,
+                            body: JSON.stringify({ sha: newCommitData.sha })
+                        });
+
+                        toast(`Репозиторий "${newName}" создан (${blobs.length} файлов)`, 'success');
+
+                        await connect();
+                        document.getElementById('repository').value = newRepo;
+                        await loadBranches();
+                        updateStatus(true);
+                        loadExplorer('');
+                    } catch (e) {
+                        toast('Ошибка копирования: ' + e.message, 'error');
+                    }
+                }
+            );
+        }
+
         // Repository management
         function createRepository() {
             const token = sessionStorage.getItem('gh-token') || '';
@@ -3693,6 +3904,8 @@
                     `<button onclick="document.getElementById('renameInput').value='${n}';this.parentNode.querySelectorAll('button').forEach(b=>b.style.opacity='0.5');this.style.opacity='1';"
                       style="font:11px monospace;padding:3px 8px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);cursor:pointer;">${n}</button>`
                   ).join('')}
+                  <button onclick="document.getElementById('renameInput').value=cleanFileName(document.getElementById('renameInput').value);this.parentNode.querySelectorAll('button').forEach(b=>b.style.opacity='0.5');this.style.opacity='1';"
+                    style="font:11px monospace;padding:3px 8px;border:1px solid var(--accent-cyan);border-radius:4px;background:var(--surface);color:var(--accent-cyan);cursor:pointer;">🧹 Очистить имя</button>
                 </div>`,
                 async () => {
                     const newName = document.getElementById('renameInput').value.trim();
@@ -4538,6 +4751,8 @@
                     `<button onclick="document.getElementById('renameUploadInput').value='${n}';this.parentNode.querySelectorAll('button').forEach(b=>b.style.opacity='0.5');this.style.opacity='1';"
                       style="font:11px monospace;padding:3px 8px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);cursor:pointer;">${n}</button>`
                   ).join('')}
+                  <button onclick="document.getElementById('renameUploadInput').value=cleanFileName(document.getElementById('renameUploadInput').value);this.parentNode.querySelectorAll('button').forEach(b=>b.style.opacity='0.5');this.style.opacity='1';"
+                    style="font:11px monospace;padding:3px 8px;border:1px solid var(--accent-cyan);border-radius:4px;background:var(--surface);color:var(--accent-cyan);cursor:pointer;">🧹 Очистить имя</button>
                 </div>`,
                 () => {
                     const newName = document.getElementById('renameUploadInput').value.trim();
@@ -4696,6 +4911,22 @@
                 py: '🐍', sh: '⚙️', yml: '⚙️', yaml: '⚙️'
             };
             return map[ext] || '📄';
+        }
+
+        // Убирает из имени файла хвост вида "_03.07.26_20.45" и прочие
+        // добавленные метки с цифрами, оставляя чистое базовое имя + расширение.
+        function cleanFileName(fullName) {
+            const dotIdx = fullName.lastIndexOf('.');
+            const ext = dotIdx > 0 ? fullName.slice(dotIdx) : '';
+            let base = dotIdx > 0 ? fullName.slice(0, dotIdx) : fullName;
+
+            // Обрезаем всё начиная с первой цифры (вместе с предшествующим разделителем)
+            base = base.replace(/[_\-.\s]?\d.*$/, '');
+            // Подчищаем разделители, оставшиеся в конце
+            base = base.replace(/[_\-.\s]+$/, '');
+
+            if (!base) return fullName; // если обрезать нечего — вернуть как есть
+            return base + ext;
         }
 
         function esc(str) {
