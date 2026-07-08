@@ -2996,10 +2996,27 @@
 
         // ── Copy path ─────────────────────────────────────────────
         function copyFilePath(path) {
-            navigator.clipboard.writeText(path).then(() => {
-                toast(`Путь скопирован: ${path}`, 'success');
+            const repo = document.getElementById('repository').value;
+            const branch = document.getElementById('branch').value || 'main';
+            const fullPath = repo
+                ? `https://github.com/${repo}/blob/${branch}/${path}`
+                : path;
+            navigator.clipboard.writeText(fullPath).then(() => {
+                toast('Путь скопирован', 'success');
             }).catch(() => {
-                toast(path, 'success');
+                toast(fullPath, 'success');
+            });
+        }
+
+        function copyRawLink(path) {
+            const repo = document.getElementById('repository').value;
+            const branch = document.getElementById('branch').value || 'main';
+            if (!repo) { toast('Репозиторий не выбран', 'error'); return; }
+            const url = `https://github.com/${repo}/raw/refs/heads/${branch}/${path}`;
+            navigator.clipboard.writeText(url).then(() => {
+                toast('🔗 Прямая ссылка скопирована', 'success');
+            }).catch(() => {
+                toast(url, 'success');
             });
         }
 
@@ -3991,6 +4008,17 @@
                     </div>
                     Копировать путь
                 </div>
+                ${type === 'file' ? `
+                <div class="context-menu-item" onclick="copyRawLink('${esc(path)}'); closeContextMenu();">
+                    <div class="context-menu-icon">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                            <line x1="5" y1="12" x2="19" y2="12"/><polyline points="15 8 19 12 15 16"/>
+                        </svg>
+                    </div>
+                    Прямая ссылка
+                </div>` : ''}
                 <div class="context-menu-item" onclick="renameItem('${esc(path)}', '${esc(name)}', '${type}', event); closeContextMenu();">
                     <div class="context-menu-icon">
                         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
