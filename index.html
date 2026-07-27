@@ -615,14 +615,244 @@
             }
         }
         
-        .explorer-toolbar {
-            padding: 12px 16px 0;
+        /* ── Explorer tabs (Files / Releases) ───────────────────── */
+        .explorer-tabs {
+            display: flex;
+            gap: 0;
+            padding: 0 16px;
+            border-bottom: 1px solid var(--border-dim);
+            background: var(--bg-surface);
+        }
+        .explorer-tab {
+            padding: 9px 16px;
+            font-family: 'Space Mono', monospace;
+            font-size: 11px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--text-dim);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+        .explorer-tab:hover { color: var(--text-primary); }
+        .explorer-tab.active {
+            color: var(--accent-cyan);
+            border-bottom-color: var(--accent-cyan);
+        }
+
+        /* ── Releases panel ──────────────────────────────────────── */
+        #releasesPanel {
+            display: none;
+            flex-direction: column;
+            flex: 1;
+            overflow: hidden;
+        }
+        #releasesPanel.active { display: flex; }
+
+        .releases-toolbar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 14px;
             background: var(--bg-surface);
             border-bottom: 1px solid var(--border-dim);
+        }
+        .releases-toolbar-title {
+            flex: 1;
+            font-family: 'Space Mono', monospace;
+            font-size: 11px;
+            color: var(--text-dim);
+            letter-spacing: 1px;
+        }
+
+        .releases-list {
+            flex: 1;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: var(--accent-cyan) transparent;
+        }
+
+        /* Release row */
+        .release-item {
+            border-bottom: 1px solid var(--border-dim);
+            transition: background 0.15s;
+        }
+        .release-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            cursor: pointer;
+        }
+        .release-header:hover { background: var(--bg-surface); }
+        .release-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            background: linear-gradient(135deg,rgba(189,147,249,.15),rgba(189,147,249,.05));
+            border: 1px solid var(--accent-purple);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 16px; flex-shrink: 0;
+        }
+        .release-info { flex: 1; min-width: 0; }
+        .release-tag {
+            font-family: 'Space Mono', monospace;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--accent-cyan);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .release-meta {
+            font-family: 'Space Mono', monospace;
+            font-size: 10px;
+            color: var(--text-dim);
+            margin-top: 2px;
+            display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+        }
+        .release-badge {
+            padding: 1px 6px;
+            border-radius: 4px;
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+        .release-badge.draft   { background: rgba(241,250,140,.15); color: var(--accent-yellow); border: 1px solid var(--accent-yellow); }
+        .release-badge.pre     { background: rgba(255,121,198,.15); color: var(--accent-pink);   border: 1px solid var(--accent-pink); }
+        .release-badge.stable  { background: rgba(80,250,123,.15);  color: var(--accent-green);  border: 1px solid var(--accent-green); }
+
+        .release-chevron {
+            font-size: 10px;
+            color: var(--text-dim);
+            transition: transform 0.2s;
+            flex-shrink: 0;
+        }
+        .release-item.open .release-chevron { transform: rotate(90deg); }
+
+        /* Assets */
+        .release-assets {
+            display: none;
+            background: var(--bg-deep);
+            border-top: 1px solid var(--border-dim);
+        }
+        .release-item.open .release-assets { display: block; }
+
+        .release-assets-toolbar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 14px;
+            border-bottom: 1px solid var(--border-dim);
+        }
+        .release-assets-label {
+            flex: 1;
+            font-family: 'Space Mono', monospace;
+            font-size: 10px;
+            color: var(--text-dim);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .asset-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 16px 9px 24px;
+            border-bottom: 1px solid var(--border-dim);
+            transition: background 0.15s;
+        }
+        .asset-item:last-child { border-bottom: none; }
+        .asset-item:hover { background: rgba(139,233,253,.04); }
+        .asset-icon {
+            width: 30px; height: 30px;
+            border-radius: 6px;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-dim);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px; flex-shrink: 0;
+        }
+        .asset-info { flex: 1; min-width: 0; }
+        .asset-name {
+            font-family: 'Space Mono', monospace;
+            font-size: 12px;
+            color: var(--text-primary);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .asset-meta {
+            font-family: 'Space Mono', monospace;
+            font-size: 10px;
+            color: var(--text-dim);
+            margin-top: 2px;
+        }
+        .asset-actions { display: flex; gap: 4px; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; max-width: 160px; }
+
+        /* Empty / loading states */
+        .releases-empty {
             display: flex;
             flex-direction: column;
-            gap: 0;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 24px;
+            gap: 12px;
+            color: var(--text-dim);
+            font-family: 'Space Mono', monospace;
+            font-size: 12px;
+            text-align: center;
         }
+        .releases-empty svg { opacity: .3; }
+
+        /* Release picker in modal */
+        .release-pick-list {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            max-height: 260px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+        }
+        .release-pick-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border-dim);
+            background: var(--bg-elevated);
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .release-pick-item:hover {
+            border-color: var(--accent-cyan);
+            background: rgba(139,233,253,.06);
+        }
+        .release-pick-item.selected {
+            border-color: var(--accent-green);
+            background: rgba(80,250,123,.08);
+        }
+
+        /* Upload progress in releases */
+        .asset-upload-progress {
+            display: none;
+            height: 3px;
+            background: var(--bg-elevated);
+            border-radius: 2px;
+            margin: 0 14px 8px;
+            overflow: hidden;
+        }
+        .asset-upload-progress.active { display: block; }
+        .asset-upload-progress-fill {
+            height: 100%;
+            background: var(--accent-cyan);
+            border-radius: 2px;
+            transition: width 0.3s;
+            width: 0%;
+        }
+
+        .explorer-toolbar { }
 
         .explorer-toolbar-btns {
             display: flex;
@@ -2142,6 +2372,26 @@
 
             <!-- Right: Explorer -->
             <div class="explorer">
+
+                <!-- Tabs -->
+                <div class="explorer-tabs">
+                    <div class="explorer-tab active" id="tabFiles" onclick="switchExplorerTab('files')">
+                        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+                        </svg>
+                        Файлы
+                    </div>
+                    <div class="explorer-tab" id="tabReleases" onclick="switchExplorerTab('releases')">
+                        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+                            <line x1="7" y1="7" x2="7.01" y2="7"/>
+                        </svg>
+                        Релизы
+                    </div>
+                </div>
+
+                <!-- Files panel (existing) -->
+                <div id="filesPanel" style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
                 <div class="explorer-toolbar">
                     <div class="explorer-toolbar-btns">
                     <button class="btn btn-secondary btn-icon" id="backBtn" style="display:none;flex-shrink:0;" title="Назад" onclick="goBack()">
@@ -2251,8 +2501,36 @@
                         <p>Connect to browse your repository</p>
                     </div>
                 </div>
-            </div>
-        </div>
+                </div><!-- /filesPanel -->
+
+                <!-- Releases panel -->
+                <div id="releasesPanel">
+                    <div class="releases-toolbar">
+                        <div class="releases-toolbar-title" id="releasesToolbarTitle">// Релизы</div>
+                        <button class="btn btn-secondary btn-icon" onclick="loadReleases()" title="Обновить">
+                            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                            </svg>
+                        </button>
+                        <button class="btn btn-secondary" onclick="showCreateReleaseModal()" style="font-size:10px;padding:5px 10px;gap:5px;">
+                            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                            </svg>
+                            Новый релиз
+                        </button>
+                    </div>
+                    <div class="releases-list" id="releasesList">
+                        <div class="releases-empty">
+                            <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                                <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+                                <line x1="7" y1="7" x2="7.01" y2="7"/>
+                            </svg>
+                            Подключитесь к репозиторию
+                        </div>
+                    </div>
+                </div><!-- /releasesPanel -->
+
+            </div><!-- /explorer -->
     </div>
 
     <!-- Toast Container -->
@@ -2605,7 +2883,535 @@
             });
         }
 
-        // Explorer
+        // ── Explorer tabs ─────────────────────────────────────────
+        let activeExplorerTab = 'files';
+
+        function switchExplorerTab(tab) {
+            activeExplorerTab = tab;
+            document.getElementById('tabFiles').classList.toggle('active', tab === 'files');
+            document.getElementById('tabReleases').classList.toggle('active', tab === 'releases');
+            document.getElementById('filesPanel').style.display = tab === 'files' ? 'flex' : 'none';
+            document.getElementById('releasesPanel').classList.toggle('active', tab === 'releases');
+            if (tab === 'releases') {
+                const repo = document.getElementById('repository').value;
+                if (repo && !releasesLoaded) loadReleases();
+            }
+        }
+
+        // ── Releases ──────────────────────────────────────────────
+        let releasesLoaded = false;
+        let releasesData = [];
+
+        async function loadReleases() {
+            const token = sessionStorage.getItem('gh-token') || '';
+            const repo = document.getElementById('repository').value;
+            if (!repo) {
+                document.getElementById('releasesList').innerHTML = `
+                    <div class="releases-empty">
+                        <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                            <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+                        </svg>
+                        Сначала подключитесь к репозиторию
+                    </div>`;
+                return;
+            }
+            document.getElementById('releasesList').innerHTML = `
+                <div class="releases-empty">
+                    <div class="spinner" style="width:28px;height:28px;"></div>
+                    Загрузка релизов...
+                </div>`;
+            try {
+                const r = await fetch(`https://api.github.com/repos/${repo}/releases?per_page=50&_=${Date.now()}`, {
+                    headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+                });
+                if (!r.ok) throw new Error(`${r.status}`);
+                releasesData = await r.json();
+                releasesLoaded = true;
+                document.getElementById('releasesToolbarTitle').textContent =
+                    `// Релизы (${releasesData.length})`;
+                renderReleases();
+            } catch (e) {
+                document.getElementById('releasesList').innerHTML = `
+                    <div class="releases-empty">
+                        <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                        </svg>
+                        Ошибка загрузки: ${e.message}
+                    </div>`;
+            }
+        }
+
+        function renderReleases() {
+            const list = document.getElementById('releasesList');
+            if (!releasesData.length) {
+                list.innerHTML = `
+                    <div class="releases-empty">
+                        <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                            <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+                        </svg>
+                        Релизов нет — создайте первый
+                    </div>`;
+                return;
+            }
+            list.innerHTML = releasesData.map(rel => {
+                const date = new Date(rel.published_at || rel.created_at).toLocaleDateString('ru-RU');
+                const badge = rel.draft ? '<span class="release-badge draft">ЧЕРНОВИК</span>'
+                    : rel.prerelease ? '<span class="release-badge pre">PRE-RELEASE</span>'
+                    : '<span class="release-badge stable">СТАБИЛЬНЫЙ</span>';
+                const assetCount = rel.assets.length;
+                const assetsHtml = assetCount === 0
+                    ? `<div style="padding:10px 24px;font-family:'Space Mono',monospace;font-size:11px;color:var(--text-dim);">Нет файлов</div>`
+                    : rel.assets.map(a => {
+                        const ext = a.name.split('.').pop().toLowerCase();
+                        const ico = ext === 'wgt' ? '📦' : ext === 'zip' ? '🗜️' : ext === 'apk' ? '🤖' : '📄';
+                        return `
+                        <div class="asset-item">
+                            <div class="asset-icon">${ico}</div>
+                            <div class="asset-info">
+                                <div class="asset-name" title="${esc(a.name)}">${esc(a.name)}</div>
+                                <div class="asset-meta">${formatSize(a.size)} · ${a.download_count} скач.</div>
+                            </div>
+                            <div class="asset-actions">
+                                <button class="btn btn-secondary btn-icon" title="Скопировать прямую ссылку"
+                                    onclick="copyAssetLink('${esc(a.browser_download_url)}',event)">
+                                    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                                        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                                    </svg>
+                                </button>
+                                <button class="btn btn-secondary btn-icon" title="Переименовать"
+                                    onclick="renameAsset(${a.id},'${esc(a.name)}',${rel.id},event)">
+                                    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                    </svg>
+                                </button>
+                                <button class="btn btn-secondary btn-icon" title="Скачать"
+                                    onclick="downloadAsset(${a.id},'${esc(a.name)}',event)">
+                                    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                        <polyline points="7 10 12 15 17 10"/>
+                                        <line x1="12" y1="15" x2="12" y2="3"/>
+                                    </svg>
+                                </button>
+                                <button class="btn btn-danger btn-icon" title="Удалить"
+                                    onclick="deleteAsset(${a.id},'${esc(a.name)}',${rel.id},event)">
+                                    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <polyline points="3 6 5 6 21 6"/>
+                                        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                                        <path d="M10 11v6"/><path d="M14 11v6"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>`;
+                    }).join('');
+
+                return `
+                <div class="release-item" id="rel-${rel.id}">
+                    <div class="release-header" onclick="toggleRelease(${rel.id})">
+                        <div class="release-icon">🏷</div>
+                        <div class="release-info">
+                            <div class="release-tag">${esc(rel.tag_name)}${rel.name && rel.name !== rel.tag_name ? ' · ' + esc(rel.name) : ''}</div>
+                            <div class="release-meta">
+                                ${badge}
+                                <span>${date}</span>
+                                <span>${assetCount} файл${assetCount === 1 ? '' : assetCount < 5 ? 'а' : 'ов'}</span>
+                            </div>
+                        </div>
+                        <span class="release-chevron">▶</span>
+                    </div>
+                    <div class="release-assets">
+                        <div class="release-assets-toolbar">
+                            <span class="release-assets-label">Assets</span>
+                            <button class="btn btn-secondary" style="font-size:10px;padding:4px 10px;gap:5px;"
+                                onclick="uploadAssetToRelease(${rel.id},'${esc(rel.tag_name)}',event)">
+                                <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                                </svg>
+                                Добавить файл
+                            </button>
+                            <button class="btn btn-danger" style="font-size:10px;padding:4px 10px;gap:5px;"
+                                onclick="deleteRelease(${rel.id},'${esc(rel.tag_name)}',event)">
+                                <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <polyline points="3 6 5 6 21 6"/>
+                                    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                                </svg>
+                                Удалить релиз
+                            </button>
+                        </div>
+                        <div class="asset-upload-progress" id="uploadProgress-${rel.id}">
+                            <div class="asset-upload-progress-fill" id="uploadProgressFill-${rel.id}"></div>
+                        </div>
+                        ${assetsHtml}
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function toggleRelease(id) {
+            const el = document.getElementById(`rel-${id}`);
+            el.classList.toggle('open');
+        }
+
+        function downloadAsset(assetId, name, e) {
+            e.stopPropagation();
+            const token = sessionStorage.getItem('gh-token') || '';
+            const repo = document.getElementById('repository').value;
+            const url = `https://api.github.com/repos/${repo}/releases/assets/${assetId}`;
+            // Use a temporary anchor with Authorization via fetch → blob
+            toast(`Скачивание ${name}...`, 'info');
+            fetch(url, { headers: { 'Authorization': `token ${token}`, 'Accept': 'application/octet-stream' } })
+                .then(r => r.blob())
+                .then(blob => {
+                    const a = document.createElement('a');
+                    a.href = URL.createObjectURL(blob);
+                    a.download = name;
+                    a.click();
+                    URL.revokeObjectURL(a.href);
+                }).catch(err => toast('Ошибка скачивания: ' + err.message, 'error'));
+        }
+
+        function copyAssetLink(url, e) {
+            e.stopPropagation();
+            navigator.clipboard.writeText(url)
+                .then(() => toast('Ссылка скопирована', 'success'))
+                .catch(() => {
+                    // Fallback for browsers without clipboard API
+                    const ta = document.createElement('textarea');
+                    ta.value = url;
+                    ta.style.position = 'fixed';
+                    ta.style.opacity = '0';
+                    document.body.appendChild(ta);
+                    ta.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(ta);
+                    toast('Ссылка скопирована', 'success');
+                });
+        }
+
+        async function renameAsset(assetId, currentName, releaseId, e) {
+            e.stopPropagation();
+            const token = sessionStorage.getItem('gh-token') || '';
+            const repo = document.getElementById('repository').value;
+
+            openModal(
+                `Переименовать файл`,
+                `<div class="form-group" style="margin-bottom:0;">
+                    <label class="form-label">Новое имя</label>
+                    <input type="text" class="form-input" id="renameAssetInput"
+                        value="${esc(currentName)}"
+                        style="font-family:'Space Mono',monospace;"
+                        onkeydown="if(event.key==='Enter') document.getElementById('modalConfirm').click()">
+                </div>`,
+                async () => {
+                    const newName = document.getElementById('renameAssetInput').value.trim();
+                    if (!newName || newName === currentName) return;
+                    const r = await fetch(`https://api.github.com/repos/${repo}/releases/assets/${assetId}`, {
+                        method: 'PATCH',
+                        headers: {
+                            'Authorization': `token ${token}`,
+                            'Accept': 'application/vnd.github.v3+json',
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ name: newName })
+                    });
+                    if (r.ok) {
+                        toast(`Переименован в "${newName}"`, 'success');
+                        releasesLoaded = false;
+                        await loadReleases();
+                        // Re-open the release
+                        setTimeout(() => {
+                            const el = document.getElementById(`rel-${releaseId}`);
+                            if (el && !el.classList.contains('open')) el.classList.add('open');
+                        }, 100);
+                    } else {
+                        const err = await r.json().catch(() => ({}));
+                        toast('Ошибка: ' + (err.message || r.status), 'error');
+                    }
+                }
+            );
+            // Focus input and select all after modal opens
+            setTimeout(() => {
+                const inp = document.getElementById('renameAssetInput');
+                if (inp) { inp.focus(); inp.select(); }
+            }, 50);
+        }
+
+        async function deleteAsset(assetId, name, releaseId, e) {
+            e.stopPropagation();
+            const token = sessionStorage.getItem('gh-token') || '';
+            const repo = document.getElementById('repository').value;
+            openModal(
+                `Удалить файл "${name}"?`,
+                `Файл будет удалён из релиза навсегда.`,
+                async () => {
+                    const r = await fetch(`https://api.github.com/repos/${repo}/releases/assets/${assetId}`, {
+                        method: 'DELETE',
+                        headers: { 'Authorization': `token ${token}` }
+                    });
+                    if (r.ok || r.status === 204) {
+                        toast(`Файл "${name}" удалён`, 'success');
+                        releasesLoaded = false;
+                        await loadReleases();
+                    } else {
+                        toast('Ошибка удаления: ' + r.status, 'error');
+                    }
+                }
+            );
+        }
+
+        async function deleteRelease(releaseId, tag, e) {
+            e.stopPropagation();
+            const token = sessionStorage.getItem('gh-token') || '';
+            const repo = document.getElementById('repository').value;
+            openModal(
+                `Удалить релиз "${tag}"?`,
+                `Релиз и все его файлы будут удалены навсегда.`,
+                async () => {
+                    const r = await fetch(`https://api.github.com/repos/${repo}/releases/${releaseId}`, {
+                        method: 'DELETE',
+                        headers: { 'Authorization': `token ${token}` }
+                    });
+                    if (r.ok || r.status === 204) {
+                        toast(`Релиз "${tag}" удалён`, 'success');
+                        releasesLoaded = false;
+                        await loadReleases();
+                    } else {
+                        toast('Ошибка удаления: ' + r.status, 'error');
+                    }
+                }
+            );
+        }
+
+        function uploadAssetToRelease(releaseId, tag, e) {
+            e.stopPropagation();
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.multiple = true;
+            input.onchange = async () => {
+                if (!input.files.length) return;
+                const token = sessionStorage.getItem('gh-token') || '';
+                const repo = document.getElementById('repository').value;
+                const bar = document.getElementById(`uploadProgress-${releaseId}`);
+                const fill = document.getElementById(`uploadProgressFill-${releaseId}`);
+
+                for (let i = 0; i < input.files.length; i++) {
+                    const file = input.files[i];
+                    const pct = Math.round((i / input.files.length) * 100);
+                    if (bar) { bar.classList.add('active'); fill.style.width = pct + '%'; }
+                    toast(`Загрузка ${file.name}...`, 'info');
+
+                    // GitHub release upload URL
+                    const relData = releasesData.find(r => r.id === releaseId);
+                    if (!relData) { toast('Релиз не найден', 'error'); continue; }
+                    const uploadUrl = relData.upload_url.replace('{?name,label}', '');
+
+                    try {
+                        const r = await fetch(`${uploadUrl}?name=${encodeURIComponent(file.name)}`, {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': `token ${token}`,
+                                'Content-Type': file.type || 'application/octet-stream',
+                                'Content-Length': file.size
+                            },
+                            body: file
+                        });
+                        if (r.ok) {
+                            toast(`${file.name} загружен`, 'success');
+                        } else {
+                            const err = await r.json().catch(() => ({}));
+                            toast(`Ошибка: ${err.message || r.status}`, 'error');
+                        }
+                    } catch (err) {
+                        toast(`Ошибка: ${err.message}`, 'error');
+                    }
+                }
+
+                if (bar) { fill.style.width = '100%'; setTimeout(() => bar.classList.remove('active'), 600); }
+                releasesLoaded = false;
+                await loadReleases();
+                // Re-open the release panel
+                const el = document.getElementById(`rel-${releaseId}`);
+                if (el && !el.classList.contains('open')) el.classList.add('open');
+            };
+            input.click();
+        }
+
+        function showCreateReleaseModal() {
+            const token = sessionStorage.getItem('gh-token') || '';
+            const repo = document.getElementById('repository').value;
+            if (!repo) { toast('Сначала подключитесь к репозиторию', 'error'); return; }
+
+            const bodyHtml = `
+                <div class="form-group">
+                    <label class="form-label">Тег версии <span style="color:var(--accent-pink)">*</span></label>
+                    <input type="text" class="form-input" id="newReleaseTag" placeholder="v1.0.0" style="font-family:'Space Mono',monospace;">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Название релиза</label>
+                    <input type="text" class="form-input" id="newReleaseName" placeholder="Release v1.0.0" style="font-family:'Space Mono',monospace;">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Описание</label>
+                    <textarea class="form-input" id="newReleaseBody" rows="3" placeholder="Что нового..." style="font-family:'Space Mono',monospace;resize:vertical;"></textarea>
+                </div>
+                <div style="display:flex;gap:16px;margin-top:8px;">
+                    <label style="display:flex;align-items:center;gap:6px;font-family:'Space Mono',monospace;font-size:12px;cursor:pointer;">
+                        <input type="checkbox" id="newReleaseDraft"> Черновик
+                    </label>
+                    <label style="display:flex;align-items:center;gap:6px;font-family:'Space Mono',monospace;font-size:12px;cursor:pointer;">
+                        <input type="checkbox" id="newReleasePrerelease"> Pre-release
+                    </label>
+                </div>`;
+
+            openModal('Новый релиз', bodyHtml, async () => {
+                const tag = document.getElementById('newReleaseTag').value.trim();
+                if (!tag) { toast('Укажите тег версии', 'error'); return false; } // false = don't close
+                const name = document.getElementById('newReleaseName').value.trim() || tag;
+                const desc = document.getElementById('newReleaseBody').value.trim();
+                const draft = document.getElementById('newReleaseDraft').checked;
+                const pre = document.getElementById('newReleasePrerelease').checked;
+                const branch = document.getElementById('branch').value || 'main';
+
+                const r = await fetch(`https://api.github.com/repos/${repo}/releases`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `token ${token}`,
+                        'Accept': 'application/vnd.github.v3+json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ tag_name: tag, name, body: desc, draft, prerelease: pre, target_commitish: branch })
+                });
+                const data = await r.json();
+                if (r.ok) {
+                    toast(`Релиз "${tag}" создан`, 'success');
+                    releasesLoaded = false;
+                    await loadReleases();
+                } else {
+                    toast('Ошибка: ' + (data.message || r.status), 'error');
+                }
+            });
+
+            // Change confirm button text
+            setTimeout(() => {
+                const btn = document.getElementById('modalConfirm');
+                if (btn) { btn.textContent = 'Создать'; btn.className = 'btn btn-success'; }
+            }, 0);
+        }
+
+        // ── Add repo file to a release ────────────────────────────
+        async function addFileToRelease(filePath, fileName, e) {
+            e.stopPropagation();
+            const token = sessionStorage.getItem('gh-token') || '';
+            const repo = document.getElementById('repository').value;
+            const branch = document.getElementById('branch').value || 'main';
+            if (!repo) { toast('Нет репозитория', 'error'); return; }
+
+            // Load releases if not yet loaded
+            if (!releasesLoaded) {
+                toast('Загрузка релизов...', 'info');
+                await loadReleases();
+            }
+            if (!releasesData.length) {
+                toast('Нет релизов — создайте релиз сначала', 'error');
+                return;
+            }
+
+            // Build release picker HTML
+            const options = releasesData.map(r => {
+                const badge = r.draft ? '🟡' : r.prerelease ? '🩷' : '🟢';
+                return `<div class="release-pick-item" onclick="confirmAddToRelease(${r.id},'${esc(r.tag_name)}','${esc(filePath)}','${esc(fileName)}',this)">
+                    <span>${badge}</span>
+                    <span style="flex:1;font-family:'Space Mono',monospace;font-size:12px;">${esc(r.tag_name)}</span>
+                    <span style="font-size:10px;color:var(--text-dim);">${r.assets.length} файл(ов)</span>
+                </div>`;
+            }).join('');
+
+            openModal(
+                `Добавить «${fileName}» в релиз`,
+                `<div style="margin-bottom:8px;font-size:12px;color:var(--text-dim);font-family:'Space Mono',monospace;">Выберите релиз:</div>
+                <div class="release-pick-list">${options}</div>
+                <div id="releasePickStatus" style="margin-top:8px;font-size:11px;font-family:'Space Mono',monospace;color:var(--text-dim);min-height:16px;"></div>`,
+                null // confirm handled by item click
+            );
+            // Hide standard confirm button — selection triggers action
+            setTimeout(() => {
+                const btn = document.getElementById('modalConfirm');
+                if (btn) btn.style.display = 'none';
+            }, 0);
+        }
+
+        async function confirmAddToRelease(releaseId, tag, filePath, fileName, el) {
+            const token = sessionStorage.getItem('gh-token') || '';
+            const repo = document.getElementById('repository').value;
+            const branch = document.getElementById('branch').value || 'main';
+            const status = document.getElementById('releasePickStatus');
+
+            // Highlight selection
+            document.querySelectorAll('.release-pick-item').forEach(i => i.classList.remove('selected'));
+            el.classList.add('selected');
+            if (status) status.textContent = `Загрузка файла в ${tag}...`;
+
+            try {
+                // 1. Download the file content from GitHub repo
+                const contentRes = await fetch(`https://api.github.com/repos/${repo}/contents/${filePath}?ref=${branch}`, {
+                    headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+                });
+                if (!contentRes.ok) throw new Error(`Не удалось получить файл: ${contentRes.status}`);
+                const contentData = await contentRes.json();
+
+                // Decode base64 → binary blob
+                const binaryStr = atob(contentData.content.replace(/\n/g, ''));
+                const bytes = new Uint8Array(binaryStr.length);
+                for (let i = 0; i < binaryStr.length; i++) bytes[i] = binaryStr.charCodeAt(i);
+                const blob = new Blob([bytes], { type: 'application/octet-stream' });
+
+                // 2. Upload to release as asset
+                const rel = releasesData.find(r => r.id === releaseId);
+                if (!rel) throw new Error('Релиз не найден');
+                const uploadUrl = rel.upload_url.replace('{?name,label}', '');
+
+                const uploadRes = await fetch(`${uploadUrl}?name=${encodeURIComponent(fileName)}`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `token ${token}`,
+                        'Content-Type': 'application/octet-stream'
+                    },
+                    body: blob
+                });
+
+                if (uploadRes.ok) {
+                    toast(`«${fileName}» добавлен в релиз ${tag}`, 'success');
+                    closeModal();
+                    releasesLoaded = false;
+                    // Refresh releases silently in background
+                    loadReleases();
+                } else {
+                    const err = await uploadRes.json().catch(() => ({}));
+                    throw new Error(err.message || uploadRes.status);
+                }
+            } catch (err) {
+                if (status) status.textContent = `Ошибка: ${err.message}`;
+                toast(`Ошибка: ${err.message}`, 'error');
+                el.classList.remove('selected');
+            }
+        }
+
+        // Reset releases when repo changes
+        document.getElementById('repository').addEventListener('change', () => {
+            releasesLoaded = false;
+            releasesData = [];
+            document.getElementById('releasesToolbarTitle').textContent = '// Релизы';
+            document.getElementById('releasesList').innerHTML = `
+                <div class="releases-empty">
+                    <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                        <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+                    </svg>
+                    Подключитесь к репозиторию
+                </div>`;
+        }, { capture: true }); // capture:true so it runs before other listeners
+
+        // ── Explorer
         async function loadExplorer(path) {
             explorerPath = path;
             selectedItems.clear();
@@ -4018,6 +4824,16 @@
                         </svg>
                     </div>
                     Прямая ссылка
+                </div>` : ''}
+                ${type === 'file' ? `
+                <div class="context-menu-item" onclick="addFileToRelease('${esc(path)}', '${esc(name)}', event); closeContextMenu();">
+                    <div class="context-menu-icon">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+                            <line x1="7" y1="7" x2="7.01" y2="7"/>
+                        </svg>
+                    </div>
+                    Добавить в релиз
                 </div>` : ''}
                 <div class="context-menu-item" onclick="renameItem('${esc(path)}', '${esc(name)}', '${type}', event); closeContextMenu();">
                     <div class="context-menu-icon">
