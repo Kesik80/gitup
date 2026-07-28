@@ -3175,11 +3175,6 @@
                 const relData = releasesData.find(r => r.id === releaseId);
                 if (!relData) { toast('Релиз не найден', 'error'); return; }
 
-                // Detect local vs production mode — same logic as connect()
-                const isLocal = window.location.protocol === 'file:' ||
-                    window.location.hostname === 'localhost' ||
-                    window.location.hostname === '127.0.0.1';
-
                 for (let i = 0; i < input.files.length; i++) {
                     const file = input.files[i];
                     const pct = Math.round((i / input.files.length) * 100);
@@ -3187,34 +3182,17 @@
                     toast(`Загрузка ${file.name}...`, 'info');
 
                     try {
-                        let r;
-
-                        if (isLocal) {
-                            // Локальный режим: прямой запрос на uploads.github.com
-                            // (CORS работает только если браузер не блокирует — для тестов)
-                            const token = sessionStorage.getItem('gh-token') || '';
-                            const uploadUrl = relData.upload_url.replace('{?name,label}', '');
-                            r = await fetch(`${uploadUrl}?name=${encodeURIComponent(file.name)}`, {
-                                method: 'POST',
-                                headers: {
-                                    'Authorization': `token ${token}`,
-                                    'Content-Type': file.type || 'application/octet-stream',
-                                },
-                                body: file
-                            });
-                        } else {
-                            // Продакшн: через серверный прокси /api/release-upload
-                            // (обходит CORS-блокировку uploads.github.com)
-                            r = await fetch('/api/release-upload', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': file.type || 'application/octet-stream',
-                                    'X-File-Name':  file.name,
-                                    'X-Upload-Url': relData.upload_url,
-                                },
-                                body: file
-                            });
-                        }
+                        // Всегда через прокси /api/release-upload —
+                        // Edge Runtime не имеет лимита на размер тела.
+                        const r = await fetch('/api/release-upload', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': file.type || 'application/octet-stream',
+                                'X-File-Name':  file.name,
+                                'X-Upload-Url': relData.upload_url,
+                            },
+                            body: file
+                        });
 
                         if (r.ok) {
                             toast(`${file.name} загружен`, 'success');
@@ -3346,62 +3324,65 @@
             const branch = document.getElementById('branch').value || 'main';
             const status = document.getElementById('releasePickStatus');
 
-            // Highlight selection
             document.querySelectorAll('.release-pick-item').forEach(i => i.classList.remove('selected'));
             el.classList.add('selected');
-            if (status) status.textContent = `Загрузка файла в ${tag}...`;
+            if (status) status.textContent = `Получение файла...`;
 
             try {
-                // 1. Download the file content from GitHub repo
-                const contentRes = await fetch(`https://api.github.com/repos/${repo}/contents/${filePath}?ref=${branch}`, {
-                    headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
-                });
-                if (!contentRes.ok) throw new Error(`Не удалось получить файл: ${contentRes.status}`);
-                const contentData = await contentRes.json();
+                // Шаг 1: получаем sha файла через Contents API (только метаданные, без content)
+                const metaRes = await fetch(
+                    `https://api.github.com/repos/${repo}/contents/${filePath}?ref=${branch}`,
+                    { headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' } }
+                );
+                if (!metaRes.ok) throw new Error(`Не удалось получить файл: ${metaRes.status}`);
+                const meta = await metaRes.json();
 
-                // Decode base64 → binary blob
-                const binaryStr = atob(contentData.content.replace(/\n/g, ''));
-                const bytes = new Uint8Array(binaryStr.length);
-                for (let i = 0; i < binaryStr.length; i++) bytes[i] = binaryStr.charCodeAt(i);
-                const blob = new Blob([bytes], { type: 'application/octet-stream' });
+                let blob;
+                if (meta.content) {
+                    // Файл ≤ 1 МБ — content есть в ответе
+                    const binaryStr = atob(meta.content.replace(/\n/g, ''));
+                    const bytes = new Uint8Array(binaryStr.length);
+                    for (let i = 0; i < binaryStr.length; i++) bytes[i] = binaryStr.charCodeAt(i);
+                    blob = new Blob([bytes], { type: 'application/octet-stream' });
+                } else {
+                    // Файл > 1 МБ — Contents API не возвращает content.
+                    // Используем Git Blobs API который возвращает полный base64.
+                    if (status) status.textContent = `Файл большой, загружаем через Blobs API...`;
+                    const blobRes = await fetch(
+                        `https://api.github.com/repos/${repo}/git/blobs/${meta.sha}`,
+                        { headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' } }
+                    );
+                    if (!blobRes.ok) throw new Error(`Git Blobs API: ${blobRes.status}`);
+                    const blobData = await blobRes.json();
+                    const binaryStr = atob(blobData.content.replace(/\n/g, ''));
+                    const bytes = new Uint8Array(binaryStr.length);
+                    for (let i = 0; i < binaryStr.length; i++) bytes[i] = binaryStr.charCodeAt(i);
+                    blob = new Blob([bytes], { type: 'application/octet-stream' });
+                }
 
-                // 2. Upload to release as asset via proxy
+                // Шаг 2: загружаем в релиз через прокси
+                if (status) status.textContent = `Загрузка в релиз ${tag}...`;
                 const rel = releasesData.find(r => r.id === releaseId);
                 if (!rel) throw new Error('Релиз не найден');
 
-                const isLocal = window.location.protocol === 'file:' ||
-                    window.location.hostname === 'localhost' ||
-                    window.location.hostname === '127.0.0.1';
-
-                let uploadRes;
-                if (isLocal) {
-                    const uploadUrl = rel.upload_url.replace('{?name,label}', '');
-                    uploadRes = await fetch(`${uploadUrl}?name=${encodeURIComponent(fileName)}`, {
-                        method: 'POST',
-                        headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/octet-stream' },
-                        body: blob
-                    });
-                } else {
-                    uploadRes = await fetch('/api/release-upload', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/octet-stream',
-                            'X-File-Name':  fileName,
-                            'X-Upload-Url': rel.upload_url,
-                        },
-                        body: blob
-                    });
-                }
+                const uploadRes = await fetch('/api/release-upload', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/octet-stream',
+                        'X-File-Name':  fileName,
+                        'X-Upload-Url': rel.upload_url,
+                    },
+                    body: blob
+                });
 
                 if (uploadRes.ok) {
                     toast(`«${fileName}» добавлен в релиз ${tag}`, 'success');
                     closeModal();
                     releasesLoaded = false;
-                    // Refresh releases silently in background
                     loadReleases();
                 } else {
                     const err = await uploadRes.json().catch(() => ({}));
-                    throw new Error(err.message || uploadRes.status);
+                    throw new Error(err.error || err.message || uploadRes.status);
                 }
             } catch (err) {
                 if (status) status.textContent = `Ошибка: ${err.message}`;
