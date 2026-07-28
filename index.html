@@ -3162,6 +3162,43 @@
             );
         }
 
+        // Загружает blob/file напрямую на uploads.github.com.
+        // Сервер (/api/release-upload) выдаёт токен и URL,
+        // браузер отправляет файл сам — нет лимита Vercel.
+        async function uploadToGitHubRelease(relData, fileName, fileBody, contentType) {
+            // Шаг 1: получаем токен и готовый URL от сервера
+            const meta = await fetch('/api/release-upload', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ uploadUrl: relData.upload_url, fileName })
+            });
+            if (!meta.ok) {
+                const e = await meta.json().catch(() => ({}));
+                throw new Error(e.error || `Сервер: ${meta.status}`);
+            }
+            const { token, url } = await meta.json();
+
+            // Шаг 2: загружаем файл напрямую на GitHub — без Vercel посередине
+            const r = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `token ${token}`,
+                    'Content-Type': contentType || 'application/octet-stream',
+                    'Accept': 'application/vnd.github.v3+json',
+                },
+                body: fileBody
+            });
+            if (!r.ok) {
+                const e = await r.json().catch(() => ({}));
+                // Validation Failed = файл с таким именем уже есть
+                if (r.status === 422) {
+                    throw new Error(`Файл "${fileName}" уже существует в этом релизе`);
+                }
+                throw new Error(e.message || `GitHub: ${r.status}`);
+            }
+            return await r.json();
+        }
+
         function uploadAssetToRelease(releaseId, tag, e) {
             e.stopPropagation();
             const input = document.createElement('input');
@@ -3171,41 +3208,25 @@
                 if (!input.files.length) return;
                 const bar  = document.getElementById(`uploadProgress-${releaseId}`);
                 const fill = document.getElementById(`uploadProgressFill-${releaseId}`);
-
                 const relData = releasesData.find(r => r.id === releaseId);
                 if (!relData) { toast('Релиз не найден', 'error'); return; }
 
+                let ok = 0, fail = 0;
                 for (let i = 0; i < input.files.length; i++) {
                     const file = input.files[i];
-                    const pct = Math.round((i / input.files.length) * 100);
-                    if (bar) { bar.classList.add('active'); fill.style.width = pct + '%'; }
+                    if (bar) { bar.classList.add('active'); fill.style.width = Math.round((i / input.files.length) * 100) + '%'; }
                     toast(`Загрузка ${file.name}...`, 'info');
-
                     try {
-                        // Всегда через прокси /api/release-upload —
-                        // Edge Runtime не имеет лимита на размер тела.
-                        const r = await fetch('/api/release-upload', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': file.type || 'application/octet-stream',
-                                'X-File-Name':  file.name,
-                                'X-Upload-Url': relData.upload_url,
-                            },
-                            body: file
-                        });
-
-                        if (r.ok) {
-                            toast(`${file.name} загружен`, 'success');
-                        } else {
-                            const err = await r.json().catch(() => ({}));
-                            toast(`Ошибка: ${err.error || err.message || r.status}`, 'error');
-                        }
+                        await uploadToGitHubRelease(relData, file.name, file, file.type);
+                        ok++;
                     } catch (err) {
-                        toast(`Ошибка: ${err.message}`, 'error');
+                        toast(`${file.name}: ${err.message}`, 'error');
+                        fail++;
                     }
                 }
 
                 if (bar) { fill.style.width = '100%'; setTimeout(() => bar.classList.remove('active'), 600); }
+                if (ok > 0) toast(`Загружено: ${ok} файл(ов)${fail ? `, ошибок: ${fail}` : ''}`, 'success');
                 releasesLoaded = false;
                 await loadReleases();
                 const el = document.getElementById(`rel-${releaseId}`);
@@ -3360,31 +3381,17 @@
                     blob = new Blob([bytes], { type: 'application/octet-stream' });
                 }
 
-                // Шаг 2: загружаем в релиз через прокси
+                // Шаг 2: загружаем в релиз напрямую из браузера
                 if (status) status.textContent = `Загрузка в релиз ${tag}...`;
                 const rel = releasesData.find(r => r.id === releaseId);
                 if (!rel) throw new Error('Релиз не найден');
 
-                const uploadRes = await fetch('/api/release-upload', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/octet-stream',
-                        'X-File-Name':  fileName,
-                        'X-Upload-Url': rel.upload_url,
-                    },
-                    body: blob
-                });
+                await uploadToGitHubRelease(rel, fileName, blob, 'application/octet-stream');
 
-                if (uploadRes.ok) {
-                    toast(`«${fileName}» добавлен в релиз ${tag}`, 'success');
-                    closeModal();
-                    releasesLoaded = false;
-                    loadReleases();
-                } else {
-                    const err = await uploadRes.json().catch(() => ({}));
-                    throw new Error(err.error || err.message || uploadRes.status);
-                }
-            } catch (err) {
+                toast(`«${fileName}» добавлен в релиз ${tag}`, 'success');
+                closeModal();
+                releasesLoaded = false;
+                loadReleases();            } catch (err) {
                 if (status) status.textContent = `Ошибка: ${err.message}`;
                 toast(`Ошибка: ${err.message}`, 'error');
                 el.classList.remove('selected');
