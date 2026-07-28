@@ -2972,34 +2972,13 @@
                                 <div class="asset-meta">${formatSize(a.size)} · ${a.download_count} скач.</div>
                             </div>
                             <div class="asset-actions">
-                                <button class="btn btn-secondary btn-icon" title="Скопировать прямую ссылку"
-                                    onclick="copyAssetLink('${esc(a.browser_download_url)}',event)">
-                                    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
-                                        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
-                                    </svg>
-                                </button>
-                                <button class="btn btn-secondary btn-icon" title="Переименовать"
-                                    onclick="renameAsset(${a.id},'${esc(a.name)}',${rel.id},event)">
-                                    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                                    </svg>
-                                </button>
-                                <button class="btn btn-secondary btn-icon" title="Скачать"
-                                    onclick="downloadAsset(${a.id},'${esc(a.name)}',event)">
-                                    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                                        <polyline points="7 10 12 15 17 10"/>
-                                        <line x1="12" y1="15" x2="12" y2="3"/>
-                                    </svg>
-                                </button>
-                                <button class="btn btn-danger btn-icon" title="Удалить"
-                                    onclick="deleteAsset(${a.id},'${esc(a.name)}',${rel.id},event)">
-                                    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                        <polyline points="3 6 5 6 21 6"/>
-                                        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-                                        <path d="M10 11v6"/><path d="M14 11v6"/>
+                                <button class="btn btn-secondary btn-icon explorer-item-actions"
+                                    title="Меню"
+                                    onclick="showAssetMenu(${a.id},'${esc(a.name)}','${esc(a.browser_download_url)}',${rel.id},event)">
+                                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+                                        <circle cx="12" cy="5" r="2"/>
+                                        <circle cx="12" cy="12" r="2"/>
+                                        <circle cx="12" cy="19" r="2"/>
                                     </svg>
                                 </button>
                             </div>
@@ -4757,6 +4736,59 @@
         }
 
         // Context menu
+        function showAssetMenu(assetId, name, downloadUrl, releaseId, e) {
+            e.stopPropagation();
+            const menu = document.getElementById('contextMenu');
+            menu.innerHTML = `
+                <div class="context-menu-item" onclick="downloadAsset(${assetId},'${esc(name)}',event); closeContextMenu();">
+                    <div class="context-menu-icon">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="7 10 12 15 17 10"/>
+                            <line x1="12" y1="15" x2="12" y2="3"/>
+                        </svg>
+                    </div>
+                    Скачать
+                </div>
+                <div class="context-menu-item" onclick="copyAssetLink('${esc(downloadUrl)}',event); closeContextMenu();">
+                    <div class="context-menu-icon">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                        </svg>
+                    </div>
+                    Прямая ссылка
+                </div>
+                <div class="context-menu-item" onclick="renameAsset(${assetId},'${esc(name)}',${releaseId},event); closeContextMenu();">
+                    <div class="context-menu-icon">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                        </svg>
+                    </div>
+                    Переименовать
+                </div>
+                <div class="context-menu-item danger" onclick="deleteAsset(${assetId},'${esc(name)}',${releaseId},event); closeContextMenu();">
+                    <div class="context-menu-icon">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <polyline points="3 6 5 6 21 6"/>
+                            <path d="M19 6l-1 14H6L5 6"/>
+                        </svg>
+                    </div>
+                    Удалить
+                </div>
+            `;
+            const rect = e.target.closest('.btn').getBoundingClientRect();
+            const menuHeight = 4 * 48 + 16;
+            const spaceBelow = window.innerHeight - rect.bottom;
+            const top = spaceBelow < menuHeight
+                ? Math.max(4, rect.top - menuHeight - 4)
+                : rect.bottom + 4;
+            menu.style.top  = top + 'px';
+            menu.style.left = Math.min(rect.left, window.innerWidth - 200) + 'px';
+            menu.classList.add('open');
+        }
+
         function showItemMenu(path, name, type, e) {
             e.stopPropagation();
             
