@@ -3169,10 +3169,16 @@
             input.multiple = true;
             input.onchange = async () => {
                 if (!input.files.length) return;
-                const token = sessionStorage.getItem('gh-token') || '';
-                const repo = document.getElementById('repository').value;
-                const bar = document.getElementById(`uploadProgress-${releaseId}`);
+                const bar  = document.getElementById(`uploadProgress-${releaseId}`);
                 const fill = document.getElementById(`uploadProgressFill-${releaseId}`);
+
+                const relData = releasesData.find(r => r.id === releaseId);
+                if (!relData) { toast('Релиз не найден', 'error'); return; }
+
+                // Detect local vs production mode — same logic as connect()
+                const isLocal = window.location.protocol === 'file:' ||
+                    window.location.hostname === 'localhost' ||
+                    window.location.hostname === '127.0.0.1';
 
                 for (let i = 0; i < input.files.length; i++) {
                     const file = input.files[i];
@@ -3180,26 +3186,41 @@
                     if (bar) { bar.classList.add('active'); fill.style.width = pct + '%'; }
                     toast(`Загрузка ${file.name}...`, 'info');
 
-                    // GitHub release upload URL
-                    const relData = releasesData.find(r => r.id === releaseId);
-                    if (!relData) { toast('Релиз не найден', 'error'); continue; }
-                    const uploadUrl = relData.upload_url.replace('{?name,label}', '');
-
                     try {
-                        const r = await fetch(`${uploadUrl}?name=${encodeURIComponent(file.name)}`, {
-                            method: 'POST',
-                            headers: {
-                                'Authorization': `token ${token}`,
-                                'Content-Type': file.type || 'application/octet-stream',
-                                'Content-Length': file.size
-                            },
-                            body: file
-                        });
+                        let r;
+
+                        if (isLocal) {
+                            // Локальный режим: прямой запрос на uploads.github.com
+                            // (CORS работает только если браузер не блокирует — для тестов)
+                            const token = sessionStorage.getItem('gh-token') || '';
+                            const uploadUrl = relData.upload_url.replace('{?name,label}', '');
+                            r = await fetch(`${uploadUrl}?name=${encodeURIComponent(file.name)}`, {
+                                method: 'POST',
+                                headers: {
+                                    'Authorization': `token ${token}`,
+                                    'Content-Type': file.type || 'application/octet-stream',
+                                },
+                                body: file
+                            });
+                        } else {
+                            // Продакшн: через серверный прокси /api/release-upload
+                            // (обходит CORS-блокировку uploads.github.com)
+                            r = await fetch('/api/release-upload', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': file.type || 'application/octet-stream',
+                                    'X-File-Name':  file.name,
+                                    'X-Upload-Url': relData.upload_url,
+                                },
+                                body: file
+                            });
+                        }
+
                         if (r.ok) {
                             toast(`${file.name} загружен`, 'success');
                         } else {
                             const err = await r.json().catch(() => ({}));
-                            toast(`Ошибка: ${err.message || r.status}`, 'error');
+                            toast(`Ошибка: ${err.error || err.message || r.status}`, 'error');
                         }
                     } catch (err) {
                         toast(`Ошибка: ${err.message}`, 'error');
@@ -3209,7 +3230,6 @@
                 if (bar) { fill.style.width = '100%'; setTimeout(() => bar.classList.remove('active'), 600); }
                 releasesLoaded = false;
                 await loadReleases();
-                // Re-open the release panel
                 const el = document.getElementById(`rel-${releaseId}`);
                 if (el && !el.classList.contains('open')) el.classList.add('open');
             };
@@ -3345,19 +3365,33 @@
                 for (let i = 0; i < binaryStr.length; i++) bytes[i] = binaryStr.charCodeAt(i);
                 const blob = new Blob([bytes], { type: 'application/octet-stream' });
 
-                // 2. Upload to release as asset
+                // 2. Upload to release as asset via proxy
                 const rel = releasesData.find(r => r.id === releaseId);
                 if (!rel) throw new Error('Релиз не найден');
-                const uploadUrl = rel.upload_url.replace('{?name,label}', '');
 
-                const uploadRes = await fetch(`${uploadUrl}?name=${encodeURIComponent(fileName)}`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `token ${token}`,
-                        'Content-Type': 'application/octet-stream'
-                    },
-                    body: blob
-                });
+                const isLocal = window.location.protocol === 'file:' ||
+                    window.location.hostname === 'localhost' ||
+                    window.location.hostname === '127.0.0.1';
+
+                let uploadRes;
+                if (isLocal) {
+                    const uploadUrl = rel.upload_url.replace('{?name,label}', '');
+                    uploadRes = await fetch(`${uploadUrl}?name=${encodeURIComponent(fileName)}`, {
+                        method: 'POST',
+                        headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/octet-stream' },
+                        body: blob
+                    });
+                } else {
+                    uploadRes = await fetch('/api/release-upload', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/octet-stream',
+                            'X-File-Name':  fileName,
+                            'X-Upload-Url': rel.upload_url,
+                        },
+                        body: blob
+                    });
+                }
 
                 if (uploadRes.ok) {
                     toast(`«${fileName}» добавлен в релиз ${tag}`, 'success');
