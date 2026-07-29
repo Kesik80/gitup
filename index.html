@@ -3162,41 +3162,41 @@
             );
         }
 
-        // Загружает blob/file напрямую на uploads.github.com.
-        // Сервер (/api/release-upload) выдаёт токен и URL,
-        // браузер отправляет файл сам — нет лимита Vercel.
-        async function uploadToGitHubRelease(relData, fileName, fileBody, contentType) {
-            // Шаг 1: получаем токен и готовый URL от сервера
-            const meta = await fetch('/api/release-upload', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ uploadUrl: relData.upload_url, fileName })
-            });
-            if (!meta.ok) {
-                const e = await meta.json().catch(() => ({}));
-                throw new Error(e.error || `Сервер: ${meta.status}`);
-            }
-            const { token, url } = await meta.json();
+        // ── URL Cloudflare Worker для загрузки в релизы ──────────
+        // После деплоя воркера замени строку ниже на свой URL.
+        // Пример: 'https://release-upload.YOUR.workers.dev'
+        const RELEASE_WORKER_URL = 'https://release-upload.kesik80.workers.dev';
 
-            // Шаг 2: загружаем файл напрямую на GitHub — без Vercel посередине
-            const r = await fetch(url, {
+        // Загружает file/blob в GitHub Release через Cloudflare Worker.
+        // Воркер проксирует поток напрямую на uploads.github.com —
+        // нет лимита Vercel 4.5 МБ, нет CORS-проблем.
+        async function uploadToGitHubRelease(relData, fileName, fileBody, contentType) {
+            const workerConfigured = RELEASE_WORKER_URL && !RELEASE_WORKER_URL.includes('YOUR');
+
+            if (!workerConfigured) {
+                throw new Error(
+                    'Cloudflare Worker не настроен. ' +
+                    'Замени RELEASE_WORKER_URL в коде на URL своего воркера.'
+                );
+            }
+
+            const r = await fetch(`${RELEASE_WORKER_URL}/proxy`, {
                 method: 'POST',
                 headers: {
-                    'Authorization': `token ${token}`,
                     'Content-Type': contentType || 'application/octet-stream',
-                    'Accept': 'application/vnd.github.v3+json',
+                    'X-File-Name':  fileName,
+                    'X-Upload-Url': relData.upload_url,
                 },
-                body: fileBody
+                body: fileBody,
             });
+
+            const data = await r.json().catch(() => ({}));
+
             if (!r.ok) {
-                const e = await r.json().catch(() => ({}));
-                // Validation Failed = файл с таким именем уже есть
-                if (r.status === 422) {
-                    throw new Error(`Файл "${fileName}" уже существует в этом релизе`);
-                }
-                throw new Error(e.message || `GitHub: ${r.status}`);
+                throw new Error(data.error || data.message || `Ошибка ${r.status}`);
             }
-            return await r.json();
+
+            return data;
         }
 
         function uploadAssetToRelease(releaseId, tag, e) {
