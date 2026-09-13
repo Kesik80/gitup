@@ -1129,10 +1129,50 @@
         }
         .conn-collapsed-bar .conn-repo-label {
             flex: 1;
+            min-width: 0;
             color: var(--accent-cyan);
+            overflow: hidden;
+        }
+        .conn-repo-line {
+            display: block;
+            font-size: 17px;
+            font-weight: 700;
+            line-height: 1.2;
+            letter-spacing: 0.5px;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
+        }
+        .conn-repo-owner { color: var(--text-dim); font-weight: 400; font-size: 13px; }
+        .conn-repo-name  { color: var(--accent-cyan); }
+        .conn-branch-line {
+            display: block;
+            margin-top: 3px;
+            font-size: 11px;
+            color: var(--text-dim);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* Куда именно уедут файлы */
+        .upload-target {
+            margin-top: 12px;
+            padding: 10px 12px;
+            border: 1px solid var(--accent-cyan);
+            border-radius: 8px;
+            background: rgba(34, 211, 238, 0.07);
+            font-family: 'Space Mono', monospace;
+            font-size: 12px;
+            line-height: 1.5;
+            color: var(--text-dim);
+            word-break: break-all;
+        }
+        .upload-target b { color: var(--accent-cyan); font-size: 14px; }
+        .upload-target.upload-target-empty {
+            border-color: #ff5f6d;
+            background: rgba(255, 95, 109, 0.08);
+            color: #ff5f6d;
         }
         .conn-collapsed-bar .btn {
             flex-shrink: 0;
@@ -2160,8 +2200,11 @@
                     <div class="card-body">
                         <!-- Collapsed bar (shown after connect) -->
                         <div class="conn-collapsed-bar" id="connCollapsedBar">
-                            <span>🔗</span>
-                            <span class="conn-repo-label" id="connRepoLabel">—</span>
+                            <span style="font-size:16px;">🔗</span>
+                            <span class="conn-repo-label" id="connRepoLabel">
+                                <span class="conn-repo-line" id="connRepoName">—</span>
+                                <span class="conn-branch-line" id="connBranchLine"></span>
+                            </span>
                             <button class="btn btn-secondary" onclick="expandConn()" style="font-size:10px;padding:5px 10px;">Изменить</button>
                             <button class="btn btn-danger" onclick="logout()" style="font-size:10px;padding:5px 10px;" title="Выйти и стереть сохранённый вход">Выйти</button>
                         </div>
@@ -2450,6 +2493,8 @@
                             <input type="text" class="form-input" id="commitMessage" placeholder="Что изменилось?" style="font-family:'Space Mono',monospace; font-size:12px;">
                         </div>
 
+                        <div class="upload-target" id="uploadTarget">Репозиторий не выбран</div>
+
                         <button class="btn btn-success" id="uploadBtn" style="margin-top: 12px;">
                             <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
                                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
@@ -2704,9 +2749,7 @@
         document.getElementById('repository').addEventListener('change', async (e) => {
             const repo = e.target.value;
             localStorage.setItem('gh-repo', repo);
-            // Update collapsed bar label
-            const lbl = document.getElementById('connRepoLabel');
-            if (lbl) lbl.textContent = repo || '—';
+            updateTargetLabels(repo);
             if (repo) {
                 saveRepoHistory(repo);
                 await loadBranches();
@@ -3103,6 +3146,7 @@
                     opt.textContent = b.name;
                     sel.appendChild(opt);
                 });
+                updateTargetLabels();
             } catch (e) {
                 toast('Не удалось загрузить ветки', 'error');
             }
@@ -3186,10 +3230,54 @@
             }
         });
 
+        // ── Куда сейчас пишем: репозиторий, ветка, папка ──────────
+        function updateTargetLabels(repoName) {
+            const repo   = repoName !== undefined ? repoName
+                         : (document.getElementById('repository').value || '');
+            const branch = document.getElementById('branch').value || '';
+            const pathEl = document.getElementById('uploadPathInput');
+            const path   = ((pathEl && pathEl.value) || '').trim().replace(/^\/+|\/+$/g, '');
+
+            // Свёрнутая панель: владелец мелким, имя репозитория крупным
+            const nameEl   = document.getElementById('connRepoName');
+            const branchEl = document.getElementById('connBranchLine');
+            if (nameEl) {
+                if (repo) {
+                    const slash = repo.indexOf('/');
+                    const owner = slash > -1 ? repo.slice(0, slash + 1) : '';
+                    const name  = slash > -1 ? repo.slice(slash + 1) : repo;
+                    nameEl.innerHTML = `<span class="conn-repo-owner"></span><span class="conn-repo-name"></span>`;
+                    nameEl.firstChild.textContent = owner;
+                    nameEl.lastChild.textContent = name;
+                } else {
+                    nameEl.textContent = '—';
+                }
+            }
+            if (branchEl) branchEl.textContent = repo ? `ветка ${branch || '—'}` : '';
+
+            // Плашка над кнопкой загрузки
+            const target = document.getElementById('uploadTarget');
+            if (target) {
+                if (!repo) {
+                    target.className = 'upload-target upload-target-empty';
+                    target.textContent = 'Репозиторий не выбран';
+                } else {
+                    target.className = 'upload-target';
+                    target.innerHTML = 'Файлы уедут в<br><b></b><span></span>';
+                    target.querySelector('b').textContent = repo;
+                    target.querySelector('span').textContent =
+                        `  ·  ветка ${branch || '—'}  ·  /${path}`;
+                }
+            }
+        }
+
+        document.getElementById('branch').addEventListener('change', () => updateTargetLabels());
+        document.getElementById('uploadPathInput').addEventListener('input', () => updateTargetLabels());
+
         // ── Connection collapse ───────────────────────────────────
         function collapseConn(repoName) {
             document.getElementById('connCollapsedBar').style.display = 'flex';
-            document.getElementById('connRepoLabel').textContent = repoName || '—';
+            updateTargetLabels(repoName || '');
             document.getElementById('connFields').style.display = 'none';
         }
 
@@ -6043,6 +6131,18 @@
                 return;
             }
 
+            // Страховка от «не туда»: спрашиваем, только если цель сменилась
+            // с прошлой загрузки. Один и тот же адрес подряд не переспрашиваем.
+            const path = (document.getElementById('uploadPathInput').value || '').trim().replace(/^\/+|\/+$/g, '');
+            const target = `${repo}@${branch}:/${path}`;
+            if (localStorage.getItem('gh-last-upload-target') !== target) {
+                const word = selectedFiles.length === 1 ? 'файл' : 'файлов';
+                if (!confirm(`Загрузить ${selectedFiles.length} ${word}\n\nв ${repo}\nветка ${branch}\nпапка /${path}`)) {
+                    return;
+                }
+            }
+            localStorage.setItem('gh-last-upload-target', target);
+
             isUploading = true;
             document.getElementById('uploadBtn').disabled = true;
             document.getElementById('uploadProgress').style.display = 'block';
@@ -6393,6 +6493,8 @@
                 }, 1500);
             }
         })();
+
+        updateTargetLabels();
 
         // ── Вход при старте ───────────────────────────────────────
         (async function initAutoLogin() {
