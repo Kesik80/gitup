@@ -2743,6 +2743,8 @@
             if (sel.querySelector(`option[value="${repo}"]`)) {
                 sel.value = repo;
                 localStorage.setItem('gh-repo', repo);
+                updateTargetLabels(repo);
+                collapseConn(repo);
                 await loadBranches();
                 updateStatus(true);
                 loadExplorer('');
@@ -2758,6 +2760,7 @@
             updateTargetLabels(repo);
             if (repo) {
                 saveRepoHistory(repo);
+                collapseConn(repo);        // выбрал — панель снова сворачивается
                 await loadBranches();
                 updateStatus(true);
                 loadExplorer('');
@@ -2938,6 +2941,7 @@
                 const opt = document.createElement('option');
                 opt.value = repo.full_name;
                 opt.textContent = repo.full_name;
+                opt.style.color = repoColor(repo.full_name);   // цвет и в самом списке
                 sel.appendChild(opt);
             });
 
@@ -3315,6 +3319,24 @@
                 }
             }
             if (branchEl) branchEl.textContent = repo ? `ветка ${branch || '—'}` : '';
+
+            // Поле выбора репозитория: закрытый select показывает выбранное значение
+            const sel = document.getElementById('repository');
+            if (sel) {
+                // Красим по значению самого поля: в свёрнутой панели может
+                // показываться репозиторий, который в списке ещё не выбран
+                const selRepo = sel.value || '';
+                if (selRepo) {
+                    const color = repoColor(selRepo);
+                    sel.style.color = color;
+                    sel.style.borderColor = color;
+                    sel.style.fontWeight = '700';
+                } else {
+                    sel.style.color = '';
+                    sel.style.borderColor = '';
+                    sel.style.fontWeight = '';
+                }
+            }
 
             // Плашка над кнопкой загрузки
             const target = document.getElementById('uploadTarget');
