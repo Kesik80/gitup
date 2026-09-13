@@ -164,6 +164,45 @@
             opacity: 0.7;
         }
 
+        /* Favorites */
+        .fav-list {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            margin-top: 8px;
+        }
+        .fav-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 10px;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-dim);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.15s;
+            font-size: 12px;
+            font-family: 'Space Mono', monospace;
+            color: var(--text-secondary);
+        }
+        .fav-item:hover { border-color: var(--accent-cyan); color: var(--accent-cyan); }
+        .fav-item-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .fav-remove {
+            background: none;
+            border: none;
+            color: var(--text-dim);
+            cursor: pointer;
+            font-size: 14px;
+            padding: 0 2px;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+        .fav-remove:hover { color: var(--accent-red); }
+        .fav-add-btn {
+            font-size: 11px;
+            padding: 5px 10px;
+            margin-top: 4px;
+        }
         
         body {
             font-family: 'Outfit', sans-serif;
@@ -1139,29 +1178,6 @@
             flex-shrink: 0;
         }
         #connFields { transition: none; }
-
-        /* Звезда избранного рядом с именем репозитория */
-        .conn-fav-star {
-            flex-shrink: 0;
-            width: 32px;
-            height: 32px;
-            padding: 0;
-            font-size: 18px;
-            line-height: 1;
-            background: transparent;
-            border: none;
-            color: var(--text-dim);
-            cursor: pointer;
-        }
-        .conn-fav-star.is-fav { color: var(--accent-yellow, #fbbf24); }
-
-        /* Чип избранного в общем ряду */
-        .repo-history-chip.is-fav { border-color: var(--accent-yellow, #fbbf24); }
-        .repo-history-chip .chip-star {
-            margin-right: 4px;
-            font-size: 10px;
-            color: var(--accent-yellow, #fbbf24);
-        }
 
         /* ── Нижняя шторка загрузки ─────────────────────────────── */
         .sheet-backdrop {
@@ -2487,7 +2503,6 @@
                                 <span class="conn-repo-line" id="connRepoName">—</span>
                                 <span class="conn-branch-line" id="connBranchLine"></span>
                             </span>
-                            <button class="conn-fav-star" id="favToggleBtn" onclick="toggleFavorite()" title="В избранное">☆</button>
                             <button class="btn btn-secondary" onclick="expandConn()" style="font-size:10px;padding:5px 10px;">Изменить</button>
                             <button class="btn btn-danger" onclick="logout()" style="font-size:10px;padding:5px 10px;" title="Выйти и стереть сохранённый вход">Выйти</button>
                         </div>
@@ -2559,6 +2574,7 @@
                             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
                                 <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;">Подробности</div>
                                 <div style="display:flex;align-items:center;gap:14px;">
+                                    <button class="btn btn-secondary fav-add-btn" id="favToggleBtn" onclick="toggleFavorite()" style="font-size:10px;padding:4px 8px;">⭐</button>
                                     <button onclick="toggleRepoCard()" id="repoCardToggleIcon" aria-label="Развернуть" style="display:flex;align-items:center;justify-content:center;width:30px;height:30px;padding:0;border-radius:8px;background:transparent;border:none;color:var(--accent-cyan);cursor:pointer;flex-shrink:0;transition:transform .2s;">
                                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
                                     </button>
@@ -2594,6 +2610,8 @@
                                 <div class="commits-list" id="commitsList" style="display:none;margin-top:6px;">
                                     <div style="color:var(--text-dim);font-size:12px;padding:8px 0;">Загрузка...</div>
                                 </div>
+                                <div style="margin:12px 0 4px;font-family:'Space Mono',monospace;font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px;">Избранные</div>
+                                <div class="fav-list" id="favList"></div>
                             </div>
                         </div>
                     </div>
@@ -2820,37 +2838,19 @@
             localStorage.setItem('gh-repo-history', JSON.stringify(h));
             renderRepoHistory();
         }
-        // Один ряд: сначала избранные (со звездой), потом недавние, без повторов.
-        // Раньше это были два разных места с одинаковым смыслом.
         function renderRepoHistory() {
+            const h = getRepoHistory();
             const el = document.getElementById('repoHistory');
             if (!el) return;
-
-            const favs = getFavorites();
-            const recent = getRepoHistory().filter(r => !favs.includes(r));
-            const items = [
-                ...favs.map(r => ({ repo: r, fav: true })),
-                ...recent.map(r => ({ repo: r, fav: false }))
-            ];
-
+            if (h.length === 0) { el.innerHTML = ''; return; }
             el.innerHTML = '';
-            if (!items.length) return;
-
-            items.forEach(({ repo, fav }) => {
+            h.forEach(r => {
                 const chip = document.createElement('span');
-                chip.className = 'repo-history-chip' + (fav ? ' is-fav' : '');
-                chip.title = fav ? repo + ' — в избранном' : repo;
-                if (fav) {
-                    const star = document.createElement('span');
-                    star.className = 'chip-star';
-                    star.textContent = '★';
-                    chip.appendChild(star);
-                }
-                const name = document.createElement('span');
-                name.textContent = repo.split('/')[1] || repo;
-                name.style.color = repoColor(repo);
-                chip.appendChild(name);
-                chip.onclick = () => selectRepoFromHistory(repo);
+                chip.className = 'repo-history-chip';
+                chip.title = r;
+                chip.textContent = r.split('/')[1] || r;
+                chip.style.color = repoColor(r);
+                chip.onclick = () => selectRepoFromHistory(r);
                 el.appendChild(chip);
             });
         }
@@ -3528,7 +3528,6 @@
             }
 
             refreshFab();
-            updateFavBtn(document.getElementById('repository').value || '');
 
             // Плашка над кнопкой загрузки
             const target = document.getElementById('uploadTarget');
@@ -4420,9 +4419,9 @@
             if (!repo || !token) { if (card) card.style.display = 'none'; return; }
             if (card) card.style.display = 'block';
 
-            // Звезда в свёрнутой строке и ряд чипов
+            // Update favorite button
             updateFavBtn(repo);
-            renderRepoHistory();
+            renderFavList();
 
             try {
                 // Repo info
@@ -4495,25 +4494,40 @@
             }
             localStorage.setItem('gh-favorites', JSON.stringify(favs));
             updateFavBtn(repo);
-            renderRepoHistory();
+            renderFavList();
         }
 
         function updateFavBtn(repo) {
             const btn = document.getElementById('favToggleBtn');
             if (!btn) return;
-            const cur = repo || document.getElementById('repository').value || '';
-            const isFav = !!cur && getFavorites().includes(cur);
-            btn.textContent = isFav ? '★' : '☆';
-            btn.classList.toggle('is-fav', isFav);
-            btn.title = isFav ? 'Убрать из избранного' : 'В избранное';
-            btn.style.display = cur ? 'block' : 'none';
+            const isFav = getFavorites().includes(repo);
+            btn.textContent = isFav ? '★ В избранном' : '⭐ В избранное';
+            btn.style.color = isFav ? 'var(--accent-yellow)' : '';
+        }
+
+        function renderFavList() {
+            const list = document.getElementById('favList');
+            if (!list) return;
+            const favs = getFavorites();
+            if (!favs.length) {
+                list.innerHTML = '<div style="font-size:12px;color:var(--text-dim);padding:4px 0;">Нет избранных</div>';
+                return;
+            }
+            list.innerHTML = favs.map(r => `
+                <div class="fav-item" title="${esc(r)}">
+                    <span style="opacity:0.6;">⭐</span>
+                    <span class="fav-item-name" onclick="pickRepoHistory('${esc(r)}')">${esc(r)}</span>
+                    <button class="fav-remove" onclick="removeFavorite('${esc(r)}')" title="Убрать">✕</button>
+                </div>
+            `).join('');
         }
 
         function removeFavorite(repo) {
             let favs = getFavorites().filter(f => f !== repo);
             localStorage.setItem('gh-favorites', JSON.stringify(favs));
-            updateFavBtn(document.getElementById('repository').value);
-            renderRepoHistory();
+            const cur = document.getElementById('repository').value;
+            if (cur === repo) updateFavBtn(repo);
+            renderFavList();
         }
 
         // ── Copy path ─────────────────────────────────────────────
