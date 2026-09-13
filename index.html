@@ -2727,10 +2727,16 @@
             const el = document.getElementById('repoHistory');
             if (!el) return;
             if (h.length === 0) { el.innerHTML = ''; return; }
-            el.innerHTML = h.map(r => {
-                const short = r.split('/')[1] || r;
-                return `<span class="repo-history-chip" title="${r}" onclick="selectRepoFromHistory('${r}')">${short}</span>`;
-            }).join('');
+            el.innerHTML = '';
+            h.forEach(r => {
+                const chip = document.createElement('span');
+                chip.className = 'repo-history-chip';
+                chip.title = r;
+                chip.textContent = r.split('/')[1] || r;
+                chip.style.color = repoColor(r);
+                chip.onclick = () => selectRepoFromHistory(r);
+                el.appendChild(chip);
+            });
         }
         async function selectRepoFromHistory(repo) {
             const sel = document.getElementById('repository');
@@ -3230,6 +3236,60 @@
             }
         });
 
+        // Свой стойкий цвет для каждого репозитория: имя → оттенок.
+        // Один и тот же репозиторий всегда одного цвета, разные — разного,
+        // так что перепутать сложнее, чем читая текст.
+        // ── Цвет репозитория ──────────────────────────────────────
+        // Просто хеш по имени давал совпадения: у половины репозиториев
+        // выпадал один и тот же цвет, а смысл как раз в различии. Поэтому
+        // цвет назначается при первой встрече — берём наименее занятый из
+        // палитры и запоминаем на устройстве. Красного нет: он занят
+        // ошибками и кнопкой «Выйти».
+        // Всё оформлено функциями (не const): чипы истории рисуются в самом
+        // начале скрипта, до этих строк, а объявления функций поднимаются.
+        function repoColorPalette() {
+            return [
+                '#22d3ee', // бирюзовый
+                '#a78bfa', // сиреневый
+                '#4ade80', // зелёный
+                '#fbbf24', // янтарный
+                '#f472b6', // розовый
+                '#60a5fa', // синий
+                '#2dd4bf', // морской
+                '#fb923c', // оранжевый
+                '#c084fc', // фиолетовый
+                '#a3e635', // лаймовый
+                '#38bdf8', // небесный
+                '#e879f9'  // орхидея
+            ];
+        }
+
+        function repoColorMap() {
+            try {
+                const m = JSON.parse(localStorage.getItem('gh-repo-colors') || '{}');
+                return (m && typeof m === 'object') ? m : {};
+            } catch { return {}; }
+        }
+
+        function repoColor(repo) {
+            if (!repo) return 'var(--accent-cyan)';
+            const map = repoColorMap();
+            if (map[repo]) return map[repo];
+
+            // Считаем, сколько раз каждый цвет уже занят, берём самый свободный
+            const palette = repoColorPalette();
+            const used = {};
+            Object.values(map).forEach(c => { used[c] = (used[c] || 0) + 1; });
+            let pick = palette[0], best = Infinity;
+            for (const c of palette) {
+                const n = used[c] || 0;
+                if (n < best) { best = n; pick = c; if (n === 0) break; }
+            }
+            map[repo] = pick;
+            try { localStorage.setItem('gh-repo-colors', JSON.stringify(map)); } catch {}
+            return pick;
+        }
+
         // ── Куда сейчас пишем: репозиторий, ветка, папка ──────────
         function updateTargetLabels(repoName) {
             const repo   = repoName !== undefined ? repoName
@@ -3249,6 +3309,7 @@
                     nameEl.innerHTML = `<span class="conn-repo-owner"></span><span class="conn-repo-name"></span>`;
                     nameEl.firstChild.textContent = owner;
                     nameEl.lastChild.textContent = name;
+                    nameEl.lastChild.style.color = repoColor(repo);
                 } else {
                     nameEl.textContent = '—';
                 }
@@ -3260,11 +3321,18 @@
             if (target) {
                 if (!repo) {
                     target.className = 'upload-target upload-target-empty';
+                    target.style.borderColor = '';
+                    target.style.background = '';
                     target.textContent = 'Репозиторий не выбран';
                 } else {
+                    const color = repoColor(repo);
                     target.className = 'upload-target';
+                    target.style.borderColor = color;
+                    target.style.background = 'transparent';
                     target.innerHTML = 'Файлы уедут в<br><b></b><span></span>';
-                    target.querySelector('b').textContent = repo;
+                    const b = target.querySelector('b');
+                    b.textContent = repo;
+                    b.style.color = color;
                     target.querySelector('span').textContent =
                         `  ·  ветка ${branch || '—'}  ·  /${path}`;
                 }
