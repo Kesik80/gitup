@@ -2984,10 +2984,37 @@
         }
 
         // Вход из сохранённого сеанса. interactive = можно показывать отпечаток.
+        // Обновление страницы: sessionStorage переживает reload, поэтому
+        // GitHub-токен часто ещё жив — восстанавливаем интерфейс из него,
+        // не дёргая ни сервер, ни отпечаток.
+        async function resumeFromLiveToken() {
+            const token = sessionStorage.getItem('gh-token');
+            if (!token || isConnecting) return false;
+
+            isConnecting = true;
+            busy(true, 'Восстановление...');
+            try {
+                await afterToken(token, { auto: true });
+                setAuthHint('Вход выполнен', 'ok');
+                return true;
+            } catch (e) {
+                if (e.authFailed) {
+                    sessionStorage.removeItem('gh-token');   // протух — пойдём обычным путём
+                    return false;
+                }
+                setAuthHint(`Не удалось восстановить сеанс: ${e.message}`, 'err');
+                console.warn('GitUp: восстановление из sessionStorage не удалось:', e.message);
+                return false;
+            } finally {
+                isConnecting = false;
+                busy(false);
+            }
+        }
+
         async function resumeSession(reason, interactive) {
             if (isConnecting) return false;
             if (sessionStorage.getItem('gh-token')) return false;
-            if (!Auth.stored()) return false;
+            if (!Auth.stored()) { setAuthHint(''); return false; }
             if (!navigator.onLine && !isLocalMode) {
                 setAuthHint('Нет сети — подключимся автоматически, когда она появится', 'err');
                 return false;
@@ -3030,7 +3057,12 @@
 
         // Тихая попытка: возврат в приложение, появление сети
         function tryAutoConnect(reason) {
-            if (isConnecting || sessionStorage.getItem('gh-token')) return;
+            if (isConnecting) return;
+            if (sessionStorage.getItem('gh-token')) {
+                // токен жив, но интерфейс мог не успеть подняться
+                if (!document.getElementById('repository').value) resumeFromLiveToken();
+                return;
+            }
             const meta = Auth.stored();
             if (!meta) return;
             if (meta.protected || Auth.biometricRequired()) return;  // нужен палец — ждём кнопку
@@ -6354,6 +6386,10 @@
         (async function initAutoLogin() {
           try {
             await refreshAuthUI();
+
+            // Обновление страницы — токен ещё в sessionStorage
+            if (await resumeFromLiveToken()) return;
+
             let meta = Auth.stored();
 
             // Миграция: прошлая версия хранила на устройстве сам пароль.
