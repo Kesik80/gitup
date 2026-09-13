@@ -1139,6 +1139,36 @@
         }
         #connFields { transition: none; }
 
+        /* ── Постоянный вход ───────────────────────────────────── */
+        .remember-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+            font-family: 'Space Mono', monospace;
+            font-size: 11px;
+            color: var(--text-dim);
+            cursor: pointer;
+            user-select: none;
+        }
+        .remember-row input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            flex-shrink: 0;
+            accent-color: var(--accent-cyan);
+            cursor: pointer;
+        }
+        .auth-hint {
+            display: none;
+            margin-top: 8px;
+            font-family: 'Space Mono', monospace;
+            font-size: 10px;
+            line-height: 1.4;
+            color: var(--text-dim);
+        }
+        .auth-hint.auth-hint-ok  { color: var(--accent-cyan); }
+        .auth-hint.auth-hint-err { color: #ff5f6d; }
+
         /* Drop zone compact when no files */
         .drop-zone-hidden { display: none; }
 
@@ -2095,12 +2125,18 @@
                             <span>🔗</span>
                             <span class="conn-repo-label" id="connRepoLabel">—</span>
                             <button class="btn btn-secondary" onclick="expandConn()" style="font-size:10px;padding:5px 10px;">Изменить</button>
+                            <button class="btn btn-danger" onclick="logout()" style="font-size:10px;padding:5px 10px;" title="Выйти и удалить сохранённый пароль">Выйти</button>
                         </div>
                         <!-- Full fields (hidden after connect) -->
                         <div id="connFields">
                         <div class="form-group">
                             <label class="form-label" id="tokenLabel">Пароль</label>
                             <input type="password" class="form-input" id="token" placeholder="Введите пароль..." onkeypress="if(event.key==='Enter') connect()">
+                            <label class="remember-row" for="rememberDevice">
+                                <input type="checkbox" id="rememberDevice" checked>
+                                <span>Запомнить на этом устройстве</span>
+                            </label>
+                            <div class="auth-hint" id="authHint"></div>
                         </div>
                         <button class="btn btn-primary" id="connectBtn" onclick="connect()" style="width: 100%;">
                             <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
@@ -2572,7 +2608,7 @@
         let currentEditFile = null; // for editor
 
         // Init
-        // Пароль не сохраняем — вводится каждую сессию
+        // Пароль сохраняется на устройстве (localStorage) — см. блок «Постоянный вход»
         renderRepoHistory();
 
         // Repo history helpers
@@ -2641,17 +2677,117 @@
             if (inp) inp.placeholder = 'ghp_...';
         }
 
-        async function connect() {
-            const password = document.getElementById('token').value.trim();
+        // ── Постоянный вход на устройстве ─────────────────────────
+        // Храним НЕ GitHub-токен, а сам пароль (в проде) — токен живёт только
+        // в sessionStorage. Пароль работает лишь против нашего /api/github-token,
+        // поэтому утечка localStorage не даёт прямого доступа к GitHub-аккаунту.
+        const AUTH_KEY  = 'gh-auth-v1';
+        const AUTH_MASK = 'GitUp/2026';
+
+        // XOR по байтам UTF-8 + base64 — безопасно для любых символов (эмодзи, кириллица)
+        function encodeSecret(str) {
+            const bytes = new TextEncoder().encode(str);
+            let bin = '';
+            for (let i = 0; i < bytes.length; i++) {
+                bin += String.fromCharCode(bytes[i] ^ (AUTH_MASK.charCodeAt(i % AUTH_MASK.length) & 0xFF));
+            }
+            return btoa(bin);
+        }
+        function decodeSecret(b64) {
+            const bin = atob(b64);
+            const bytes = new Uint8Array(bin.length);
+            for (let i = 0; i < bin.length; i++) {
+                bytes[i] = bin.charCodeAt(i) ^ (AUTH_MASK.charCodeAt(i % AUTH_MASK.length) & 0xFF);
+            }
+            return new TextDecoder().decode(bytes);
+        }
+
+        function saveAuth(secret, mode) {
+            try {
+                localStorage.setItem(AUTH_KEY, JSON.stringify({ v: 1, mode, s: encodeSecret(secret) }));
+                return true;
+            } catch (e) {
+                console.warn('GitUp: не удалось сохранить вход:', e.message);
+                return false;
+            }
+        }
+        function loadAuth() {
+            try {
+                const raw = localStorage.getItem(AUTH_KEY);
+                if (!raw) return null;
+                const o = JSON.parse(raw);
+                if (!o || !o.s) return null;
+                const secret = decodeSecret(o.s);
+                if (!secret) return null;
+                return { secret, mode: o.mode || 'pwd' };
+            } catch (e) {
+                console.warn('GitUp: сохранённый вход повреждён, сбрасываю');
+                try { localStorage.removeItem(AUTH_KEY); } catch {}
+                return null;
+            }
+        }
+        function clearAuth() {
+            try { localStorage.removeItem(AUTH_KEY); } catch {}
+        }
+
+        function setAuthHint(text, type) {
+            const el = document.getElementById('authHint');
+            if (!el) return;
+            el.textContent = text || '';
+            el.className = 'auth-hint' + (type ? ' auth-hint-' + type : '');
+            el.style.display = text ? 'block' : 'none';
+        }
+
+        // Выход: чистим сохранённый пароль и всё состояние сессии
+        function logout() {
+            if (!confirm('Выйти и удалить сохранённый пароль с этого устройства?')) return;
+            clearAuth();
+            sessionStorage.removeItem('gh-token');
+
+            const inp = document.getElementById('token');
+            if (inp) inp.value = '';
+            const chk = document.getElementById('rememberDevice');
+            if (chk) chk.checked = true;
+
+            const sel = document.getElementById('repository');
+            if (sel) sel.innerHTML = '<option value="">Сначала подключитесь...</option>';
+            const br = document.getElementById('branch');
+            if (br) br.innerHTML = '';
+            const panel = document.getElementById('repoInfoPanel');
+            if (panel) panel.style.display = 'none';
+            const exp = document.getElementById('explorerContent');
+            if (exp) exp.innerHTML = '';
+
+            explorerPath = '';
+            explorerCache = {};
+            folderChildCache = {};
+            selectedItems = new Set();
+
+            updateStatus(false);
+            expandConn();
+            setAuthHint('Пароль удалён с устройства', 'ok');
+            toast('Вы вышли', 'success');
+        }
+
+        let isConnecting = false;
+
+        async function connect(opts = {}) {
+            if (isConnecting) return false;
+
+            const auto  = opts.auto === true;
+            const inp   = document.getElementById('token');
+            const password = String(opts.secret !== undefined ? opts.secret : (inp ? inp.value : '')).trim();
+
             if (!password) {
-                toast('Введите пароль', 'error');
-                return;
+                if (!auto) toast('Введите пароль', 'error');
+                return false;
             }
 
             const btn = document.getElementById('connectBtn');
             const orig = btn.innerHTML;
+            isConnecting = true;
             btn.disabled = true;
-            btn.innerHTML = '<div class="spinner"></div> Подключение...';
+            btn.innerHTML = `<div class="spinner"></div> ${auto ? 'Автовход...' : 'Подключение...'}`;
 
             try {
                 let token;
@@ -2684,7 +2820,11 @@
                         throw new Error(`Ответ не JSON (статус ${authResp.status})`);
                     }
 
-                    if (!authData.ok) throw new Error(authData.error || 'Неверный пароль');
+                    if (!authData.ok) {
+                        const authErr = new Error(authData.error || 'Неверный пароль');
+                        authErr.authFailed = true;
+                        throw authErr;
+                    }
                     token = authData.token;
                 }
 
@@ -2693,7 +2833,11 @@
                 const r = await fetch('https://api.github.com/user/repos?per_page=100&sort=updated', {
                     headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
                 });
-                if (!r.ok) throw new Error(r.status === 401 ? 'Неверный токен GitHub' : 'Ошибка подключения');
+                if (!r.ok) {
+                    const ghErr = new Error(r.status === 401 ? 'Неверный токен GitHub' : `Ошибка подключения (${r.status})`);
+                    if (r.status === 401) ghErr.authFailed = true;
+                    throw ghErr;
+                }
 
                 const repos = await r.json();
                 const sel = document.getElementById('repository');
@@ -2714,19 +2858,60 @@
                     loadRepoInfo(saved);
                 }
 
-                toast(`Подключено! ${repos.length} репозиториев`, 'success');
-                console.log('GitUp: подключено успешно');
+                // Запоминаем вход на устройстве
+                const chk = document.getElementById('rememberDevice');
+                const remember = chk ? chk.checked : true;
+                if (remember) {
+                    const saved = saveAuth(password, isLocalMode ? 'token' : 'pwd');
+                    if (!saved) setAuthHint('Не удалось сохранить вход (хранилище недоступно)', 'err');
+                    else setAuthHint(auto ? 'Автовход выполнен' : 'Вход сохранён на этом устройстве', 'ok');
+                } else {
+                    clearAuth();
+                    setAuthHint('');
+                }
+
+                toast(auto ? `Автовход выполнен · ${repos.length} репозиториев` : `Подключено! ${repos.length} репозиториев`, 'success');
+                console.log(`GitUp: подключено успешно${auto ? ' (автовход)' : ''}`);
                 // Collapse connection panel
                 const connectedRepo = document.getElementById('repository').value || repos[0]?.full_name || '';
                 collapseConn(connectedRepo);
+                return true;
             } catch (e) {
+                if (e.authFailed) {
+                    // Пароль/токен больше не подходит — сохранённые данные бесполезны
+                    clearAuth();
+                    sessionStorage.removeItem('gh-token');
+                    if (inp) inp.value = '';
+                    expandConn();
+                    setAuthHint('Сохранённый пароль не подошёл — введите заново', 'err');
+                } else if (auto) {
+                    // Сеть/сервер — пароль оставляем, дадим повторить
+                    setAuthHint(`Автоподключение не удалось: ${e.message}. Нажмите «Подключить».`, 'err');
+                }
                 toast(e.message, 'error');
                 console.error('GitUp connect error:', e.message, e.stack);
                 updateStatus(false);
+                return false;
             } finally {
+                isConnecting = false;
                 btn.disabled = false;
                 btn.innerHTML = orig;
             }
+        }
+
+        // Повторить автовход, если токена сессии нет, а пароль сохранён
+        function tryAutoConnect(reason) {
+            if (isConnecting) return;
+            if (sessionStorage.getItem('gh-token')) return;
+            if (!navigator.onLine) return;
+            const saved = loadAuth();
+            if (!saved) return;
+            if (saved.mode !== (isLocalMode ? 'token' : 'pwd')) return;
+            const inp = document.getElementById('token');
+            if (inp && !inp.value) inp.value = saved.secret;
+            setAuthHint('Автоподключение...', '');
+            console.log('GitUp: автовход (' + (reason || 'init') + ')');
+            connect({ auto: true, secret: saved.secret });
         }
 
         async function loadBranches() {
@@ -2777,6 +2962,7 @@
             const repo = document.getElementById('repository').value;
             updateStatus(!!repo);
             toast('✓ Соединение восстановлено', 'success');
+            tryAutoConnect('online');
         });
         
         window.addEventListener('offline', () => {
@@ -2784,6 +2970,11 @@
             toast('⚠️ Нет подключения к интернету', 'error');
         });
         
+        // Возврат в приложение: если сессия потеряна — переподключаемся молча
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') tryAutoConnect('resume');
+        });
+
         // Warn before closing with unsaved files
         window.addEventListener('beforeunload', (e) => {
             if (selectedFiles.length > 0) {
@@ -3832,6 +4023,7 @@
             let hist = JSON.parse(localStorage.getItem('gh-repo-history') || '[]');
             hist = [repoName, ...hist.filter(r => r !== repoName)].slice(0, 5);
             localStorage.setItem('gh-repo-history', JSON.stringify(hist));
+            renderRepoHistory();
         }
 
         function showRepoHistory() {
@@ -6031,6 +6223,35 @@
                     document.getElementById('pwa-later').onclick = dismiss;
                 }, 1500);
             }
+        })();
+
+        // ── Автовход при старте ───────────────────────────────────
+        (function initAutoLogin() {
+          try {
+            const saved = loadAuth();
+            if (!saved) return;
+
+            const expectedMode = isLocalMode ? 'token' : 'pwd';
+            if (saved.mode !== expectedMode) {
+                setAuthHint('Сохранённый вход от другого режима — введите заново', 'err');
+                return;
+            }
+
+            const inp = document.getElementById('token');
+            if (inp) inp.value = saved.secret;
+            const chk = document.getElementById('rememberDevice');
+            if (chk) chk.checked = true;
+
+            if (!navigator.onLine) {
+                setAuthHint('Нет сети — подключимся автоматически, когда она появится', 'err');
+                return;
+            }
+
+            setAuthHint('Автоподключение...', '');
+            connect({ auto: true, secret: saved.secret });
+          } catch (e) {
+            console.warn('GitUp: автовход не выполнен:', e.message);
+          }
         })();
     </script>
 <script src="console.js"></script>
