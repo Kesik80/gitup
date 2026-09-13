@@ -33,7 +33,9 @@
      Auth.stored()               → {mode, exp, protected} | null (без расшифровки)
      Auth.strength()             → 'prf' | 'gate' | 'plain' | 'none'
      Auth.biometricRequired()    → bool
-     Auth.setBiometricRequired(v)→ void
+     Auth.setBiometricRequired(v)→ void          только флаг, без пересохранения
+     Auth.setProtection(on)      → Promise<{ok, cancelled, protectedNow}>
+     Auth.unenroll()             → Promise<{ok}>   отвязать отпечаток совсем
    ========================================================================== */
 (function () {
     'use strict';
@@ -205,11 +207,14 @@
     // mode: 'session' (продакшн, серверный session-токен) | 'token' (локальный режим, PAT)
     async function remember(secret, mode, exp, prfKey) {
         if (!secret) return false;
-        let key = prfKey || null;
         const cred = credential();
+        // Шифруем ключом отпечатка ТОЛЬКО если вход по отпечатку включён.
+        // Иначе сеанс лёг бы на диск зашифрованным, и снять галочку было бы
+        // невозможно — палец спрашивался бы всё равно.
+        const wantPrf = biometricRequired() && !!(cred && cred.prf);
+        let key = wantPrf ? (prfKey || null) : null;
 
-        // Отпечаток привязан и умеет PRF, но ключа под рукой нет — спросим палец
-        if (!key && cred && cred.prf) {
+        if (wantPrf && !key) {
             const res = await assert();
             if (res.ok && res.prfKey) key = res.prfKey;
         }
@@ -266,6 +271,49 @@
         } catch { return null; }
     }
     function dropLegacy() { drop(LEGACY_KEY); }
+
+    /**
+     * Включить/выключить запрос отпечатка при входе — с пересохранением
+     * секрета в нужном виде. Выключение требует одного последнего
+     * прикосновения: иначе зашифрованный сеанс не расшифровать.
+     * → {ok, cancelled?, protectedNow?}
+     */
+    async function setProtection(on) {
+        const rec = readJSON(STORE_KEY);
+        if (!rec || !rec.data) { setBiometricRequired(on); return { ok: true, changed: false }; }
+
+        const cred = credential();
+        let prfKey = null;
+
+        // Палец нужен, если данные зашифрованы (чтобы прочитать)
+        // или если включаем защиту на устройстве с PRF (чтобы зашифровать).
+        if (rec.enc === 'prf' || (on && cred && cred.prf)) {
+            const res = await assert();
+            if (!res.ok) return { ok: false, cancelled: !!res.cancelled };
+            prfKey = res.prfKey || null;
+        }
+
+        const secret = await unpackSecret(rec, rec.enc === 'prf' ? prfKey : null);
+        if (!secret) return { ok: false };
+
+        const packed = await packSecret(secret, on ? prfKey : null);
+        const saved = writeJSON(STORE_KEY, {
+            v: 2, mode: rec.mode || 'session', exp: rec.exp || 0, ...packed
+        });
+        if (!saved) return { ok: false };
+
+        setBiometricRequired(on);
+        return { ok: true, changed: true, protectedNow: packed.enc === 'prf' };
+    }
+
+    // Отвязать отпечаток совсем: сеанс остаётся, вход снова автоматический
+    async function unenroll() {
+        const res = await setProtection(false);
+        if (!res.ok) return res;
+        drop(CRED_KEY);
+        drop(BIO_KEY);
+        return { ok: true };
+    }
 
     function biometricRequired() {
         if (!enrolled()) return false;
@@ -367,7 +415,7 @@
         remember, recall, stored, strength,
         legacyRecord, dropLegacy,
         verify, exchange, resume,
-        biometricRequired, setBiometricRequired,
+        biometricRequired, setBiometricRequired, setProtection, unenroll,
         _assert: assert
     };
 

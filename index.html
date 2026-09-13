@@ -2109,6 +2109,8 @@
             strength: () => 'none',
             biometricRequired: () => false,
             setBiometricRequired: () => {},
+            setProtection: async () => ({ ok: true, changed: false }),
+            unenroll: async () => ({ ok: true }),
             resume: async () => ({ need: 'password' }),
             async verify(password) {
                 const r = await fetch('/api/github-token', {
@@ -2182,6 +2184,9 @@
                             </button>
                             <div class="remember-row" id="enrollRow" style="display:none;">
                                 <span style="cursor:pointer;color:var(--accent-cyan);" onclick="enrollBiometrics()">👆 Привязать отпечаток к этому устройству</span>
+                            </div>
+                            <div class="remember-row" id="unenrollRow" style="display:none;">
+                                <span style="cursor:pointer;color:var(--text-dim);text-decoration:underline;" onclick="unenrollBiometrics()">Отвязать отпечаток</span>
                             </div>
                         </div>
                         <button class="btn btn-primary" id="connectBtn" onclick="connect()" style="width: 100%;">
@@ -2745,10 +2750,16 @@
             const enrollRow = document.getElementById('enrollRow');
             const canBio    = await Auth.available();
 
-            if (unlockBtn) unlockBtn.style.display = (meta && Auth.enrolled()) ? 'flex' : 'none';
+            const locked = !!meta && Auth.enrolled() &&
+                           (meta.protected || Auth.biometricRequired()) &&
+                           !sessionStorage.getItem('gh-token');
+
+            if (unlockBtn) unlockBtn.style.display = locked ? 'flex' : 'none';
             if (bioRow)    bioRow.style.display    = Auth.enrolled() ? 'flex' : 'none';
             if (bioChk)    bioChk.checked          = Auth.biometricRequired();
             if (enrollRow) enrollRow.style.display = (canBio && !Auth.enrolled() && meta) ? 'flex' : 'none';
+            const unenrollRow = document.getElementById('unenrollRow');
+            if (unenrollRow) unenrollRow.style.display = Auth.enrolled() ? 'flex' : 'none';
         }
 
         async function enrollBiometrics() {
@@ -2760,8 +2771,7 @@
             if (!ok) { toast('Привязка отпечатка отменена', 'error'); await refreshAuthUI(); return; }
 
             // Перешифровываем сохранённый секрет ключом от отпечатка (если есть PRF)
-            const rec = await Auth.recall(null);
-            if (rec) await Auth.remember(rec.secret, rec.mode, rec.exp);
+            await Auth.setProtection(true);
 
             await refreshAuthUI();
             const s = Auth.strength();
@@ -2772,9 +2782,43 @@
             toast('Отпечаток привязан', 'success');
         }
 
-        function toggleBioRequired(el) {
-            Auth.setBiometricRequired(el.checked);
-            setAuthHint(el.checked ? 'Вход будет спрашивать отпечаток' : 'Вход без отпечатка (автоматически)', 'ok');
+        async function toggleBioRequired(el) {
+            const want = el.checked;
+            el.disabled = true;
+            setAuthHint(want ? 'Подтвердите отпечаток, чтобы включить защиту...'
+                             : 'Подтвердите отпечаток последний раз, чтобы отключить...', '');
+            try {
+                const res = await Auth.setProtection(want);
+                if (!res.ok) {
+                    el.checked = !want;                       // откатываем галочку
+                    setAuthHint(res.cancelled ? 'Отпечаток не подтверждён — ничего не изменилось'
+                                              : 'Не удалось изменить настройку', 'err');
+                    return;
+                }
+                setAuthHint(want
+                    ? (res.protectedNow
+                        ? 'Вход по отпечатку включён · сеанс зашифрован ключом отпечатка'
+                        : 'Вход по отпечатку включён · шифрование ключом отпечатка (PRF) браузером не поддерживается')
+                    : 'Отпечаток больше не спрашивается — вход автоматический', 'ok');
+            } finally {
+                el.disabled = false;
+                await refreshAuthUI();
+            }
+        }
+
+        // Отвязать отпечаток совсем
+        async function unenrollBiometrics() {
+            if (!confirm('Отвязать отпечаток? Сеанс останется, вход станет автоматическим.')) return;
+            setAuthHint('Подтвердите отпечаток последний раз...', '');
+            const res = await Auth.unenroll();
+            if (!res.ok) {
+                setAuthHint(res.cancelled ? 'Отпечаток не подтверждён — привязка осталась'
+                                          : 'Не удалось отвязать отпечаток', 'err');
+            } else {
+                setAuthHint('Отпечаток отвязан — вход автоматический', 'ok');
+                toast('Отпечаток отвязан', 'success');
+            }
+            await refreshAuthUI();
         }
 
         function forgetDevice() {
