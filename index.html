@@ -2185,6 +2185,9 @@
                             <div class="remember-row" id="enrollRow" style="display:none;">
                                 <span style="cursor:pointer;color:var(--accent-cyan);" onclick="enrollBiometrics()">👆 Привязать отпечаток к этому устройству</span>
                             </div>
+                            <div class="remember-row" id="noBioRow" style="display:none;">
+                                <span style="color:var(--text-dim);">Отпечаток недоступен в этом браузере</span>
+                            </div>
                             <div class="remember-row" id="unenrollRow" style="display:none;">
                                 <span style="cursor:pointer;color:var(--text-dim);text-decoration:underline;" onclick="unenrollBiometrics()">Отвязать отпечаток</span>
                             </div>
@@ -2757,24 +2760,33 @@
             if (unlockBtn) unlockBtn.style.display = locked ? 'flex' : 'none';
             if (bioRow)    bioRow.style.display    = Auth.enrolled() ? 'flex' : 'none';
             if (bioChk)    bioChk.checked          = Auth.biometricRequired();
-            if (enrollRow) enrollRow.style.display = (canBio && !Auth.enrolled() && meta) ? 'flex' : 'none';
+            // Привязать отпечаток можно в любой момент, даже до первого входа:
+            // шифрование применится к сеансу при следующем сохранении.
+            if (enrollRow) enrollRow.style.display = (canBio && !Auth.enrolled()) ? 'flex' : 'none';
             const unenrollRow = document.getElementById('unenrollRow');
             if (unenrollRow) unenrollRow.style.display = Auth.enrolled() ? 'flex' : 'none';
+            const noBioRow = document.getElementById('noBioRow');
+            if (noBioRow) noBioRow.style.display = (!canBio && !Auth.enrolled()) ? 'flex' : 'none';
         }
 
         async function enrollBiometrics() {
-            if (!(await Auth.available())) { toast('Отпечаток на этом устройстве недоступен', 'error'); return; }
-            const meta = Auth.stored();
-            if (!meta) { toast('Сначала подключитесь по паролю', 'error'); return; }
+            if (!(await Auth.available())) { toast('Отпечаток в этом браузере недоступен', 'error'); return; }
 
             const ok = await Auth.enroll();
             if (!ok) { toast('Привязка отпечатка отменена', 'error'); await refreshAuthUI(); return; }
 
-            // Перешифровываем сохранённый секрет ключом от отпечатка (если есть PRF)
-            await Auth.setProtection(true);
+            // Есть сохранённый сеанс — сразу перешифровываем ключом отпечатка.
+            // Нет — зашифруется при первом сохранении после входа по паролю.
+            if (Auth.stored()) await Auth.setProtection(true);
+            else Auth.setBiometricRequired(true);
 
             await refreshAuthUI();
             const s = Auth.strength();
+            if (s === 'none') {
+                setAuthHint('Отпечаток привязан · зашифруем сеанс при следующем входе по паролю', 'ok');
+                toast('Отпечаток привязан', 'success');
+                return;
+            }
             setAuthHint(s === 'prf'
                 ? 'Отпечаток привязан · сессия зашифрована ключом отпечатка'
                 : 'Отпечаток привязан · этот браузер не поддерживает шифрование ключом отпечатка (PRF), защита экранная',
