@@ -2087,6 +2087,42 @@
         }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="auth.js"></script>
+    <script>
+    // Заглушка на случай, если auth.js не загрузился: вход по паролю без
+    // сохранения сеанса и без отпечатка — приложение остаётся рабочим.
+    if (!window.Auth) {
+        console.warn('auth.js не загрузился — работает аварийный режим входа');
+        window.Auth = {
+            stub: true,
+            available: async () => false,
+            enrolled: () => false,
+            enroll: async () => false,
+            unlock: async () => false,
+            forget: () => { try { sessionStorage.removeItem('gh-token'); } catch {} },
+            forgetSecret: () => { try { sessionStorage.removeItem('gh-token'); } catch {} },
+            legacyRecord: () => null,
+            dropLegacy: () => {},
+            remember: async () => false,
+            recall: async () => null,
+            stored: () => null,
+            strength: () => 'none',
+            biometricRequired: () => false,
+            setBiometricRequired: () => {},
+            resume: async () => ({ need: 'password' }),
+            async verify(password) {
+                const r = await fetch('/api/github-token', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password })
+                });
+                const d = await r.json().catch(() => ({}));
+                if (!d.ok) { const e = new Error(d.error || 'Неверный пароль'); e.authFailed = r.status !== 500; throw e; }
+                return { ok: true, token: d.token, session: d.session, exp: d.exp || 0 };
+            }
+        };
+    }
+    </script>
 </head>
 <body>
 
@@ -2125,7 +2161,7 @@
                             <span>🔗</span>
                             <span class="conn-repo-label" id="connRepoLabel">—</span>
                             <button class="btn btn-secondary" onclick="expandConn()" style="font-size:10px;padding:5px 10px;">Изменить</button>
-                            <button class="btn btn-danger" onclick="logout()" style="font-size:10px;padding:5px 10px;" title="Выйти и удалить сохранённый пароль">Выйти</button>
+                            <button class="btn btn-danger" onclick="logout()" style="font-size:10px;padding:5px 10px;" title="Выйти и стереть сохранённый вход">Выйти</button>
                         </div>
                         <!-- Full fields (hidden after connect) -->
                         <div id="connFields">
@@ -2134,9 +2170,19 @@
                             <input type="password" class="form-input" id="token" placeholder="Введите пароль..." onkeypress="if(event.key==='Enter') connect()">
                             <label class="remember-row" for="rememberDevice">
                                 <input type="checkbox" id="rememberDevice" checked>
-                                <span>Запомнить на этом устройстве</span>
+                                <span>Запомнить сеанс на этом устройстве</span>
+                            </label>
+                            <label class="remember-row" id="bioRow" for="bioRequired" style="display:none;">
+                                <input type="checkbox" id="bioRequired" onchange="toggleBioRequired(this)">
+                                <span>Спрашивать отпечаток при входе</span>
                             </label>
                             <div class="auth-hint" id="authHint"></div>
+                            <button class="btn btn-secondary" id="unlockBtn" onclick="unlockWithBiometrics()" style="display:none;width:100%;margin-top:10px;">
+                                <span style="font-size:15px;">👆</span> Войти по отпечатку
+                            </button>
+                            <div class="remember-row" id="enrollRow" style="display:none;">
+                                <span style="cursor:pointer;color:var(--accent-cyan);" onclick="enrollBiometrics()">👆 Привязать отпечаток к этому устройству</span>
+                            </div>
                         </div>
                         <button class="btn btn-primary" id="connectBtn" onclick="connect()" style="width: 100%;">
                             <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
@@ -2677,58 +2723,10 @@
             if (inp) inp.placeholder = 'ghp_...';
         }
 
-        // ── Постоянный вход на устройстве ─────────────────────────
-        // Храним НЕ GitHub-токен, а сам пароль (в проде) — токен живёт только
-        // в sessionStorage. Пароль работает лишь против нашего /api/github-token,
-        // поэтому утечка localStorage не даёт прямого доступа к GitHub-аккаунту.
-        const AUTH_KEY  = 'gh-auth-v1';
-        const AUTH_MASK = 'GitUp/2026';
-
-        // XOR по байтам UTF-8 + base64 — безопасно для любых символов (эмодзи, кириллица)
-        function encodeSecret(str) {
-            const bytes = new TextEncoder().encode(str);
-            let bin = '';
-            for (let i = 0; i < bytes.length; i++) {
-                bin += String.fromCharCode(bytes[i] ^ (AUTH_MASK.charCodeAt(i % AUTH_MASK.length) & 0xFF));
-            }
-            return btoa(bin);
-        }
-        function decodeSecret(b64) {
-            const bin = atob(b64);
-            const bytes = new Uint8Array(bin.length);
-            for (let i = 0; i < bin.length; i++) {
-                bytes[i] = bin.charCodeAt(i) ^ (AUTH_MASK.charCodeAt(i % AUTH_MASK.length) & 0xFF);
-            }
-            return new TextDecoder().decode(bytes);
-        }
-
-        function saveAuth(secret, mode) {
-            try {
-                localStorage.setItem(AUTH_KEY, JSON.stringify({ v: 1, mode, s: encodeSecret(secret) }));
-                return true;
-            } catch (e) {
-                console.warn('GitUp: не удалось сохранить вход:', e.message);
-                return false;
-            }
-        }
-        function loadAuth() {
-            try {
-                const raw = localStorage.getItem(AUTH_KEY);
-                if (!raw) return null;
-                const o = JSON.parse(raw);
-                if (!o || !o.s) return null;
-                const secret = decodeSecret(o.s);
-                if (!secret) return null;
-                return { secret, mode: o.mode || 'pwd' };
-            } catch (e) {
-                console.warn('GitUp: сохранённый вход повреждён, сбрасываю');
-                try { localStorage.removeItem(AUTH_KEY); } catch {}
-                return null;
-            }
-        }
-        function clearAuth() {
-            try { localStorage.removeItem(AUTH_KEY); } catch {}
-        }
+        // ── Вход: пароль + отпечаток (auth.js) ────────────────────
+        // На устройстве живёт только session-токен от сервера (или, в локальном
+        // режиме, сам PAT). Пароль не сохраняется никогда. GitHub-токен — только
+        // в sessionStorage. Подробности и модель угроз — в шапке auth.js.
 
         function setAuthHint(text, type) {
             const el = document.getElementById('authHint');
@@ -2738,17 +2736,62 @@
             el.style.display = text ? 'block' : 'none';
         }
 
-        // Выход: чистим сохранённый пароль и всё состояние сессии
-        function logout() {
-            if (!confirm('Выйти и удалить сохранённый пароль с этого устройства?')) return;
-            clearAuth();
-            sessionStorage.removeItem('gh-token');
+        // Кнопка «Войти по отпечатку» + строка «Требовать отпечаток»
+        async function refreshAuthUI() {
+            const meta      = Auth.stored();
+            const unlockBtn = document.getElementById('unlockBtn');
+            const bioRow    = document.getElementById('bioRow');
+            const bioChk    = document.getElementById('bioRequired');
+            const enrollRow = document.getElementById('enrollRow');
+            const canBio    = await Auth.available();
 
+            if (unlockBtn) unlockBtn.style.display = (meta && Auth.enrolled()) ? 'flex' : 'none';
+            if (bioRow)    bioRow.style.display    = Auth.enrolled() ? 'flex' : 'none';
+            if (bioChk)    bioChk.checked          = Auth.biometricRequired();
+            if (enrollRow) enrollRow.style.display = (canBio && !Auth.enrolled() && meta) ? 'flex' : 'none';
+        }
+
+        async function enrollBiometrics() {
+            if (!(await Auth.available())) { toast('Отпечаток на этом устройстве недоступен', 'error'); return; }
+            const meta = Auth.stored();
+            if (!meta) { toast('Сначала подключитесь по паролю', 'error'); return; }
+
+            const ok = await Auth.enroll();
+            if (!ok) { toast('Привязка отпечатка отменена', 'error'); await refreshAuthUI(); return; }
+
+            // Перешифровываем сохранённый секрет ключом от отпечатка (если есть PRF)
+            const rec = await Auth.recall(null);
+            if (rec) await Auth.remember(rec.secret, rec.mode, rec.exp);
+
+            await refreshAuthUI();
+            const s = Auth.strength();
+            setAuthHint(s === 'prf'
+                ? 'Отпечаток привязан · сессия зашифрована ключом отпечатка'
+                : 'Отпечаток привязан · этот браузер не поддерживает шифрование ключом отпечатка (PRF), защита экранная',
+                s === 'prf' ? 'ok' : 'err');
+            toast('Отпечаток привязан', 'success');
+        }
+
+        function toggleBioRequired(el) {
+            Auth.setBiometricRequired(el.checked);
+            setAuthHint(el.checked ? 'Вход будет спрашивать отпечаток' : 'Вход без отпечатка (автоматически)', 'ok');
+        }
+
+        function forgetDevice() {
+            if (!confirm('Выйти и стереть сохранённый вход с этого устройства?')) return;
+            Auth.forget();
+            resetSessionUI();
+            refreshAuthUI();
+            setAuthHint('Вход стёрт с устройства', 'ok');
+            toast('Вы вышли', 'success');
+        }
+        // Старое имя оставлено — на него ссылается кнопка «Выйти»
+        function logout() { forgetDevice(); }
+
+        function resetSessionUI() {
+            sessionStorage.removeItem('gh-token');
             const inp = document.getElementById('token');
             if (inp) inp.value = '';
-            const chk = document.getElementById('rememberDevice');
-            if (chk) chk.checked = true;
-
             const sel = document.getElementById('repository');
             if (sel) sel.innerHTML = '<option value="">Сначала подключитесь...</option>';
             const br = document.getElementById('branch');
@@ -2765,154 +2808,192 @@
 
             updateStatus(false);
             expandConn();
-            setAuthHint('Пароль удалён с устройства', 'ok');
-            toast('Вы вышли', 'success');
         }
 
         let isConnecting = false;
 
-        async function connect(opts = {}) {
-            if (isConnecting) return false;
+        // Общая часть после получения GitHub-токена: список репозиториев и UI
+        async function afterToken(token, opts) {
+            opts = opts || {};
+            sessionStorage.setItem('gh-token', token);
 
-            const auto  = opts.auto === true;
-            const inp   = document.getElementById('token');
-            const password = String(opts.secret !== undefined ? opts.secret : (inp ? inp.value : '')).trim();
-
-            if (!password) {
-                if (!auto) toast('Введите пароль', 'error');
-                return false;
+            const r = await fetch('https://api.github.com/user/repos?per_page=100&sort=updated', {
+                headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+            });
+            if (!r.ok) {
+                const ghErr = new Error(r.status === 401 ? 'Неверный токен GitHub' : `Ошибка подключения (${r.status})`);
+                if (r.status === 401) ghErr.authFailed = true;
+                throw ghErr;
             }
 
-            const btn = document.getElementById('connectBtn');
-            const orig = btn.innerHTML;
-            isConnecting = true;
-            btn.disabled = true;
-            btn.innerHTML = `<div class="spinner"></div> ${auto ? 'Автовход...' : 'Подключение...'}`;
+            const repos = await r.json();
+            const sel = document.getElementById('repository');
+            sel.innerHTML = '<option value="">Выберите репозиторий...</option>';
+            repos.forEach(repo => {
+                const opt = document.createElement('option');
+                opt.value = repo.full_name;
+                opt.textContent = repo.full_name;
+                sel.appendChild(opt);
+            });
 
+            const saved = localStorage.getItem('gh-repo');
+            if (saved && repos.find(x => x.full_name === saved)) {
+                sel.value = saved;
+                await loadBranches();
+                updateStatus(true);
+                loadExplorer('');
+                loadRepoInfo(saved);
+            }
+
+            toast(opts.auto ? `Вход выполнен · ${repos.length} репозиториев` : `Подключено! ${repos.length} репозиториев`, 'success');
+            console.log(`GitUp: подключено${opts.auto ? ' (автовход)' : ''}`);
+            collapseConn(sel.value || repos[0]?.full_name || '');
+            await refreshAuthUI();
+            return true;
+        }
+
+        function connectFailed(e, opts) {
+            opts = opts || {};
+            if (e.authFailed) {
+                (Auth.forgetSecret || Auth.forget)();
+                resetSessionUI();
+                setAuthHint('Сохранённый вход больше не действует — введите пароль', 'err');
+                refreshAuthUI();
+            } else if (opts.auto) {
+                setAuthHint(`Автоподключение не удалось: ${e.message}. Нажмите «Подключить».`, 'err');
+            }
+            toast(e.message, 'error');
+            console.error('GitUp connect error:', e.message, e.stack);
+            updateStatus(false);
+            return false;
+        }
+
+        function busy(on, label) {
+            const btn = document.getElementById('connectBtn');
+            if (!btn) return;
+            if (on) {
+                btn._orig = btn._orig || btn.innerHTML;
+                btn.disabled = true;
+                btn.innerHTML = `<div class="spinner"></div> ${label || 'Подключение...'}`;
+            } else {
+                btn.disabled = false;
+                if (btn._orig) btn.innerHTML = btn._orig;
+            }
+        }
+
+        // Вход по паролю (ручной)
+        async function connect() {
+            if (isConnecting) return false;
+            const inp = document.getElementById('token');
+            const password = (inp ? inp.value : '').trim();
+            if (!password) { toast('Введите пароль', 'error'); return false; }
+
+            isConnecting = true;
+            busy(true, 'Подключение...');
             try {
-                let token;
+                let token, session = null, exp = 0;
 
                 if (isLocalMode) {
-                    // Локальный режим: поле содержит GitHub токен напрямую
-                    token = password;
+                    token = password;              // локальный режим: в поле сам PAT
                 } else {
-                    // Продакшн: получаем токен с сервера по паролю
-                    let authResp;
-                    try {
-                        authResp = await fetch('/api/github-token', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ password })
-                        });
-                    } catch (fetchErr) {
-                        throw new Error(`Сеть: ${fetchErr.message}`);
-                    }
-
-                    if (!authResp.ok && authResp.status !== 200) {
-                        const txt = await authResp.text().catch(() => '');
-                        throw new Error(`API ${authResp.status}: ${txt.slice(0, 100)}`);
-                    }
-
-                    let authData;
-                    try {
-                        authData = await authResp.json();
-                    } catch {
-                        throw new Error(`Ответ не JSON (статус ${authResp.status})`);
-                    }
-
-                    if (!authData.ok) {
-                        const authErr = new Error(authData.error || 'Неверный пароль');
-                        authErr.authFailed = true;
-                        throw authErr;
-                    }
-                    token = authData.token;
+                    const res = await Auth.verify(password);
+                    token   = res.token;
+                    session = res.session;
+                    exp     = res.exp;
                 }
 
-                sessionStorage.setItem('gh-token', token);
+                await afterToken(token, { auto: false });
+                if (inp) inp.value = '';           // пароль в поле больше не нужен
 
-                const r = await fetch('https://api.github.com/user/repos?per_page=100&sort=updated', {
-                    headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
-                });
-                if (!r.ok) {
-                    const ghErr = new Error(r.status === 401 ? 'Неверный токен GitHub' : `Ошибка подключения (${r.status})`);
-                    if (r.status === 401) ghErr.authFailed = true;
-                    throw ghErr;
-                }
-
-                const repos = await r.json();
-                const sel = document.getElementById('repository');
-                sel.innerHTML = '<option value="">Выберите репозиторий...</option>';
-                repos.forEach(repo => {
-                    const opt = document.createElement('option');
-                    opt.value = repo.full_name;
-                    opt.textContent = repo.full_name;
-                    sel.appendChild(opt);
-                });
-
-                const saved = localStorage.getItem('gh-repo');
-                if (saved && repos.find(r => r.full_name === saved)) {
-                    sel.value = saved;
-                    await loadBranches();
-                    updateStatus(true);
-                    loadExplorer('');
-                    loadRepoInfo(saved);
-                }
-
-                // Запоминаем вход на устройстве
                 const chk = document.getElementById('rememberDevice');
-                const remember = chk ? chk.checked : true;
-                if (remember) {
-                    const saved = saveAuth(password, isLocalMode ? 'token' : 'pwd');
-                    if (!saved) setAuthHint('Не удалось сохранить вход (хранилище недоступно)', 'err');
-                    else setAuthHint(auto ? 'Автовход выполнен' : 'Вход сохранён на этом устройстве', 'ok');
-                } else {
-                    clearAuth();
-                    setAuthHint('');
-                }
+                if (chk && chk.checked) {
+                    const ok = await Auth.remember(isLocalMode ? token : session,
+                                                   isLocalMode ? 'token' : 'session', exp);
+                    const until = exp ? new Date(exp).toLocaleDateString('ru-RU') : '';
+                    setAuthHint(ok
+                        ? (until ? `Сеанс сохранён на устройстве до ${until}` : 'Сеанс сохранён на устройстве')
+                        : (Auth.stub ? 'Аварийный режим: auth.js не загрузился, сеанс не сохранён'
+                                     : 'Не удалось сохранить сеанс (хранилище недоступно)'), ok ? 'ok' : 'err');
 
-                toast(auto ? `Автовход выполнен · ${repos.length} репозиториев` : `Подключено! ${repos.length} репозиториев`, 'success');
-                console.log(`GitUp: подключено успешно${auto ? ' (автовход)' : ''}`);
-                // Collapse connection panel
-                const connectedRepo = document.getElementById('repository').value || repos[0]?.full_name || '';
-                collapseConn(connectedRepo);
+                    // Предлагаем отпечаток, если устройство умеет и он ещё не привязан
+                    if (ok && await Auth.available() && !Auth.enrolled()) {
+                        setTimeout(() => {
+                            if (confirm('Привязать вход к отпечатку пальца?\nСеанс будет зашифрован — без пальца его не прочитать.')) {
+                                enrollBiometrics();
+                            } else {
+                                refreshAuthUI();
+                            }
+                        }, 400);
+                    }
+                } else {
+                    Auth.forget();
+                    setAuthHint('Сеанс не сохранён — пароль понадобится снова', '');
+                }
+                await refreshAuthUI();
                 return true;
             } catch (e) {
-                if (e.authFailed) {
-                    // Пароль/токен больше не подходит — сохранённые данные бесполезны
-                    clearAuth();
-                    sessionStorage.removeItem('gh-token');
-                    if (inp) inp.value = '';
-                    expandConn();
-                    setAuthHint('Сохранённый пароль не подошёл — введите заново', 'err');
-                } else if (auto) {
-                    // Сеть/сервер — пароль оставляем, дадим повторить
-                    setAuthHint(`Автоподключение не удалось: ${e.message}. Нажмите «Подключить».`, 'err');
-                }
-                toast(e.message, 'error');
-                console.error('GitUp connect error:', e.message, e.stack);
-                updateStatus(false);
-                return false;
+                return connectFailed(e, { auto: false });
             } finally {
                 isConnecting = false;
-                btn.disabled = false;
-                btn.innerHTML = orig;
+                busy(false);
             }
         }
 
-        // Повторить автовход, если токена сессии нет, а пароль сохранён
-        function tryAutoConnect(reason) {
-            if (isConnecting) return;
-            if (sessionStorage.getItem('gh-token')) return;
-            if (!navigator.onLine) return;
-            const saved = loadAuth();
-            if (!saved) return;
-            if (saved.mode !== (isLocalMode ? 'token' : 'pwd')) return;
-            const inp = document.getElementById('token');
-            if (inp && !inp.value) inp.value = saved.secret;
-            setAuthHint('Автоподключение...', '');
-            console.log('GitUp: автовход (' + (reason || 'init') + ')');
-            connect({ auto: true, secret: saved.secret });
+        // Вход из сохранённого сеанса. interactive = можно показывать отпечаток.
+        async function resumeSession(reason, interactive) {
+            if (isConnecting) return false;
+            if (sessionStorage.getItem('gh-token')) return false;
+            if (!Auth.stored()) return false;
+            if (!navigator.onLine && !isLocalMode) {
+                setAuthHint('Нет сети — подключимся автоматически, когда она появится', 'err');
+                return false;
+            }
+
+            isConnecting = true;
+            busy(true, interactive ? 'Проверка отпечатка...' : 'Автовход...');
+            try {
+                console.log('GitUp: восстановление сеанса (' + (reason || 'init') + ')');
+                const res = await Auth.resume({ interactive: !!interactive });
+
+                if (res.need === 'unlock') {
+                    setAuthHint(res.cancelled ? 'Вход отменён — нажмите «Войти по отпечатку»'
+                                              : 'Требуется отпечаток — нажмите «Войти по отпечатку»', '');
+                    await refreshAuthUI();
+                    return false;
+                }
+                if (res.need === 'password') {
+                    setAuthHint(res.error || 'Введите пароль', res.error ? 'err' : '');
+                    await refreshAuthUI();
+                    return false;
+                }
+                if (!res.ok) {
+                    setAuthHint(`Автоподключение не удалось: ${res.error}. Нажмите «Подключить».`, 'err');
+                    return false;
+                }
+
+                await afterToken(res.token, { auto: true });
+                setAuthHint('Вход выполнен', 'ok');
+                return true;
+            } catch (e) {
+                return connectFailed(e, { auto: true });
+            } finally {
+                isConnecting = false;
+                busy(false);
+            }
         }
+
+        function unlockWithBiometrics() { resumeSession('button', true); }
+
+        // Тихая попытка: возврат в приложение, появление сети
+        function tryAutoConnect(reason) {
+            if (isConnecting || sessionStorage.getItem('gh-token')) return;
+            const meta = Auth.stored();
+            if (!meta) return;
+            if (meta.protected || Auth.biometricRequired()) return;  // нужен палец — ждём кнопку
+            if (!navigator.onLine) return;
+            resumeSession(reason, false);
+        }
+
 
         async function loadBranches() {
             const token = sessionStorage.getItem('gh-token') || '';
@@ -6225,30 +6306,56 @@
             }
         })();
 
-        // ── Автовход при старте ───────────────────────────────────
-        (function initAutoLogin() {
+        // ── Вход при старте ───────────────────────────────────────
+        (async function initAutoLogin() {
           try {
-            const saved = loadAuth();
-            if (!saved) return;
+            await refreshAuthUI();
+            let meta = Auth.stored();
 
-            const expectedMode = isLocalMode ? 'token' : 'pwd';
-            if (saved.mode !== expectedMode) {
-                setAuthHint('Сохранённый вход от другого режима — введите заново', 'err');
+            // Миграция: прошлая версия хранила на устройстве сам пароль.
+            // Меняем его на серверный session-токен и стираем старый ключ.
+            if (!meta && Auth.legacyRecord) {
+                const legacy = Auth.legacyRecord();
+                if (legacy && navigator.onLine) {
+                    const wantToken = legacy.mode === 'token';
+                    if (wantToken === isLocalMode) {
+                        console.log('GitUp: миграция старого сохранённого входа');
+                        const inp = document.getElementById('token');
+                        if (inp) inp.value = legacy.secret;
+                        const ok = await connect();
+                        Auth.dropLegacy();
+                        if (ok) { setAuthHint('Вход перенесён: на устройстве теперь сеанс, а не пароль', 'ok'); return; }
+                    } else {
+                        Auth.dropLegacy();
+                    }
+                } else if (legacy && !navigator.onLine) {
+                    setAuthHint('Нет сети — подключимся автоматически, когда она появится', 'err');
+                    return;
+                }
+                meta = Auth.stored();
+            }
+
+            if (!meta) return;
+
+            if (meta.mode === 'token' && !isLocalMode) {
+                setAuthHint('Сохранён вход от локального режима — введите пароль', 'err');
                 return;
             }
 
-            const inp = document.getElementById('token');
-            if (inp) inp.value = saved.secret;
-            const chk = document.getElementById('rememberDevice');
-            if (chk) chk.checked = true;
+            if (meta.protected || Auth.biometricRequired()) {
+                // Пробуем сразу; если браузер требует жест — остаётся кнопка
+                setAuthHint('Подтвердите отпечаток для входа', '');
+                const ok = await resumeSession('init', true);
+                if (!ok) await refreshAuthUI();
+                return;
+            }
 
             if (!navigator.onLine) {
                 setAuthHint('Нет сети — подключимся автоматически, когда она появится', 'err');
                 return;
             }
-
             setAuthHint('Автоподключение...', '');
-            connect({ auto: true, secret: saved.secret });
+            resumeSession('init', false);
           } catch (e) {
             console.warn('GitUp: автовход не выполнен:', e.message);
           }
