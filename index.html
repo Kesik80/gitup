@@ -166,6 +166,7 @@
 
         
         body {
+            overflow-x: hidden;       /* ничто внутри карточек не должно двигать страницу вбок */
             font-family: 'Outfit', sans-serif;
             background: var(--bg-void);
             color: var(--text-primary);
@@ -1080,8 +1081,10 @@
         .conn-collapsed-bar {
             display: none;
             align-items: center;
-            gap: 10px;
-            padding: 10px 16px;
+            flex-wrap: wrap;          /* звезда прибавила ширины — кнопкам нужен запасной ряд */
+            gap: 8px;
+            row-gap: 10px;
+            padding: 10px 12px;
             background: var(--bg-elevated);
             border-radius: 8px;
             font-family: 'Space Mono', monospace;
@@ -1089,7 +1092,7 @@
             color: var(--text-dim);
         }
         .conn-collapsed-bar .conn-repo-label {
-            flex: 1;
+            flex: 1 1 130px;
             min-width: 0;
             color: var(--accent-cyan);
             overflow: hidden;
@@ -1143,8 +1146,8 @@
         /* Звезда избранного рядом с именем репозитория */
         .conn-fav-star {
             flex-shrink: 0;
-            width: 32px;
-            height: 32px;
+            width: 28px;
+            height: 28px;
             padding: 0;
             font-size: 18px;
             line-height: 1;
