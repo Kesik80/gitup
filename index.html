@@ -4322,18 +4322,20 @@
                 const isPending = item.sha === 'pending';
 
                 div.innerHTML = `
-                    <div class="explorer-checkbox ${selectedItems.has(item.path) ? 'checked' : ''}" ${isPending ? '' : `onclick="toggleSelect('${esc(item.path)}', event)"`} style="${isPending ? 'opacity:0.3;pointer-events:none;' : ''}">
+                    <div class="explorer-checkbox ${selectedItems.has(item.path) ? 'checked' : ''}" ${isPending ? '' : `onclick="toggleSelect('${attrJs(item.path)}', event)"`} style="${isPending ? 'opacity:0.3;pointer-events:none;' : ''}">
                         ${selectedItems.has(item.path) ? '<svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12" fill="none" stroke="currentColor" stroke-width="3"/></svg>' : ''}
                     </div>
                     <div class="explorer-icon ${isDir ? 'folder' : ''}">${emoji}</div>
-                    <div class="explorer-info" ${isDir && !isPending ? `onclick="closeContextMenu(); loadExplorer('${esc(item.path)}')"` : ''} style="${isDir && !isPending ? 'cursor:pointer' : ''} ${isPending ? 'opacity:0.6' : ''}">
+                    <div class="explorer-info" ${isPending ? '' : (isDir
+                            ? `onclick="closeContextMenu(); loadExplorer('${attrJs(item.path)}')"`
+                            : `onclick="closeContextMenu(); viewFile('${attrJs(item.path)}', '${attrJs(item.name)}', event)"`)} style="${isPending ? 'opacity:0.6' : 'cursor:pointer'}">
                         <div class="explorer-name">${nameHTML}</div>
                         <div class="explorer-meta">${isPending ? 'Синхронизация...' : (isDir ? `Папка <span class="folder-count" id="fc-${item.path.replace(/\//g,'-')}">...</span>` : formatSize(item.size))}</div>
                     </div>
                     <div class="explorer-item-actions">
                         ${isPending
                             ? `<div class="spinner" style="width:14px;height:14px;margin:6px;"></div>`
-                            : `<button class="btn btn-secondary btn-icon" onclick="showItemMenu('${esc(item.path)}', '${esc(item.name)}', '${item.type}', event)" title="Меню">
+                            : `<button class="btn btn-secondary btn-icon" onclick="showItemMenu('${attrJs(item.path)}', '${attrJs(item.name)}', '${item.type}', event)" title="Меню">
                                 <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
                                     <circle cx="12" cy="5" r="2"/>
                                     <circle cx="12" cy="12" r="2"/>
@@ -6724,6 +6726,19 @@
 
             if (!base) return fullName; // если обрезать нечего — вернуть как есть
             return base + ext;
+        }
+
+        // Подстановка в атрибут onclick: сначала экранируем как строку JS,
+        // затем как значение HTML-атрибута. Обычный esc() кавычки не трогает,
+        // поэтому файл вроде it's.txt ломал обработчик.
+        function attrJs(str) {
+            return String(str)
+                .replace(/\\/g, '\\\\')
+                .replace(/'/g, "\\'")
+                .replace(/&/g, '&amp;')
+                .replace(/"/g, '&quot;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
         }
 
         function esc(str) {
