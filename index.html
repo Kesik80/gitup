@@ -3341,72 +3341,77 @@
         });
         
         // ── Кнопка «Назад» ────────────────────────────────────────
-        // Держим в истории одну «заглушку». Пока она на месте, системная
-        // кнопка не закрывает приложение, а приходит к нам в popstate:
-        // закрываем шторку, окно, поднимаемся из папки. В корне заглушку
-        // не восстанавливаем 2 секунды — второе нажатие уходит браузеру,
-        // и приложение закрывается.
-        //
-        // Важно: Chrome помечает записи истории, добавленные без касания
-        // экрана, как пропускаемые — «Назад» перепрыгивает через них.
-        // Поэтому заглушку ставим не только при загрузке, но и на первом
-        // же касании, и проверяем её наличие по history.state, а не по
-        // своему флагу: так она не потеряется, если браузер её отбросил.
+        // Chrome помечает записи истории, добавленные без касания экрана,
+        // как пропускаемые — «Назад» перепрыгивает через них. Это касается
+        // и записей, созданных внутри обработчика popstate: активации там
+        // уже нет. Поэтому запас записей набирается ТОЛЬКО во время касаний
+        // и держится на трёх штуках. Каждое нажатие «Назад» съедает одну,
+        // любое касание экрана восполняет запас.
+        const BACK_GUARD_DEPTH = 3;
+        let guardDepth = 0;        // сколько наших записей лежит выше стартовой
+        let ignorePop = 0;         // сколько popstate пропустить (наш же откат)
+        let exitPending = false;   // идёт двухсекундное окно выхода
         let backExitTimer = null;
-        let backExitPending = false;
 
-        function backGuardPresent() {
-            return !!(history.state && history.state.gitup === 'guard');
-        }
-
-        function armBackGuard() {
-            if (backGuardPresent()) return;
-            try { history.pushState({ gitup: 'guard' }, ''); } catch (e) {
-                console.warn('GitUp: не удалось поставить заглушку истории:', e.message);
+        function topUpGuards() {
+            if (exitPending) return;                    // иначе выйти будет нельзя
+            while (guardDepth < BACK_GUARD_DEPTH) {
+                try {
+                    history.pushState({ gitup: 'guard' }, '');
+                    guardDepth++;
+                } catch (e) {
+                    console.warn('GitUp: история не принимает записи:', e.message);
+                    break;
+                }
             }
         }
 
-        // Любое касание — повод убедиться, что заглушка на месте.
-        // Запись, созданная в обработчике касания, браузером не пропускается.
         ['pointerdown', 'keydown'].forEach(ev => {
-            document.addEventListener(ev, () => {
-                if (backExitPending) return;   // идёт двухсекундное окно выхода
-                armBackGuard();
-            }, { capture: true, passive: true });
+            document.addEventListener(ev, topUpGuards, { capture: true, passive: true });
         });
 
         function handleBackPress() {
-            if (uploadSheetOpen()) { closeUploadSheet(); armBackGuard(); return; }
+            if (uploadSheetOpen()) { closeUploadSheet(); return; }
 
             const modal = document.getElementById('modal');
-            if (modal && modal.classList.contains('open')) { closeModal(); armBackGuard(); return; }
+            if (modal && modal.classList.contains('open')) { closeModal(); return; }
 
             const search = document.getElementById('searchInput');
-            if (search && search.value) { clearSearch(); armBackGuard(); return; }
+            if (search && search.value) { clearSearch(); return; }
 
-            if (selectedItems && selectedItems.size) { clearSelection(); armBackGuard(); return; }
+            if (selectedItems && selectedItems.size) { clearSelection(); return; }
 
             if (explorerPath) {                     // выходим из папки на уровень выше
                 const parent = explorerPath.includes('/')
                     ? explorerPath.slice(0, explorerPath.lastIndexOf('/'))
                     : '';
                 loadExplorer(parent);
-                armBackGuard();
                 return;
             }
 
-            // Корень: подтверждаем выход вторым нажатием
+            // Корень: предупреждаем и убираем весь оставшийся запас, чтобы
+            // следующее нажатие ушло браузеру и он закрыл приложение сам.
             toast('Нажмите «Назад» ещё раз, чтобы выйти', 'error');
-            backExitPending = true;
+            exitPending = true;
+            if (guardDepth > 0) {
+                const n = guardDepth;
+                ignorePop = n;
+                guardDepth = 0;
+                try { history.go(-n); } catch {}
+            }
             clearTimeout(backExitTimer);
-            backExitTimer = setTimeout(() => {
-                backExitPending = false;
-                armBackGuard();
-            }, 2000);
+            // Запас не восстанавливаем сами: запись без касания всё равно
+            // будет пропущена. Вернётся при первом же касании экрана.
+            backExitTimer = setTimeout(() => { exitPending = false; }, 2000);
         }
 
-        window.addEventListener('popstate', handleBackPress);
-        armBackGuard();
+        window.addEventListener('popstate', () => {
+            if (ignorePop > 0) { ignorePop--; return; }
+            if (guardDepth > 0) guardDepth--;
+            handleBackPress();
+        });
+
+        topUpGuards();   // на случай браузеров без этого ограничения
 
         // Возврат в приложение: если сессия потеряна — переподключаемся молча
         document.addEventListener('visibilitychange', () => {
