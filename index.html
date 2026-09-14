@@ -1736,20 +1736,6 @@
             }
             .modal-content.large .modal-title { font-size: 14px; letter-spacing: 0.5px; }
             .modal-content.large .modal-actions { padding: 10px 12px; }
-            /* Никаких полей по краям: рамка вокруг текста съедала ширину,
-               а внутренний отступ оставляем — иначе буквы липнут к краю */
-            .file-preview-container { padding: 0; }
-            .file-preview-container pre {
-                padding: 12px 10px;
-                font-size: 12px;
-                border: none;
-                border-radius: 0;
-                background: var(--bg-deep);
-            }
-            .md-preview {
-                max-width: none;
-                padding: 14px 12px;
-            }
         }
         
         @keyframes modalZoom {
@@ -1895,6 +1881,24 @@
         .file-preview-container pre.wrap {
             white-space: pre-wrap;
             word-break: break-word;
+        }
+
+        /* Телефон и альбомная ориентация: ни полей по краям, ни второй рамки
+           вокруг текста. Блок стоит после базовых правил намеренно — при
+           одинаковой силе селекторов побеждает тот, что ниже в файле. */
+        @media (max-width: 767px), (max-height: 600px) {
+            .file-preview-container { padding: 0; }
+            .file-preview-container pre {
+                padding: 12px 10px;
+                font-size: 12px;
+                border: none;
+                border-radius: 0;
+                background: var(--bg-deep);
+            }
+            .md-preview {
+                max-width: none;
+                padding: 14px 12px;
+            }
         }
 
         .file-preview-loading {
