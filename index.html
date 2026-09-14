@@ -3340,6 +3340,51 @@
             toast('⚠️ Нет подключения к интернету', 'error');
         });
         
+        // ── Кнопка «Назад» ────────────────────────────────────────
+        // Держим в истории одну «заглушку». Пока она на месте, системная
+        // кнопка не закрывает приложение, а приходит к нам в popstate:
+        // закрываем шторку, окно, поднимаемся из папки. В корне заглушку
+        // не восстанавливаем 2 секунды — второе нажатие уходит браузеру,
+        // и приложение закрывается.
+        let backGuardArmed = false;
+        let backExitTimer = null;
+
+        function armBackGuard() {
+            if (backGuardArmed) return;
+            try { history.pushState({ gitup: 'guard' }, ''); backGuardArmed = true; } catch {}
+        }
+
+        function handleBackPress() {
+            backGuardArmed = false;   // заглушку только что сняли
+
+            if (uploadSheetOpen()) { closeUploadSheet(); armBackGuard(); return; }
+
+            const modal = document.getElementById('modal');
+            if (modal && modal.classList.contains('open')) { closeModal(); armBackGuard(); return; }
+
+            const search = document.getElementById('searchInput');
+            if (search && search.value) { clearSearch(); armBackGuard(); return; }
+
+            if (selectedItems && selectedItems.size) { clearSelection(); armBackGuard(); return; }
+
+            if (explorerPath) {                     // выходим из папки на уровень выше
+                const parent = explorerPath.includes('/')
+                    ? explorerPath.slice(0, explorerPath.lastIndexOf('/'))
+                    : '';
+                loadExplorer(parent);
+                armBackGuard();
+                return;
+            }
+
+            // Корень: подтверждаем выход вторым нажатием
+            toast('Нажмите «Назад» ещё раз, чтобы выйти', 'error');
+            clearTimeout(backExitTimer);
+            backExitTimer = setTimeout(armBackGuard, 2000);
+        }
+
+        window.addEventListener('popstate', handleBackPress);
+        armBackGuard();
+
         // Возврат в приложение: если сессия потеряна — переподключаемся молча
         document.addEventListener('visibilitychange', () => {
             if (document.visibilityState === 'visible') tryAutoConnect('resume');
