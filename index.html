@@ -6000,7 +6000,51 @@
         function togglePreviewWrap() {
             localStorage.setItem('gh-preview-wrap', previewWrapOn() ? '0' : '1');
             applyPreviewWrap();
+            fitPreviewFont();
         }
+
+        // Подгоняем кегль под самую длинную строку, чтобы код влезал по
+        // ширине без горизонтальной прокрутки. На широком экране упирается
+        // в верхнюю границу и остаётся обычным, на телефоне уменьшается.
+        function fitPreviewFont() {
+            const pre = document.querySelector('.file-preview-container pre');
+            if (!pre) return;
+
+            if (previewWrapOn()) {           // при переносе подгонять нечего
+                pre.style.fontSize = '';
+                pre.style.lineHeight = '';
+                return;
+            }
+
+            const text = pre.textContent || '';
+            let maxLen = 0;
+            for (const line of text.split('\n')) {
+                if (line.length > maxLen) maxLen = line.length;
+            }
+            if (!maxLen) return;
+
+            const cs = getComputedStyle(pre);
+            const avail = pre.clientWidth - parseFloat(cs.paddingLeft || 0) - parseFloat(cs.paddingRight || 0);
+            if (avail <= 0) return;
+
+            // Ширину символа моноширинного шрифта замеряем, а не угадываем
+            const probe = document.createElement('span');
+            probe.style.cssText = 'position:absolute;visibility:hidden;white-space:pre;top:-9999px;' +
+                                  `font-family:${cs.fontFamily};font-size:100px;`;
+            probe.textContent = 'M'.repeat(20);
+            document.body.appendChild(probe);
+            const charWidthAt100 = probe.getBoundingClientRect().width / 20;
+            probe.remove();
+            if (!charWidthAt100) return;
+
+            const ideal = avail / (maxLen * (charWidthAt100 / 100));
+            const size = Math.max(6, Math.min(13, ideal));
+            pre.style.fontSize = size.toFixed(1) + 'px';
+            pre.style.lineHeight = '1.45';
+        }
+
+        window.addEventListener('resize', fitPreviewFont);
+        window.addEventListener('orientationchange', () => setTimeout(fitPreviewFont, 250));
 
         let lastPreviewUrl = null;
         function previewUrlFor(b64, mime) {
@@ -6139,6 +6183,7 @@
                     }
                     body.innerHTML = previewHTML;
                     applyPreviewWrap();
+                    fitPreviewFont();
                 }
 
                 function showEditor() {
