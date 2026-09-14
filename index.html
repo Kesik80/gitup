@@ -4771,7 +4771,7 @@
                 });
                 if (!r.ok) throw new Error('Не удалось загрузить файл');
                 const fileData = await r.json();
-                const text = decodeURIComponent(escape(atob(fileData.content.replace(/\n/g,''))));
+                const text = decodeBase64Text(fileData.content);
                 editingFile = { path, name, sha: fileData.sha };
                 body.innerHTML = `<textarea class="file-editor-textarea" id="editorTextarea">${esc(text)}</textarea>`;
                 actions.style.display = 'flex';
@@ -5007,7 +5007,7 @@
                     );
                     if (!r.ok) continue;
                     const data = await r.json();
-                    const content = decodeURIComponent(escape(atob(data.content.replace(/\n/g, ''))));
+                    const content = decodeBase64Text(data.content);
                     parts.push(`\n${'─'.repeat(60)}\nФайл: ${file.path}\n${'─'.repeat(60)}\n${content}`);
                 }
 
@@ -5859,6 +5859,43 @@
             }
         }
 
+        // Base64 → текст без «URI malformed»: раньше использовалась связка
+        // decodeURIComponent(escape(atob(...))), которая падает на любых
+        // двоичных данных — то есть на каждой картинке.
+        function decodeBase64Text(b64) {
+            const bin = atob(String(b64 || '').replace(/\s/g, ''));
+            const bytes = Uint8Array.from(bin, c => c.charCodeAt(0));
+            return new TextDecoder('utf-8').decode(bytes);
+        }
+
+        function imageMime(ext) {
+            const map = {
+                png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg',
+                gif: 'image/gif', webp: 'image/webp', bmp: 'image/bmp',
+                ico: 'image/x-icon', avif: 'image/avif', svg: 'image/svg+xml'
+            };
+            return map[ext] || 'application/octet-stream';
+        }
+
+        // Расширения, которые смотрим как текст
+        const TEXT_EXTS = [
+            'md','markdown','txt','log','csv','tsv','json','jsonc','js','mjs','cjs','ts','jsx','tsx',
+            'css','scss','less','html','htm','xml','svg','yaml','yml','toml','ini','cfg','conf','properties',
+            'sh','bash','zsh','bat','ps1','py','rb','php','go','rs','java','kt','swift','dart','lua','pl','r',
+            'c','h','cpp','hpp','cs','sql','vue','gradle','env','gitignore','gitattributes','editorconfig',
+            'npmrc','babelrc','lock','map','ino','patch','diff'
+        ];
+        // Файлы без расширения, которые почти всегда текстовые
+        const TEXT_NAMES = ['license','readme','makefile','dockerfile','procfile','changelog','codeowners'];
+
+        let lastPreviewUrl = null;
+        function previewUrlFor(b64, mime) {
+            const blob = base64ToBlob(b64, mime);
+            if (lastPreviewUrl) URL.revokeObjectURL(lastPreviewUrl);
+            lastPreviewUrl = URL.createObjectURL(blob);
+            return lastPreviewUrl;
+        }
+
         async function viewFile(path, name, e) {
             e.stopPropagation();
 
@@ -5866,11 +5903,14 @@
             const repo = document.getElementById('repository').value;
             const branch = document.getElementById('branch').value;
 
-            const ext = name.split('.').pop().toLowerCase();
-            const isImage = ['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp', 'bmp'].includes(ext);
+            const hasExt = name.includes('.') && !name.startsWith('.');
+            const ext = hasExt ? name.split('.').pop().toLowerCase() : name.replace(/^\./, '').toLowerCase();
+            const bare = name.toLowerCase().split('.')[0];
+
+            const isImage = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp', 'ico', 'avif'].includes(ext);
             const isPDF = ext === 'pdf';
-            const isText = ['md', 'txt', 'json', 'js', 'ts', 'jsx', 'tsx', 'css', 'html', 'xml', 'yaml', 'yml', 'sh', 'py', 'java', 'c', 'cpp', 'h', 'rs', 'env', 'toml', 'ini', 'cfg', 'svg'].includes(ext);
-            const isMarkdown = ext === 'md';
+            const isText = TEXT_EXTS.includes(ext) || TEXT_NAMES.includes(bare) || TEXT_NAMES.includes(ext);
+            const isMarkdown = ext === 'md' || ext === 'markdown';
             const isEditable = isText;
 
             if (!isImage && !isPDF && !isText) {
@@ -5923,8 +5963,30 @@
                 if (!r.ok) throw new Error('Не удалось загрузить файл');
 
                 const fileData = await r.json();
+
+                // Файлы больше 1 МБ приходят без содержимого — забираем через blobs
+                if (!fileData.content && fileData.sha) {
+                    const br = await fetch(`https://api.github.com/repos/${repo}/git/blobs/${fileData.sha}`, {
+                        headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+                    });
+                    if (!br.ok) throw new Error('Не удалось загрузить содержимое файла');
+                    const blobData = await br.json();
+                    fileData.content = blobData.content;
+                }
+                if (!fileData.content) throw new Error('Файл пуст или недоступен для просмотра');
+
                 currentViewFile = { path, name, content: fileData.content, sha: fileData.sha };
-                const rawText = decodeURIComponent(escape(atob(fileData.content.replace(/\n/g, ''))));
+
+                // Текст декодируем только для текстовых файлов: на двоичных
+                // данных декодирование бессмысленно и раньше рушило просмотр
+                let rawText = '';
+                if (isText) {
+                    try {
+                        rawText = decodeBase64Text(fileData.content);
+                    } catch (decErr) {
+                        throw new Error('Не удалось прочитать файл как текст');
+                    }
+                }
 
                 let isEditMode = false;
 
@@ -5935,12 +5997,10 @@
 
                     let previewHTML = '';
                     if (isImage) {
-                        const blob = base64ToBlob(fileData.content, `image/${ext}`);
-                        const url = URL.createObjectURL(blob);
+                        const url = previewUrlFor(fileData.content, imageMime(ext));
                         previewHTML = `<div class="file-preview-container"><img src="${url}" alt="${esc(name)}"></div>`;
                     } else if (isPDF) {
-                        const blob = base64ToBlob(fileData.content, 'application/pdf');
-                        const url = URL.createObjectURL(blob);
+                        const url = previewUrlFor(fileData.content, 'application/pdf');
                         previewHTML = `<div class="file-preview-container"><iframe src="${url}"></iframe></div>`;
                     } else if (isMarkdown) {
                         const html = rawText
@@ -6764,6 +6824,8 @@
             actions.style.display = 'flex';
             currentViewFile = null;
             modalCallback = null;
+
+            if (lastPreviewUrl) { URL.revokeObjectURL(lastPreviewUrl); lastPreviewUrl = null; }
 
             const dismiss = modalDismiss;
             modalDismiss = null;
