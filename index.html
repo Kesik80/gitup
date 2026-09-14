@@ -2161,56 +2161,6 @@
             .app { max-width: 1400px; }
         }
         
-        /* ── Режим «Версия для ПК» в Chrome ──────────────────────
-           Браузер сообщает странице настольную ширину (около 980px) и
-           игнорирует viewport, поэтому медиазапросы включают макет для
-           большого экрана: две колонки, мелкий шрифт, окна с полями.
-           Класс ставит скрипт, когда экран физически сенсорный и узкий,
-           и возвращает телефонный вид. */
-        html.force-mobile .main-grid {
-            grid-template-columns: 1fr;
-            gap: 12px;
-        }
-        html.force-mobile .explorer {
-            position: static;
-            top: auto;
-            height: auto;
-            min-height: 50vh;
-            max-height: none;
-        }
-        html.force-mobile .header {
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-        html.force-mobile .modal.modal-large { padding: 0; }
-        html.force-mobile .modal-content.large {
-            width: 100vw;
-            max-width: 100vw;
-            height: 100dvh;
-            max-height: 100dvh;
-            border-radius: 0;
-            border-left: none;
-            border-right: none;
-        }
-        html.force-mobile .modal-content.large .modal-header { padding: 10px; gap: 6px; }
-        html.force-mobile .modal-content.large .modal-title { gap: 6px; }
-        html.force-mobile .modal-content.large .modal-title .btn-icon {
-            width: 34px;
-            height: 34px;
-            padding: 0;
-        }
-        html.force-mobile .file-preview-container { padding: 0; }
-        html.force-mobile .file-preview-container pre {
-            padding: 12px 10px;
-            border: none;
-            border-radius: 0;
-            background: var(--bg-deep);
-        }
-        html.force-mobile .md-preview {
-            max-width: none;
-            padding: 14px 12px;
-        }
-
         /* Safe area */
         @supports (padding: env(safe-area-inset-top)) {
             .app {
@@ -7148,27 +7098,6 @@
                 }, 1500);
             }
         })();
-
-        // ── Режим «Версия для ПК» ─────────────────────────────────
-        // Сенсорный экран + узкое окно = телефон, даже если браузер
-        // притворяется настольным. Проверяем и при повороте экрана.
-        function applyForceMobile() {
-            const coarse = window.matchMedia('(pointer: coarse)').matches ||
-                           navigator.maxTouchPoints > 0;
-            const narrow = window.innerWidth < 1100;
-            const force = coarse && narrow;
-            document.documentElement.classList.toggle('force-mobile', force);
-
-            // Подсказываем один раз за сеанс, если браузер отдаёт настольную ширину
-            if (force && window.innerWidth >= 768 && !sessionStorage.getItem('desktop-mode-hint')) {
-                sessionStorage.setItem('desktop-mode-hint', '1');
-                setTimeout(() => toast('Включён режим «Версия для ПК» — выключите его в меню браузера', 'error'), 1200);
-            }
-        }
-
-        applyForceMobile();
-        window.addEventListener('resize', applyForceMobile);
-        window.addEventListener('orientationchange', applyForceMobile);
 
         updateTargetLabels();
 
