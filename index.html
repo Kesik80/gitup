@@ -3346,17 +3346,36 @@
         // закрываем шторку, окно, поднимаемся из папки. В корне заглушку
         // не восстанавливаем 2 секунды — второе нажатие уходит браузеру,
         // и приложение закрывается.
-        let backGuardArmed = false;
+        //
+        // Важно: Chrome помечает записи истории, добавленные без касания
+        // экрана, как пропускаемые — «Назад» перепрыгивает через них.
+        // Поэтому заглушку ставим не только при загрузке, но и на первом
+        // же касании, и проверяем её наличие по history.state, а не по
+        // своему флагу: так она не потеряется, если браузер её отбросил.
         let backExitTimer = null;
+        let backExitPending = false;
 
-        function armBackGuard() {
-            if (backGuardArmed) return;
-            try { history.pushState({ gitup: 'guard' }, ''); backGuardArmed = true; } catch {}
+        function backGuardPresent() {
+            return !!(history.state && history.state.gitup === 'guard');
         }
 
-        function handleBackPress() {
-            backGuardArmed = false;   // заглушку только что сняли
+        function armBackGuard() {
+            if (backGuardPresent()) return;
+            try { history.pushState({ gitup: 'guard' }, ''); } catch (e) {
+                console.warn('GitUp: не удалось поставить заглушку истории:', e.message);
+            }
+        }
 
+        // Любое касание — повод убедиться, что заглушка на месте.
+        // Запись, созданная в обработчике касания, браузером не пропускается.
+        ['pointerdown', 'keydown'].forEach(ev => {
+            document.addEventListener(ev, () => {
+                if (backExitPending) return;   // идёт двухсекундное окно выхода
+                armBackGuard();
+            }, { capture: true, passive: true });
+        });
+
+        function handleBackPress() {
             if (uploadSheetOpen()) { closeUploadSheet(); armBackGuard(); return; }
 
             const modal = document.getElementById('modal');
@@ -3378,8 +3397,12 @@
 
             // Корень: подтверждаем выход вторым нажатием
             toast('Нажмите «Назад» ещё раз, чтобы выйти', 'error');
+            backExitPending = true;
             clearTimeout(backExitTimer);
-            backExitTimer = setTimeout(armBackGuard, 2000);
+            backExitTimer = setTimeout(() => {
+                backExitPending = false;
+                armBackGuard();
+            }, 2000);
         }
 
         window.addEventListener('popstate', handleBackPress);
