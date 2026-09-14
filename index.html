@@ -3014,7 +3014,10 @@
 
         // Отвязать отпечаток совсем
         async function unenrollBiometrics() {
-            if (!confirm('Отвязать отпечаток? Сеанс останется, вход станет автоматическим.')) return;
+            const ok = await confirmModal('Отвязать отпечаток?',
+                'Сохранённый сеанс останется, вход станет автоматическим.<br>Понадобится одно последнее подтверждение отпечатком.',
+                { okText: 'Отвязать' });
+            if (!ok) return;
             setAuthHint('Подтвердите отпечаток последний раз...', '');
             const res = await Auth.unenroll();
             if (!res.ok) {
@@ -3027,8 +3030,11 @@
             await refreshAuthUI();
         }
 
-        function forgetDevice() {
-            if (!confirm('Выйти и стереть сохранённый вход с этого устройства?')) return;
+        async function forgetDevice() {
+            const ok = await confirmModal('Выйти?',
+                'Сохранённый вход будет стёрт с этого устройства. В следующий раз понадобится пароль.',
+                { okText: 'Выйти' });
+            if (!ok) return;
             Auth.forget();
             resetSessionUI();
             refreshAuthUI();
@@ -3168,12 +3174,11 @@
 
                     // Предлагаем отпечаток, если устройство умеет и он ещё не привязан
                     if (ok && await Auth.available() && !Auth.enrolled()) {
-                        setTimeout(() => {
-                            if (confirm('Привязать вход к отпечатку пальца?\nСеанс будет зашифрован — без пальца его не прочитать.')) {
-                                enrollBiometrics();
-                            } else {
-                                refreshAuthUI();
-                            }
+                        setTimeout(async () => {
+                            const yes = await confirmModal('Привязать отпечаток?',
+                                'Сеанс будет зашифрован ключом от отпечатка — без пальца его не прочитать.',
+                                { okText: 'Привязать', danger: false });
+                            if (yes) enrollBiometrics(); else refreshAuthUI();
                         }, 400);
                     }
                 } else {
@@ -6432,9 +6437,13 @@
             const target = `${repo}@${branch}:/${path}`;
             if (localStorage.getItem('gh-last-upload-target') !== target) {
                 const word = selectedFiles.length === 1 ? 'файл' : 'файлов';
-                if (!confirm(`Загрузить ${selectedFiles.length} ${word}\n\nв ${repo}\nветка ${branch}\nпапка /${path}`)) {
-                    return;
-                }
+                const okTarget = await confirmModal(`Загрузить ${selectedFiles.length} ${word}?`,
+                    `<div style="font-family:'Space Mono',monospace;font-size:13px;line-height:1.7;">` +
+                    `<div style="color:${repoColor(repo)};font-weight:700;font-size:15px;">${esc(repo)}</div>` +
+                    `<div style="color:var(--text-dim);">ветка ${esc(branch)}</div>` +
+                    `<div style="color:var(--text-dim);">папка /${esc(path)}</div></div>`,
+                    { okText: 'Загрузить', danger: false });
+                if (!okTarget) return;
             }
             localStorage.setItem('gh-last-upload-target', target);
 
@@ -6642,6 +6651,29 @@
 
         // Modal
         let modalCallback = null;
+        let modalDismiss = null;
+
+        // Подтверждение в теме приложения вместо системного confirm()
+        function confirmModal(title, bodyHtml, opts = {}) {
+            return new Promise(resolve => {
+                const btn = document.getElementById('modalConfirm');
+                if (!btn) { resolve(false); return; }
+
+                const prevText = btn.textContent;
+                const prevClass = btn.className;
+                const restore = () => { btn.textContent = prevText; btn.className = prevClass; };
+
+                btn.textContent = opts.okText || 'Подтвердить';
+                btn.className = 'btn ' + (opts.danger === false ? 'btn-primary' : 'btn-danger');
+
+                modalDismiss = () => { restore(); resolve(false); };
+                openModal(title, bodyHtml, async () => {
+                    modalDismiss = null;
+                    restore();
+                    resolve(true);
+                });
+            });
+        }
 
         function openModal(title, body, onConfirm) {
             document.getElementById('modalTitle').textContent = title;
@@ -6659,6 +6691,10 @@
             actions.style.display = 'flex';
             currentViewFile = null;
             modalCallback = null;
+
+            const dismiss = modalDismiss;
+            modalDismiss = null;
+            if (dismiss) dismiss();
         }
 
         document.getElementById('modalConfirm').onclick = async () => {
