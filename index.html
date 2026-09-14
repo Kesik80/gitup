@@ -1712,8 +1712,10 @@
             border-color: rgba(255, 95, 109, 0.45) !important;
         }
 
-        /* Телефон: просмотр во весь экран, поля минимальные */
-        @media (max-width: 767px) {
+        /* Телефон: просмотр во весь экран, поля минимальные.
+           Второе условие — альбомная ориентация: ширина там больше 767px,
+           а высоты мало, и окно с полями почти не оставляло места тексту. */
+        @media (max-width: 767px), (max-height: 600px) {
             .modal.modal-large { padding: 0; }
             .modal-content.large {
                 width: 100vw;
@@ -1731,8 +1733,6 @@
             .file-preview-container pre {
                 padding: 12px;
                 font-size: 12px;
-                white-space: pre-wrap;      /* на телефоне горизонтальная прокрутка мучительна */
-                word-break: break-word;
             }
         }
         
@@ -1865,6 +1865,11 @@
             color: var(--text-primary);
         }
         
+        .file-preview-container pre.wrap {
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
         .file-preview-loading {
             display: flex;
             flex-direction: column;
@@ -5945,6 +5950,27 @@
         // Файлы без расширения, которые почти всегда текстовые
         const TEXT_NAMES = ['license','readme','makefile','dockerfile','procfile','changelog','codeowners'];
 
+        // Перенос длинных строк в просмотре: код удобнее читать без переноса,
+        // длинные комментарии — с переносом. Выбор запоминается на устройстве.
+        function previewWrapOn() {
+            return localStorage.getItem('gh-preview-wrap') === '1';
+        }
+
+        function applyPreviewWrap() {
+            const pre = document.querySelector('.file-preview-container pre');
+            if (pre) pre.classList.toggle('wrap', previewWrapOn());
+            const btn = document.getElementById('wrapToggleBtn');
+            if (btn) {
+                btn.style.color = previewWrapOn() ? 'var(--accent-cyan)' : '';
+                btn.style.borderColor = previewWrapOn() ? 'var(--accent-cyan)' : '';
+            }
+        }
+
+        function togglePreviewWrap() {
+            localStorage.setItem('gh-preview-wrap', previewWrapOn() ? '0' : '1');
+            applyPreviewWrap();
+        }
+
         let lastPreviewUrl = null;
         function previewUrlFor(b64, mime) {
             const blob = base64ToBlob(b64, mime);
@@ -5994,6 +6020,14 @@
                             <line x1="12" y1="15" x2="12" y2="3"/>
                         </svg>
                     </button>
+                    ${isText && !isMarkdown ? `<button class="btn btn-secondary btn-icon" id="wrapToggleBtn" onclick="togglePreviewWrap()" title="Перенос длинных строк" style="${previewWrapOn() ? 'color:var(--accent-cyan);border-color:var(--accent-cyan);' : ''}">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <line x1="3" y1="6" x2="21" y2="6"/>
+                            <path d="M3 12h15a3 3 0 0 1 0 6h-4"/>
+                            <polyline points="16 15 13 18 16 21"/>
+                            <line x1="3" y1="18" x2="8" y2="18"/>
+                        </svg>
+                    </button>` : ''}
                     ${isEditable ? `<button class="btn ${editing ? 'btn-primary' : 'btn-secondary'} btn-icon" id="editToggleBtn" onclick="toggleInlineEdit()" title="${editing ? 'Просмотр' : 'Редактировать'}" style="${editing ? 'background:var(--accent-cyan);color:#000;' : ''}">
                         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
@@ -6070,9 +6104,10 @@
                             .replace(/\n/gim, '<br>');
                         previewHTML = `<div class="file-preview-container"><div style="max-width:800px;padding:24px;color:var(--text-primary);line-height:1.8;">${html}</div></div>`;
                     } else {
-                        previewHTML = `<div class="file-preview-container"><pre>${esc(rawText)}</pre></div>`;
+                        previewHTML = `<div class="file-preview-container"><pre class="${previewWrapOn() ? 'wrap' : ''}">${esc(rawText)}</pre></div>`;
                     }
                     body.innerHTML = previewHTML;
+                    applyPreviewWrap();
                 }
 
                 function showEditor() {
