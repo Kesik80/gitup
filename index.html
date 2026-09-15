@@ -969,6 +969,9 @@
             overflow-y: auto;
             scrollbar-width: thin;
             scrollbar-color: var(--accent-cyan) transparent;
+            /* Плавающая кнопка занимает нижний правый угол: без запаса
+               её круг накрывает меню последней строки списка */
+            padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px));
         }
         
         .explorer-content::-webkit-scrollbar {
