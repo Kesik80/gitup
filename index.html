@@ -7583,6 +7583,18 @@
             setUploadState('busy', 'Отправка...');
             setUploadProgress(0);
 
+            // Прогресс по этапам, а не по номеру файла: при одном файле
+            // счётчик раньше так и стоял на нуле до самого конца.
+            // 0–80% — заливка файлов, дальше дерево, коммит, ветка.
+            const prog = (pct, label) => {
+                const p = Math.round(pct);
+                document.getElementById('progressFill').style.width = p + '%';
+                document.getElementById('progressPct').textContent = p + '%';
+                if (label) document.getElementById('progressLabel').textContent = label;
+                setUploadProgress(p);
+                setUploadState('busy', `Отправка ${p}%`);
+            };
+
             try {
                 const r = await fetch(`https://api.github.com/repos/${repo}/git/refs/heads/${branch}`, {
                     headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
@@ -7602,17 +7614,15 @@
                 // Compute destination path at upload time (not at file-add time)
                 const basePath = (document.getElementById("uploadPathInput")?.value.trim().replace(/^\/+|\/+$/g, "")) || explorerPath || "";
 
+                prog(5, 'Подготовка...');
+
                 for (let i = 0; i < selectedFiles.length; i++) {
                     const file = selectedFiles[i];
-                    const pct = Math.round((i / selectedFiles.length) * 100);
+                    const share = 75 / selectedFiles.length;      // 5% уже прошло
 
-                    document.getElementById('progressFill').style.width = pct + '%';
-                    document.getElementById('progressPct').textContent = pct + '%';
-                    document.getElementById('progressLabel').textContent = `Загрузка ${file.name}...`;
-                    setUploadProgress(pct);
-                    setUploadState('busy', `Отправка ${pct}%`);
-
+                    prog(5 + share * i, `Чтение ${file.name}...`);
                     const base64 = await fileToBase64(file.file);
+                    prog(5 + share * (i + 0.5), `Загрузка ${file.name}...`);
 
                     const blobRes = await fetch(`https://api.github.com/repos/${repo}/git/blobs`, {
                         method: 'POST',
@@ -7624,7 +7634,10 @@
                     const relPath = file.relPath || file.name;
                     const fullPath = basePath ? `${basePath}/${relPath}` : relPath;
                     blobs.push({ path: fullPath, mode: '100644', type: 'blob', sha: blob.sha });
+                    prog(5 + share * (i + 1), `Загружено ${i + 1} из ${selectedFiles.length}`);
                 }
+
+                prog(82, 'Сборка дерева файлов...');
 
                 const treeRes = await fetch(`https://api.github.com/repos/${repo}/git/trees`, {
                     method: 'POST',
@@ -7633,6 +7646,7 @@
                 });
 
                 const tree = await treeRes.json();
+                prog(90, 'Создание коммита...');
 
                 const newCommitRes = await fetch(`https://api.github.com/repos/${repo}/git/commits`, {
                     method: 'POST',
@@ -7641,6 +7655,7 @@
                 });
 
                 const newCommit = await newCommitRes.json();
+                prog(96, 'Обновление ветки...');
 
                 await fetch(`https://api.github.com/repos/${repo}/git/refs/heads/${branch}`, {
                     method: 'PATCH',
@@ -7669,19 +7684,24 @@
                 renderFileList();
 
                 scheduleExplorerRefresh(explorerPath);
-                setUploadProgress(100);
+
+                prog(100, 'Готово');
                 setUploadState('done', 'Готово');
+                // Даём увидеть замкнувшееся кольцо и галочку — раньше шторка
+                // закрывалась мгновенно, и анимации никто не замечал
+                await new Promise(r => setTimeout(r, 900));
+                closeUploadSheet();
             } catch (e) {
+                // Шторку оставляем открытой: с ошибкой удобнее разбираться на месте
                 toast('Ошибка загрузки: ' + e.message, 'error');
                 setUploadState('idle');
             } finally {
                 isUploading = false;
-                closeUploadSheet();
                 document.getElementById('uploadBtn').disabled = false;
                 setTimeout(() => {
                     document.getElementById('uploadProgress').style.display = 'none';
                     setUploadState('idle');          // к следующему разу кнопка чистая
-                }, 1500);
+                }, 1200);
             }
         };
 
