@@ -2086,6 +2086,12 @@
             padding: 16px;
             background: rgba(0, 0, 0, 0.6);
         }
+        /* Поверх шторки загрузки: она сама position:fixed, поэтому и диалог
+           крепим к экрану, иначе он лёг бы только на видимую часть списка */
+        .inner-dialog.over-sheet {
+            position: fixed;
+            z-index: 950;
+        }
         .inner-dialog-box {
             width: 100%;
             max-width: 340px;
@@ -6526,13 +6532,13 @@
         // ── Несохранённые правки ──────────────────────────────────
         let pendingEdit = { dirty: false };
 
-        function innerDialog(title, text, actions, fallback) {
+        function innerDialog(title, text, actions, fallback, host) {
             return new Promise(resolve => {
-                const content = document.querySelector('#modal .modal-content');
+                const content = host || document.querySelector('#modal .modal-content');
                 if (!content) { resolve(fallback || 'cancel'); return; }
 
                 const box = document.createElement('div');
-                box.className = 'inner-dialog';
+                box.className = 'inner-dialog' + (host ? ' over-sheet' : '');
                 box.id = 'unsavedDialog';
                 box.innerHTML = `
                     <div class="inner-dialog-box">
@@ -7539,13 +7545,17 @@
             const target = `${repo}@${branch}:/${path}`;
             if (localStorage.getItem('gh-last-upload-target') !== target) {
                 const word = selectedFiles.length === 1 ? 'файл' : 'файлов';
-                const okTarget = await confirmModal(`Загрузить ${selectedFiles.length} ${word}?`,
-                    `<div style="font-family:'Space Mono',monospace;font-size:13px;line-height:1.7;">` +
-                    `<div style="color:${repoColor(repo)};font-weight:700;font-size:15px;">${esc(repo)}</div>` +
-                    `<div style="color:var(--text-dim);">ветка ${esc(branch)}</div>` +
-                    `<div style="color:var(--text-dim);">папка /${esc(path)}</div></div>`,
-                    { okText: 'Загрузить', danger: false });
-                if (!okTarget) return;
+                // Диалог живёт внутри шторки: общее окно накрывало её
+                // затемнением, и казалось, что список файлов пропал
+                const sheet = document.getElementById('uploadSheet');
+                const okTarget = await innerDialog(
+                    `Загрузить ${selectedFiles.length} ${word}?`,
+                    `${repo} · ветка ${branch} · папка /${path}`,
+                    [{ act: 'cancel', label: 'Отмена' },
+                     { act: 'ok', label: 'Загрузить', primary: true }],
+                    'cancel',
+                    sheet && sheet.classList.contains('open') ? sheet : null);
+                if (okTarget !== 'ok') return;
             }
             localStorage.setItem('gh-last-upload-target', target);
 
