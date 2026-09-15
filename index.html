@@ -5121,6 +5121,7 @@
             setOverlayOpen(true);
             try {
                 const r = await fetch(`https://api.github.com/repos/${repo}/contents/${path}?ref=${branch}`, {
+                    cache: 'no-store',   // GitHub кэширует содержимое, а нам нужен свежий sha
                     headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
                 });
                 if (!r.ok) throw new Error('Не удалось загрузить файл');
@@ -6432,22 +6433,20 @@
         // ── Несохранённые правки ──────────────────────────────────
         let pendingEdit = { dirty: false };
 
-        function unsavedDialog() {
+        function innerDialog(title, text, actions, fallback) {
             return new Promise(resolve => {
                 const content = document.querySelector('#modal .modal-content');
-                if (!content) { resolve('discard'); return; }
+                if (!content) { resolve(fallback || 'cancel'); return; }
 
                 const box = document.createElement('div');
                 box.className = 'inner-dialog';
                 box.id = 'unsavedDialog';
                 box.innerHTML = `
                     <div class="inner-dialog-box">
-                        <div class="inner-dialog-title">Несохранённые изменения</div>
-                        <div class="inner-dialog-text">Файл изменён. Что сделать перед закрытием?</div>
+                        <div class="inner-dialog-title">${esc(title)}</div>
+                        <div class="inner-dialog-text">${esc(text)}</div>
                         <div class="inner-dialog-actions">
-                            <button class="btn btn-secondary" data-act="cancel">Отмена</button>
-                            <button class="btn btn-secondary" data-act="discard">Не сохранять</button>
-                            <button class="btn btn-primary" data-act="save">Сохранить</button>
+                            ${actions.map(a => `<button class="btn ${a.primary ? 'btn-primary' : 'btn-secondary'}" data-act="${a.act}">${esc(a.label)}</button>`).join('')}
                         </div>
                     </div>`;
                 content.appendChild(box);
@@ -6459,6 +6458,15 @@
                     resolve(act ? act.dataset.act : 'cancel');   // тап по фону = отмена
                 });
             });
+        }
+
+        function unsavedDialog() {
+            return innerDialog('Несохранённые изменения',
+                'Файл изменён. Что сделать перед закрытием?',
+                [{ act: 'cancel', label: 'Отмена' },
+                 { act: 'discard', label: 'Не сохранять' },
+                 { act: 'save', label: 'Сохранить', primary: true }],
+                'discard');
         }
 
         function unsavedDialogOpen() {
@@ -6683,6 +6691,7 @@
 
             try {
                 const r = await fetch(`https://api.github.com/repos/${repo}/contents/${path}?ref=${branch}`, {
+                    cache: 'no-store',   // GitHub кэширует содержимое, а нам нужен свежий sha
                     headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
                 });
                 if (!r.ok) throw new Error('Не удалось загрузить файл');
@@ -6873,32 +6882,80 @@
                     if (isEditMode) showPreview(); else showEditor();
                 };
 
+                async function putFile(text, sha) {
+                    return fetch(`https://api.github.com/repos/${repo}/contents/${path}`, {
+                        method: 'PUT',
+                        headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            message: `Edit ${name}`,
+                            content: btoa(unescape(encodeURIComponent(text))),
+                            sha,
+                            branch
+                        })
+                    });
+                }
+
+                // Свежий sha и содержимое прямо с GitHub, мимо кэша
+                async function fetchFresh() {
+                    const r = await fetch(`https://api.github.com/repos/${repo}/contents/${path}?ref=${branch}`, {
+                        cache: 'no-store',
+                        headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+                    });
+                    if (!r.ok) return null;
+                    const d = await r.json();
+                    let body = '';
+                    try { body = d.content ? decodeBase64Text(d.content) : ''; } catch { body = ''; }
+                    return { sha: d.sha, text: body };
+                }
+
                 window.saveInlineEdit = async function() {
                     const text = document.getElementById('inlineEditorTA').value;
                     const btn = document.getElementById('inlineSaveBtn');
+                    const origLabel = btn.innerHTML;
                     btn.disabled = true;
                     btn.innerHTML = '<div class="spinner"></div> Сохранение...';
-                    try {
-                        const res = await fetch(`https://api.github.com/repos/${repo}/contents/${path}`, {
-                            method: 'PUT',
-                            headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                message: `Edit ${name}`,
-                                content: btoa(unescape(encodeURIComponent(text))),
-                                sha: currentViewFile.sha,
-                                branch
-                            })
-                        });
-                        if (!res.ok) throw new Error((await res.json()).message || 'Ошибка');
-                        pendingEdit.dirty = false;   // сохранено — закрываем без вопросов
+
+                    const finish = () => {
+                        pendingEdit.dirty = false;
                         closeModal();
                         explorerCache = {};
                         loadExplorer(explorerPath);
                         toast(`"${name}" сохранён`, 'success');
+                    };
+
+                    try {
+                        let res = await putFile(text, currentViewFile.sha);
+
+                        // 409: наш sha устарел. Чаще всего это кэш GitHub,
+                        // реже файл правда изменили. Разбираем, что именно.
+                        if (res.status === 409 || res.status === 422) {
+                            const fresh = await fetchFresh();
+                            if (!fresh) throw new Error('Не удалось проверить состояние файла');
+
+                            if (fresh.text === rawText) {
+                                currentViewFile.sha = fresh.sha;      // содержимое то же — молча повторяем
+                                res = await putFile(text, fresh.sha);
+                            } else {
+                                const ans = await innerDialog('Файл изменился на GitHub',
+                                    'С момента открытия файл кто-то изменил. Сохранить поверх? Чужие правки будут потеряны.',
+                                    [{ act: 'cancel', label: 'Отмена' },
+                                     { act: 'force', label: 'Перезаписать', primary: true }]);
+                                if (ans !== 'force') {
+                                    btn.disabled = false;
+                                    btn.innerHTML = origLabel;
+                                    return;
+                                }
+                                currentViewFile.sha = fresh.sha;
+                                res = await putFile(text, fresh.sha);
+                            }
+                        }
+
+                        if (!res.ok) throw new Error((await res.json()).message || 'Ошибка');
+                        finish();
                     } catch (err) {
                         toast('Ошибка: ' + err.message, 'error');
                         btn.disabled = false;
-                        btn.innerHTML = 'Сохранить в GitHub';
+                        btn.innerHTML = origLabel;
                     }
                 };
 
