@@ -1934,44 +1934,52 @@
             color: var(--text-primary);
         }
         
-        /* Нумерация строк: колонка слева, липнет при горизонтальной прокрутке */
+        /* Нумерация строк: каждая строка — свой ряд с номером слева.
+           Отдельная колонка номеров не годилась: при переносе длинных
+           строк номера разъезжались с кодом, и их приходилось прятать. */
         .code-view {
-            display: flex;
-            align-items: flex-start;
             width: 100%;
             height: 100%;
             overflow: auto;
             background: var(--bg-surface);
         }
-        .code-gutter {
-            position: sticky;
-            left: 0;
-            z-index: 1;
-            flex: 0 0 auto;
-            margin: 0;
-            padding: 20px 10px 20px 14px;
-            text-align: right;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 13px;
-            line-height: 1.6;
-            color: var(--text-dim);
-            background: var(--bg-deep);
-            border-right: 1px solid var(--border-dim);
-            user-select: none;
-            white-space: pre;
-        }
-        .code-view.wrap .code-gutter { display: none; }  /* при переносе номера врут */
         .code-view .code-body {
-            flex: 1 1 auto;
             width: auto;
             height: auto;
             min-height: 100%;
             overflow: visible;
             border: none;
             border-radius: 0;
+            white-space: normal;
+            padding: 14px 0;
+        }
+        .code-line {
+            display: flex;
+            align-items: flex-start;
+            width: max-content;
+            min-width: 100%;
+        }
+        .code-view.wrap .code-line { width: 100%; }
+        .code-line .ln {
+            position: sticky;
+            left: 0;
+            z-index: 1;
+            flex: 0 0 auto;
+            min-width: 3.2em;
+            padding: 0 10px 0 12px;
+            text-align: right;
+            color: var(--text-dim);
+            background: var(--bg-deep);
+            border-right: 1px solid var(--border-dim);
+            user-select: none;
+        }
+        .code-line .lc {
+            flex: 1 1 auto;
+            padding: 0 12px 0 10px;
             white-space: pre;
         }
-        .code-view.wrap .code-body { white-space: pre-wrap; word-break: break-word; }
+        .code-view.wrap .code-line .lc { white-space: pre-wrap; word-break: break-word; }
+        .code-line.cur-line { background: rgba(34, 211, 238, 0.06); }
 
         /* Поиск по открытому файлу */
         .find-bar {
@@ -2025,7 +2033,8 @@
         mark.find-hit.current { background: var(--accent-cyan); color: #06131a; }
 
         @media (max-width: 767px), (max-height: 600px) {
-            .code-gutter { padding: 12px 8px 12px 10px; font-size: 12px; }
+            .code-line .ln { min-width: 2.8em; padding: 0 8px 0 8px; }
+            .code-line .lc { padding: 0 10px 0 8px; }
         }
 
         /* Подсветка кода */
@@ -6163,11 +6172,10 @@
         }
 
         function applyPreviewWrap() {
-            const pre = document.querySelector('.code-body');
-            if (pre) pre.classList.toggle('wrap', previewWrapOn());
             const view = document.querySelector('.code-view');
-            // Номера строк при переносе показывали бы неправду — прячем
             if (view) view.classList.toggle('wrap', previewWrapOn());
+            const plain = document.querySelector('.file-preview-container > pre');
+            if (plain) plain.classList.toggle('wrap', previewWrapOn());
             const btn = document.getElementById('wrapToggleBtn');
             if (btn) {
                 btn.style.color = previewWrapOn() ? 'var(--accent-cyan)' : '';
@@ -6185,30 +6193,25 @@
         // ширине без горизонтальной прокрутки. На широком экране упирается
         // в верхнюю границу и остаётся обычным, на телефоне уменьшается.
         function fitPreviewFont() {
-            const pre = document.querySelector('.code-body') ||
-                        document.querySelector('.file-preview-container pre');
-            if (!pre) return;
-            const gutter = document.querySelector('.code-gutter');
+            const view = document.querySelector('.code-view');
+            const pre = document.querySelector('.code-body');
+            if (!view || !pre) return;
 
             if (previewWrapOn()) {           // при переносе подгонять нечего
                 pre.style.fontSize = '';
                 pre.style.lineHeight = '';
-                if (gutter) { gutter.style.fontSize = ''; gutter.style.lineHeight = ''; }
                 return;
             }
 
-            const text = pre.textContent || '';
-            let maxLen = 0;
-            for (const line of text.split('\n')) {
-                if (line.length > maxLen) maxLen = line.length;
-            }
+            // Длину строки берём из данных, а не из textContent: ряды —
+            // блочные элементы, переводов строки между ними нет
+            const maxLen = parseInt(view.dataset.maxlen || '0', 10);
             if (!maxLen) return;
 
+            const sample = pre.querySelector('.code-line .ln');
+            const gutterW = sample ? sample.getBoundingClientRect().width : 0;
             const cs = getComputedStyle(pre);
-            const view = pre.closest('.code-view');
-            const gutterW = gutter ? gutter.getBoundingClientRect().width : 0;
-            const box = view ? view.clientWidth - gutterW : pre.clientWidth;
-            const avail = box - parseFloat(cs.paddingLeft || 0) - parseFloat(cs.paddingRight || 0);
+            const avail = view.clientWidth - gutterW - 22;   // отступы ряда
             if (avail <= 0) return;
 
             // Ширину символа моноширинного шрифта замеряем, а не угадываем
@@ -6225,10 +6228,6 @@
             const size = Math.max(6, Math.min(13, ideal));
             pre.style.fontSize = size.toFixed(1) + 'px';
             pre.style.lineHeight = '1.45';
-            if (gutter) {                    // номера обязаны совпадать построчно
-                gutter.style.fontSize = size.toFixed(1) + 'px';
-                gutter.style.lineHeight = '1.45';
-            }
         }
 
         window.addEventListener('resize', fitPreviewFont);
@@ -6316,6 +6315,28 @@
                 if (prop) return `<span class="tok-prop">${prop}</span>`;
                 return m;
             });
+        }
+
+        // Многострочный токен (блочный комментарий, шаблонная строка) при
+        // разрезании по строкам порвал бы <span>. Поэтому сначала закрываем
+        // и переоткрываем его на каждом переводе строки — вложенности у
+        // нашей подсветки нет, так что хватает одной замены.
+        function splitHighlightedLines(html) {
+            const perLine = html.replace(/<span class="(tok-[a-z]+)">([\s\S]*?)<\/span>/g,
+                (m, cls, body) => body.includes('\n')
+                    ? body.split('\n').map(part => `<span class="${cls}">${part}</span>`).join('\n')
+                    : m);
+            return perLine.split('\n');
+        }
+
+        // Готовая разметка просмотра: ряды «номер + код»
+        function buildCodeLines(text, ext, name) {
+            const lines = splitHighlightedLines(highlight(esc(text), ext, name));
+            let out = '';
+            for (let i = 0; i < lines.length; i++) {
+                out += `<div class="code-line"><span class="ln">${i + 1}</span><span class="lc">${lines[i] || ' '}</span></div>`;
+            }
+            return out;
         }
 
         function highlight(escaped, ext, name) {
@@ -6594,12 +6615,11 @@
                         previewHTML = `<div class="file-preview-container"><div class="md-preview">${html}</div></div>`;
                     } else {
                         const shown = draftText !== null ? draftText : rawText;
-                        const lineCount = shown.split('\n').length;
-                        const gutter = Array.from({ length: lineCount }, (_, i) => i + 1).join('\n');
+                        let maxLen = 0;
+                        for (const line of shown.split('\n')) if (line.length > maxLen) maxLen = line.length;
                         previewHTML = `<div class="file-preview-container">
-                            <div class="code-view${previewWrapOn() ? ' wrap' : ''}">
-                                <pre class="code-gutter" aria-hidden="true">${gutter}</pre>
-                                <pre class="code-body${previewWrapOn() ? ' wrap' : ''}">${highlight(esc(shown), ext, name)}</pre>
+                            <div class="code-view${previewWrapOn() ? ' wrap' : ''}" data-maxlen="${maxLen}">
+                                <pre class="code-body">${buildCodeLines(shown, ext, name)}</pre>
                             </div>
                         </div>`;
                     }
