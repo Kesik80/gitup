@@ -1934,6 +1934,100 @@
             color: var(--text-primary);
         }
         
+        /* Нумерация строк: колонка слева, липнет при горизонтальной прокрутке */
+        .code-view {
+            display: flex;
+            align-items: flex-start;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background: var(--bg-surface);
+        }
+        .code-gutter {
+            position: sticky;
+            left: 0;
+            z-index: 1;
+            flex: 0 0 auto;
+            margin: 0;
+            padding: 20px 10px 20px 14px;
+            text-align: right;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            color: var(--text-dim);
+            background: var(--bg-deep);
+            border-right: 1px solid var(--border-dim);
+            user-select: none;
+            white-space: pre;
+        }
+        .code-view.wrap .code-gutter { display: none; }  /* при переносе номера врут */
+        .code-view .code-body {
+            flex: 1 1 auto;
+            width: auto;
+            height: auto;
+            min-height: 100%;
+            overflow: visible;
+            border: none;
+            border-radius: 0;
+            white-space: pre;
+        }
+        .code-view.wrap .code-body { white-space: pre-wrap; word-break: break-word; }
+
+        /* Поиск по открытому файлу */
+        .find-bar {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 10px;
+            background: var(--bg-elevated);
+            border-bottom: 1px solid var(--border-dim);
+            flex-shrink: 0;
+        }
+        .find-bar input {
+            flex: 1;
+            min-width: 0;
+            background: var(--bg-deep);
+            border: 1px solid var(--border-dim);
+            border-radius: 8px;
+            padding: 7px 10px;
+            color: var(--text-primary);
+            font-family: 'Space Mono', monospace;
+            font-size: 12px;
+            outline: none;
+        }
+        .find-bar input:focus { border-color: var(--accent-cyan); }
+        .find-count {
+            flex-shrink: 0;
+            min-width: 54px;
+            text-align: center;
+            font-family: 'Space Mono', monospace;
+            font-size: 11px;
+            color: var(--text-dim);
+        }
+        .find-bar button {
+            flex-shrink: 0;
+            width: 30px;
+            height: 30px;
+            padding: 0;
+            border: 1px solid var(--border-dim);
+            border-radius: 8px;
+            background: var(--bg-deep);
+            color: var(--accent-cyan);
+            cursor: pointer;
+            font-size: 14px;
+            line-height: 1;
+        }
+        mark.find-hit {
+            background: rgba(251, 191, 36, 0.35);
+            color: inherit;
+            border-radius: 2px;
+        }
+        mark.find-hit.current { background: var(--accent-cyan); color: #06131a; }
+
+        @media (max-width: 767px), (max-height: 600px) {
+            .code-gutter { padding: 12px 8px 12px 10px; font-size: 12px; }
+        }
+
         /* Подсветка кода */
         .tok-com  { color: #6b8494; font-style: italic; }
         .tok-str  { color: #a3e635; }
@@ -3527,6 +3621,8 @@
         });
 
         function handleBackPress() {
+            if (findBarOpen()) { closeFindBar(); return; }
+
             if (uploadSheetOpen()) { closeUploadSheet(); return; }
 
             const modal = document.getElementById('modal');
@@ -6067,8 +6163,11 @@
         }
 
         function applyPreviewWrap() {
-            const pre = document.querySelector('.file-preview-container pre');
+            const pre = document.querySelector('.code-body');
             if (pre) pre.classList.toggle('wrap', previewWrapOn());
+            const view = document.querySelector('.code-view');
+            // Номера строк при переносе показывали бы неправду — прячем
+            if (view) view.classList.toggle('wrap', previewWrapOn());
             const btn = document.getElementById('wrapToggleBtn');
             if (btn) {
                 btn.style.color = previewWrapOn() ? 'var(--accent-cyan)' : '';
@@ -6086,12 +6185,15 @@
         // ширине без горизонтальной прокрутки. На широком экране упирается
         // в верхнюю границу и остаётся обычным, на телефоне уменьшается.
         function fitPreviewFont() {
-            const pre = document.querySelector('.file-preview-container pre');
+            const pre = document.querySelector('.code-body') ||
+                        document.querySelector('.file-preview-container pre');
             if (!pre) return;
+            const gutter = document.querySelector('.code-gutter');
 
             if (previewWrapOn()) {           // при переносе подгонять нечего
                 pre.style.fontSize = '';
                 pre.style.lineHeight = '';
+                if (gutter) { gutter.style.fontSize = ''; gutter.style.lineHeight = ''; }
                 return;
             }
 
@@ -6103,7 +6205,10 @@
             if (!maxLen) return;
 
             const cs = getComputedStyle(pre);
-            const avail = pre.clientWidth - parseFloat(cs.paddingLeft || 0) - parseFloat(cs.paddingRight || 0);
+            const view = pre.closest('.code-view');
+            const gutterW = gutter ? gutter.getBoundingClientRect().width : 0;
+            const box = view ? view.clientWidth - gutterW : pre.clientWidth;
+            const avail = box - parseFloat(cs.paddingLeft || 0) - parseFloat(cs.paddingRight || 0);
             if (avail <= 0) return;
 
             // Ширину символа моноширинного шрифта замеряем, а не угадываем
@@ -6120,6 +6225,10 @@
             const size = Math.max(6, Math.min(13, ideal));
             pre.style.fontSize = size.toFixed(1) + 'px';
             pre.style.lineHeight = '1.45';
+            if (gutter) {                    // номера обязаны совпадать построчно
+                gutter.style.fontSize = size.toFixed(1) + 'px';
+                gutter.style.lineHeight = '1.45';
+            }
         }
 
         window.addEventListener('resize', fitPreviewFont);
@@ -6222,6 +6331,123 @@
             }
         }
 
+        // ── Поиск по открытому файлу ──────────────────────────────
+        // Метки расставляем по текстовым узлам уже подсвеченного кода:
+        // так разметка подсветки не ломается. Совпадение, разорванное
+        // границей токена (например «x = 42», где 42 — отдельный span),
+        // не найдётся — плата за сохранность подсветки.
+        let findState = { hits: [], idx: -1, baseHTML: null };
+
+        function findBarOpen() {
+            return !!document.getElementById('findBar');
+        }
+
+        function openFindBar() {
+            if (findBarOpen()) { document.getElementById('findInput').focus(); return; }
+            const content = document.querySelector('#modal .modal-content');
+            const body = document.getElementById('modalBody');
+            if (!content || !body) return;
+
+            const bar = document.createElement('div');
+            bar.className = 'find-bar';
+            bar.id = 'findBar';
+            bar.innerHTML = `
+                <input id="findInput" type="text" placeholder="Найти в файле..."
+                       autocomplete="off" autocorrect="off" spellcheck="false">
+                <span class="find-count" id="findCount">0/0</span>
+                <button id="findPrev" title="Предыдущее">↑</button>
+                <button id="findNext" title="Следующее">↓</button>
+                <button id="findClose" title="Закрыть">✕</button>`;
+            content.insertBefore(bar, body);
+
+            const input = document.getElementById('findInput');
+            let t = null;
+            input.addEventListener('input', () => {
+                clearTimeout(t);
+                t = setTimeout(() => runFind(input.value), 120);
+            });
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') { e.preventDefault(); stepFind(e.shiftKey ? -1 : 1); }
+                if (e.key === 'Escape') { e.preventDefault(); closeFindBar(); }
+            });
+            document.getElementById('findPrev').onclick = () => stepFind(-1);
+            document.getElementById('findNext').onclick = () => stepFind(1);
+            document.getElementById('findClose').onclick = closeFindBar;
+            input.focus();
+        }
+
+        function closeFindBar() {
+            clearFindMarks();
+            const bar = document.getElementById('findBar');
+            if (bar) bar.remove();
+            findState = { hits: [], idx: -1, baseHTML: null };
+        }
+
+        function clearFindMarks() {
+            const pre = document.querySelector('.code-body');
+            if (pre && findState.baseHTML !== null) pre.innerHTML = findState.baseHTML;
+            findState.hits = [];
+            findState.idx = -1;
+        }
+
+        function runFind(query) {
+            const pre = document.querySelector('.code-body');
+            const counter = document.getElementById('findCount');
+            if (!pre) return;
+
+            if (findState.baseHTML === null) findState.baseHTML = pre.innerHTML;
+            clearFindMarks();
+
+            const q = (query || '').trim();
+            if (!q) { if (counter) counter.textContent = '0/0'; return; }
+
+            const needle = q.toLowerCase();
+            const walker = document.createTreeWalker(pre, NodeFilter.SHOW_TEXT);
+            const nodes = [];
+            while (walker.nextNode()) nodes.push(walker.currentNode);
+
+            nodes.forEach(node => {
+                const text = node.nodeValue;
+                const lower = text.toLowerCase();
+                if (lower.indexOf(needle) === -1) return;
+
+                const frag = document.createDocumentFragment();
+                let last = 0, idx = lower.indexOf(needle);
+                while (idx !== -1) {
+                    if (idx > last) frag.appendChild(document.createTextNode(text.slice(last, idx)));
+                    const mark = document.createElement('mark');
+                    mark.className = 'find-hit';
+                    mark.textContent = text.substr(idx, needle.length);
+                    frag.appendChild(mark);
+                    last = idx + needle.length;
+                    idx = lower.indexOf(needle, last);
+                }
+                if (last < text.length) frag.appendChild(document.createTextNode(text.slice(last)));
+                node.parentNode.replaceChild(frag, node);
+            });
+
+            findState.hits = Array.from(pre.querySelectorAll('mark.find-hit'));
+            findState.idx = findState.hits.length ? 0 : -1;
+            markCurrentHit(true);
+            if (counter) counter.textContent = `${findState.hits.length ? 1 : 0}/${findState.hits.length}`;
+        }
+
+        function stepFind(dir) {
+            if (!findState.hits.length) return;
+            findState.idx = (findState.idx + dir + findState.hits.length) % findState.hits.length;
+            markCurrentHit(true);
+            const counter = document.getElementById('findCount');
+            if (counter) counter.textContent = `${findState.idx + 1}/${findState.hits.length}`;
+        }
+
+        function markCurrentHit(scroll) {
+            findState.hits.forEach((h, i) => h.classList.toggle('current', i === findState.idx));
+            const cur = findState.hits[findState.idx];
+            if (cur && scroll && cur.scrollIntoView) {
+                cur.scrollIntoView({ block: 'center', inline: 'nearest' });
+            }
+        }
+
         let lastPreviewUrl = null;
         function previewUrlFor(b64, mime) {
             const blob = base64ToBlob(b64, mime);
@@ -6271,6 +6497,11 @@
                             <line x1="12" y1="15" x2="12" y2="3"/>
                         </svg>
                     </button>
+                    ${isText && !isMarkdown && !editing ? `<button class="btn btn-secondary btn-icon" onclick="openFindBar()" title="Поиск в файле">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                        </svg>
+                    </button>` : ''}
                     ${isText && !isMarkdown ? `<button class="btn btn-secondary btn-icon" id="wrapToggleBtn" onclick="togglePreviewWrap()" title="Перенос длинных строк" style="${previewWrapOn() ? 'color:var(--accent-cyan);border-color:var(--accent-cyan);' : ''}">
                         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <line x1="3" y1="6" x2="21" y2="6"/>
@@ -6363,11 +6594,21 @@
                         previewHTML = `<div class="file-preview-container"><div class="md-preview">${html}</div></div>`;
                     } else {
                         const shown = draftText !== null ? draftText : rawText;
-                        previewHTML = `<div class="file-preview-container"><pre class="${previewWrapOn() ? 'wrap' : ''}">${highlight(esc(shown), ext, name)}</pre></div>`;
+                        const lineCount = shown.split('\n').length;
+                        const gutter = Array.from({ length: lineCount }, (_, i) => i + 1).join('\n');
+                        previewHTML = `<div class="file-preview-container">
+                            <div class="code-view${previewWrapOn() ? ' wrap' : ''}">
+                                <pre class="code-gutter" aria-hidden="true">${gutter}</pre>
+                                <pre class="code-body${previewWrapOn() ? ' wrap' : ''}">${highlight(esc(shown), ext, name)}</pre>
+                            </div>
+                        </div>`;
                     }
                     body.innerHTML = previewHTML;
+                    findState = { hits: [], idx: -1, baseHTML: null };   // разметка новая
                     applyPreviewWrap();
                     fitPreviewFont();
+                    const findInput = document.getElementById('findInput');
+                    if (findInput && findInput.value) runFind(findInput.value);
                 }
 
                 function showEditor() {
@@ -6378,6 +6619,7 @@
                                       : (draftText !== null ? draftText : rawText);
 
                     isEditMode = true;
+                    closeFindBar();
                     renderViewHeader(true);
                     body.innerHTML = `
                         <div class="editor-wrap">
@@ -7242,6 +7484,7 @@
             actions.style.display = 'flex';
             currentViewFile = null;
             modalCallback = null;
+            closeFindBar();
 
             if (lastPreviewUrl) { URL.revokeObjectURL(lastPreviewUrl); lastPreviewUrl = null; }
 
