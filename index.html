@@ -1808,6 +1808,59 @@
             display: block;
         }
 
+        /* Редактор с подсветкой: подсвеченный слой снизу, прозрачное поле
+           ввода сверху. Типографика и отступы обязаны совпадать до пикселя,
+           иначе текст и подсветка разъедутся. */
+        .editor-wrap {
+            position: relative;
+            flex: 1;
+            min-height: 0;
+            height: 100%;
+            background: var(--bg-deep);
+            overflow: hidden;
+        }
+        .editor-wrap .editor-highlight,
+        .editor-wrap .editor-input {
+            position: absolute;
+            inset: 0;
+            margin: 0;
+            padding: 20px;
+            border: 0;
+            box-sizing: border-box;
+            font-family: 'Space Mono', monospace;
+            font-size: 13px;
+            line-height: 1.7;
+            white-space: pre-wrap;
+            overflow-wrap: break-word;
+            word-break: break-word;
+            tab-size: 4;
+            overflow: auto;
+        }
+        .editor-wrap .editor-highlight {
+            z-index: 0;
+            color: var(--text-primary);
+            background: transparent;
+            pointer-events: none;
+        }
+        .editor-wrap .editor-input {
+            z-index: 1;
+            background: transparent;
+            color: transparent;
+            -webkit-text-fill-color: transparent;
+            caret-color: var(--accent-cyan);
+            resize: none;
+            outline: none;
+        }
+        .editor-wrap .editor-input::selection { background: rgba(34, 211, 238, 0.3); }
+
+        @media (max-width: 767px), (max-height: 600px) {
+            .editor-wrap .editor-highlight,
+            .editor-wrap .editor-input {
+                padding: 12px 10px;
+                font-size: 12px;
+            }
+        }
+
         .modal-content.large .modal-body .file-editor-textarea {
             flex: 1;
             min-height: 0;
@@ -6253,6 +6306,7 @@
                 // Текст декодируем только для текстовых файлов: на двоичных
                 // данных декодирование бессмысленно и раньше рушило просмотр
                 let rawText = '';
+                let draftText = null;   // несохранённые правки редактора
                 if (isText) {
                     try {
                         rawText = decodeBase64Text(fileData.content);
@@ -6264,6 +6318,11 @@
                 let isEditMode = false;
 
                 function showPreview() {
+                    // Правки живут отдельно от rawText: rawText остаётся тем,
+                    // что лежит в репозитории, и служит точкой сравнения
+                    const ta = document.getElementById('inlineEditorTA');
+                    if (ta && isText) draftText = ta.value;
+
                     isEditMode = false;
                     renderViewHeader(false);
                     actions.style.display = 'none';
@@ -6276,7 +6335,7 @@
                         const url = previewUrlFor(fileData.content, 'application/pdf');
                         previewHTML = `<div class="file-preview-container"><iframe src="${url}"></iframe></div>`;
                     } else if (isMarkdown) {
-                        const html = rawText
+                        const html = (draftText !== null ? draftText : rawText)
                             .replace(/^### (.*$)/gim, '<h3>$1</h3>')
                             .replace(/^## (.*$)/gim, '<h2>$1</h2>')
                             .replace(/^# (.*$)/gim, '<h1>$1</h1>')
@@ -6285,7 +6344,8 @@
                             .replace(/\n/gim, '<br>');
                         previewHTML = `<div class="file-preview-container"><div class="md-preview">${html}</div></div>`;
                     } else {
-                        previewHTML = `<div class="file-preview-container"><pre class="${previewWrapOn() ? 'wrap' : ''}">${highlight(esc(rawText), ext, name)}</pre></div>`;
+                        const shown = draftText !== null ? draftText : rawText;
+                        previewHTML = `<div class="file-preview-container"><pre class="${previewWrapOn() ? 'wrap' : ''}">${highlight(esc(shown), ext, name)}</pre></div>`;
                     }
                     body.innerHTML = previewHTML;
                     applyPreviewWrap();
@@ -6293,15 +6353,22 @@
                 }
 
                 function showEditor() {
+                    // Текущее содержимое берём из поля, если оно уже открывалось,
+                    // иначе из файла — иначе правки терялись при переключении
+                    const existing = document.getElementById('inlineEditorTA');
+                    const currentText = existing ? existing.value
+                                      : (draftText !== null ? draftText : rawText);
+
                     isEditMode = true;
                     renderViewHeader(true);
-                    const currentText = isEditMode && document.getElementById('inlineEditorTA')
-                        ? document.getElementById('inlineEditorTA').value
-                        : rawText;
-                    body.innerHTML = `<textarea class="file-editor-textarea" id="inlineEditorTA">${esc(rawText)}</textarea>`;
+                    body.innerHTML = `
+                        <div class="editor-wrap">
+                            <pre class="editor-highlight" id="inlineEditorHL" aria-hidden="true"></pre>
+                            <textarea class="editor-input" id="inlineEditorTA" spellcheck="false" autocapitalize="off" autocorrect="off">${esc(currentText)}</textarea>
+                        </div>`;
                     actions.style.display = 'flex';
                     actions.innerHTML = `
-                        <button class="btn btn-secondary btn-icon" id="inlineUndoBtn" onclick="document.getElementById('inlineEditorTA').focus(); document.execCommand('undo');" title="Отменить" disabled style="opacity:0.35;cursor:not-allowed;">
+                        <button class="btn btn-secondary btn-icon" id="inlineUndoBtn" onclick="window.revertInlineEdit()" title="Вернуть содержимое файла" disabled style="opacity:0.35;cursor:not-allowed;">
                             <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <polyline points="9 14 4 9 9 4"/>
                                 <path d="M20 20v-7a4 4 0 0 0-4-4H4"/>
@@ -6314,14 +6381,56 @@
                             </svg>
                         </button>`;
                     const ta = document.getElementById('inlineEditorTA');
-                    ta.focus();
-                    ta.addEventListener('input', () => {
+                    const hl = document.getElementById('inlineEditorHL');
+
+                    // Перерисовка подсветки: хвостовой перевод строки нужен,
+                    // иначе последняя строка «подпрыгивает» при наборе
+                    function paint() {
+                        if (!hl) return;
+                        hl.innerHTML = highlight(esc(ta.value + '\n'), ext, name);
+                        hl.scrollTop = ta.scrollTop;
+                        hl.scrollLeft = ta.scrollLeft;
+                    }
+
+                    let paintTimer = null;
+                    function schedulePaint() {
+                        clearTimeout(paintTimer);
+                        paintTimer = setTimeout(paint, 60);   // не красим на каждой букве
+                    }
+
+                    // Кнопка отката: системный undo после перерисовки поля
+                    // всё равно пуст, поэтому возвращаем содержимое файла
+                    function updateUndoState() {
                         const undoBtn = document.getElementById('inlineUndoBtn');
                         if (!undoBtn) return;
                         const changed = ta.value !== rawText;
                         undoBtn.disabled = !changed;
                         undoBtn.style.opacity = changed ? '1' : '0.35';
                         undoBtn.style.cursor = changed ? 'pointer' : 'not-allowed';
+                    }
+
+                    window.revertInlineEdit = function () {
+                        ta.value = rawText;
+                        draftText = null;
+                        paint();
+                        updateUndoState();
+                        ta.focus();
+                    };
+
+                    paint();
+                    updateUndoState();   // правки могли остаться с прошлого захода
+                    ta.focus();
+
+                    ta.addEventListener('scroll', () => {
+                        if (!hl) return;
+                        hl.scrollTop = ta.scrollTop;
+                        hl.scrollLeft = ta.scrollLeft;
+                    });
+
+                    ta.addEventListener('input', () => {
+                        draftText = ta.value;
+                        schedulePaint();
+                        updateUndoState();
                     });
                 }
 
