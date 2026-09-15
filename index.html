@@ -1307,28 +1307,13 @@
 
         .upload-fab-icon { display: flex; }
 
-        /* Кольцо прогресса поверх кнопки */
-        .upload-fab-ring {
-            position: absolute;
-            inset: -6px;
-            width: calc(100% + 12px);
-            height: calc(100% + 12px);
-            transform: rotate(-90deg);   /* отсчёт с двенадцати часов */
-            pointer-events: none;
-        }
-        .upload-fab-ring .ring-bg { stroke: rgba(255, 255, 255, 0.12); }
-        .upload-fab-ring .ring-fg {
-            stroke: var(--accent-cyan);
-            stroke-linecap: round;
-            transition: stroke-dashoffset .25s linear;
-        }
-
         /* Идёт отправка: кнопка дышит, иконка крутится */
         .upload-fab-btn.busy { animation: uploadPulse 1.6s ease-in-out infinite; }
         .upload-fab-btn.busy .upload-fab-icon { animation: uploadRise 1.2s ease-in-out infinite; }
+        /* Пульсация бирюзовым: своим же зелёным кнопка почти не мигала */
         @keyframes uploadPulse {
-            0%, 100% { box-shadow: 0 8px 26px rgba(74, 222, 128, 0.35); }
-            50%      { box-shadow: 0 8px 34px rgba(74, 222, 128, 0.75); }
+            0%, 100% { box-shadow: 0 0 0 0 rgba(34, 211, 238, 0.30), 0 8px 26px rgba(34, 211, 238, 0.35); }
+            50%      { box-shadow: 0 0 0 12px rgba(34, 211, 238, 0.06), 0 10px 34px rgba(34, 211, 238, 0.85); }
         }
         @keyframes uploadRise {
             0%   { transform: translateY(3px); opacity: .6; }
@@ -2820,11 +2805,6 @@
 
                         <div class="upload-submit-wrap">
                             <button class="upload-fab-btn" id="uploadBtn" title="Загрузить на GitHub" aria-label="Загрузить на GitHub">
-                                <svg class="upload-fab-ring" viewBox="0 0 100 100" aria-hidden="true">
-                                    <circle class="ring-bg" cx="50" cy="50" r="45" fill="none" stroke-width="5"></circle>
-                                    <circle class="ring-fg" id="uploadRing" cx="50" cy="50" r="45" fill="none" stroke-width="5"
-                                            stroke-dasharray="283" stroke-dashoffset="283"></circle>
-                                </svg>
                                 <span class="upload-fab-icon" id="uploadBtnIcon">
                                     <svg width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24">
                                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
@@ -4004,15 +3984,8 @@
         }
 
         // ── Состояния круглой кнопки отправки ─────────────────────
-        const UPLOAD_RING_LEN = 283;   // длина окружности r=45
-
-        function setUploadProgress(pct) {
-            const ring = document.getElementById('uploadRing');
-            if (!ring) return;
-            const p = Math.max(0, Math.min(100, pct || 0));
-            ring.style.strokeDashoffset = String(UPLOAD_RING_LEN * (1 - p / 100));
-        }
-
+        // Процент показывает полоса под списком файлов; на самой кнопке
+        // остались только пульсация и подпись — кольцо дублировало счётчик.
         function setUploadState(state, label) {
             const btn  = document.getElementById('uploadBtn');
             const icon = document.getElementById('uploadBtnIcon');
@@ -4033,7 +4006,6 @@
                        </svg>`;
             }
             if (cap) cap.textContent = label || 'Загрузить на GitHub';
-            if (state === 'idle') setUploadProgress(0);
         }
 
         // Быстрая подстановка пути
@@ -7581,7 +7553,6 @@
             document.getElementById('uploadBtn').disabled = true;
             document.getElementById('uploadProgress').style.display = 'block';
             setUploadState('busy', 'Отправка...');
-            setUploadProgress(0);
 
             // Прогресс по этапам, а не по номеру файла: при одном файле
             // счётчик раньше так и стоял на нуле до самого конца.
@@ -7591,7 +7562,6 @@
                 document.getElementById('progressFill').style.width = p + '%';
                 document.getElementById('progressPct').textContent = p + '%';
                 if (label) document.getElementById('progressLabel').textContent = label;
-                setUploadProgress(p);
                 setUploadState('busy', `Отправка ${p}%`);
             };
 
