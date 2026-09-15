@@ -1277,6 +1277,82 @@
             text-align: center;
         }
 
+        /* Круглая кнопка отправки в шторке: тот же силуэт, что у плавающей,
+           но зелёная — действие другое, и путать их не хочется */
+        .upload-submit-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            margin-top: 16px;
+        }
+        .upload-fab-btn {
+            position: relative;
+            width: 76px;
+            height: 76px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4ade80, #22c55e);
+            color: #06210f;
+            box-shadow: 0 8px 26px rgba(74, 222, 128, 0.35);
+            cursor: pointer;
+            transition: transform .15s, box-shadow .25s;
+        }
+        .upload-fab-btn:active { transform: scale(0.94); }
+        .upload-fab-btn:disabled { cursor: default; }
+
+        .upload-fab-icon { display: flex; }
+
+        /* Кольцо прогресса поверх кнопки */
+        .upload-fab-ring {
+            position: absolute;
+            inset: -6px;
+            width: calc(100% + 12px);
+            height: calc(100% + 12px);
+            transform: rotate(-90deg);   /* отсчёт с двенадцати часов */
+            pointer-events: none;
+        }
+        .upload-fab-ring .ring-bg { stroke: rgba(255, 255, 255, 0.12); }
+        .upload-fab-ring .ring-fg {
+            stroke: var(--accent-cyan);
+            stroke-linecap: round;
+            transition: stroke-dashoffset .25s linear;
+        }
+
+        /* Идёт отправка: кнопка дышит, иконка крутится */
+        .upload-fab-btn.busy { animation: uploadPulse 1.6s ease-in-out infinite; }
+        .upload-fab-btn.busy .upload-fab-icon { animation: uploadRise 1.2s ease-in-out infinite; }
+        @keyframes uploadPulse {
+            0%, 100% { box-shadow: 0 8px 26px rgba(74, 222, 128, 0.35); }
+            50%      { box-shadow: 0 8px 34px rgba(74, 222, 128, 0.75); }
+        }
+        @keyframes uploadRise {
+            0%   { transform: translateY(3px); opacity: .6; }
+            50%  { transform: translateY(-3px); opacity: 1; }
+            100% { transform: translateY(3px); opacity: .6; }
+        }
+
+        /* Готово: короткая вспышка */
+        .upload-fab-btn.done { animation: uploadDone .6s ease; }
+        @keyframes uploadDone {
+            0%   { transform: scale(1); }
+            40%  { transform: scale(1.12); box-shadow: 0 0 0 14px rgba(74, 222, 128, 0.18); }
+            100% { transform: scale(1); box-shadow: 0 8px 26px rgba(74, 222, 128, 0.35); }
+        }
+
+        .upload-submit-label {
+            font-family: 'Space Mono', monospace;
+            font-size: 11px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--text-dim);
+            text-align: center;
+        }
+
         /* Кнопка «текущая папка» под полем пути */
         .path-shortcuts {
             display: flex;
@@ -2742,12 +2818,21 @@
 
                         <div class="upload-target" id="uploadTarget">Репозиторий не выбран</div>
 
-                        <button class="btn btn-success" id="uploadBtn" style="margin-top: 12px;">
-                            <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
-                            </svg>
-                            Загрузить на GitHub
-                        </button>
+                        <div class="upload-submit-wrap">
+                            <button class="upload-fab-btn" id="uploadBtn" title="Загрузить на GitHub" aria-label="Загрузить на GitHub">
+                                <svg class="upload-fab-ring" viewBox="0 0 100 100" aria-hidden="true">
+                                    <circle class="ring-bg" cx="50" cy="50" r="45" fill="none" stroke-width="5"></circle>
+                                    <circle class="ring-fg" id="uploadRing" cx="50" cy="50" r="45" fill="none" stroke-width="5"
+                                            stroke-dasharray="283" stroke-dashoffset="283"></circle>
+                                </svg>
+                                <span class="upload-fab-icon" id="uploadBtnIcon">
+                                    <svg width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+                                    </svg>
+                                </span>
+                            </button>
+                            <div class="upload-submit-label" id="uploadBtnLabel">Загрузить на GitHub</div>
+                        </div>
                     </div>
                 </div>
     </div>
@@ -3916,6 +4001,39 @@
                 badge.textContent = n;
                 badge.style.display = n ? 'block' : 'none';
             }
+        }
+
+        // ── Состояния круглой кнопки отправки ─────────────────────
+        const UPLOAD_RING_LEN = 283;   // длина окружности r=45
+
+        function setUploadProgress(pct) {
+            const ring = document.getElementById('uploadRing');
+            if (!ring) return;
+            const p = Math.max(0, Math.min(100, pct || 0));
+            ring.style.strokeDashoffset = String(UPLOAD_RING_LEN * (1 - p / 100));
+        }
+
+        function setUploadState(state, label) {
+            const btn  = document.getElementById('uploadBtn');
+            const icon = document.getElementById('uploadBtnIcon');
+            const cap  = document.getElementById('uploadBtnLabel');
+            if (!btn) return;
+
+            btn.classList.remove('busy', 'done');
+            if (state === 'busy') btn.classList.add('busy');
+            if (state === 'done') btn.classList.add('done');
+
+            if (icon) {
+                icon.innerHTML = state === 'done'
+                    ? `<svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+                           <polyline points="20 6 9 17 4 12"/>
+                       </svg>`
+                    : `<svg width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24">
+                           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+                       </svg>`;
+            }
+            if (cap) cap.textContent = label || 'Загрузить на GitHub';
+            if (state === 'idle') setUploadProgress(0);
         }
 
         // Быстрая подстановка пути
@@ -7462,6 +7580,8 @@
             isUploading = true;
             document.getElementById('uploadBtn').disabled = true;
             document.getElementById('uploadProgress').style.display = 'block';
+            setUploadState('busy', 'Отправка...');
+            setUploadProgress(0);
 
             try {
                 const r = await fetch(`https://api.github.com/repos/${repo}/git/refs/heads/${branch}`, {
@@ -7489,6 +7609,8 @@
                     document.getElementById('progressFill').style.width = pct + '%';
                     document.getElementById('progressPct').textContent = pct + '%';
                     document.getElementById('progressLabel').textContent = `Загрузка ${file.name}...`;
+                    setUploadProgress(pct);
+                    setUploadState('busy', `Отправка ${pct}%`);
 
                     const base64 = await fileToBase64(file.file);
 
@@ -7547,14 +7669,18 @@
                 renderFileList();
 
                 scheduleExplorerRefresh(explorerPath);
+                setUploadProgress(100);
+                setUploadState('done', 'Готово');
             } catch (e) {
                 toast('Ошибка загрузки: ' + e.message, 'error');
+                setUploadState('idle');
             } finally {
                 isUploading = false;
                 closeUploadSheet();
                 document.getElementById('uploadBtn').disabled = false;
                 setTimeout(() => {
                     document.getElementById('uploadProgress').style.display = 'none';
+                    setUploadState('idle');          // к следующему разу кнопка чистая
                 }, 1500);
             }
         };
