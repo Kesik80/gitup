@@ -1253,6 +1253,10 @@
             z-index: 880;
         }
         .fab:active { transform: scale(0.94); }
+        /* .app создаёт свой слой (z-index:1), поэтому модальное окно внутри
+           него не может подняться над кнопкой. Проще убрать кнопку, пока
+           сверху открыто окно или шторка — она там всё равно не нужна. */
+        body.overlay-open .fab { display: none !important; }
         .fab-badge {
             position: absolute;
             top: -2px;
@@ -3682,6 +3686,7 @@
 
             sheet.classList.add('open');
             sheet.setAttribute('aria-hidden', 'false');
+            setOverlayOpen(true);
             if (bd) bd.classList.add('open');
             document.body.style.overflow = 'hidden';
         }
@@ -3690,6 +3695,7 @@
             const sheet = document.getElementById('uploadSheet');
             const bd = document.getElementById('uploadBackdrop');
             if (sheet) { sheet.classList.remove('open'); sheet.setAttribute('aria-hidden', 'true'); }
+            setOverlayOpen(false);
             if (bd) bd.classList.remove('open');
             document.body.style.overflow = '';
         }
@@ -3704,6 +3710,15 @@
         });
 
         // Кнопка видна только когда есть куда загружать
+        function setOverlayOpen(on) {
+            if (on) { document.body.classList.add('overlay-open'); return; }
+            // Окно подтверждения может закрыться поверх открытой шторки —
+            // тогда кнопку возвращать рано
+            const modal = document.getElementById('modal');
+            const stillOpen = (modal && modal.classList.contains('open')) || uploadSheetOpen();
+            document.body.classList.toggle('overlay-open', !!stillOpen);
+        }
+
         function refreshFab() {
             const fab = document.getElementById('uploadFab');
             if (!fab) return;
@@ -4868,6 +4883,7 @@
                 <button class="btn btn-primary" onclick="saveNewFile()">Создать</button>
             `;
             modal.classList.add('open');
+            setOverlayOpen(true);
             setTimeout(() => document.getElementById('newFileNameInput').focus(), 100);
         }
 
@@ -4920,6 +4936,7 @@
             body.innerHTML = '<div class="file-preview-loading"><div class="spinner" style="width:32px;height:32px;"></div><p>Загрузка...</p></div>';
             actions.style.display = 'none';
             modal.classList.add('open');
+            setOverlayOpen(true);
             try {
                 const r = await fetch(`https://api.github.com/repos/${repo}/contents/${path}?ref=${branch}`, {
                     headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
@@ -6281,6 +6298,7 @@
             body.innerHTML = '<div class="file-preview-loading"><div class="spinner" style="width: 32px; height: 32px;"></div><p>Загрузка...</p></div>';
             actions.style.display = 'none';
             modal.classList.add('open');
+            setOverlayOpen(true);
 
             try {
                 const r = await fetch(`https://api.github.com/repos/${repo}/contents/${path}?ref=${branch}`, {
@@ -7210,6 +7228,7 @@
             document.getElementById('modalBody').innerHTML = body;
             modalCallback = onConfirm;
             document.getElementById('modal').classList.add('open');
+            setOverlayOpen(true);
         }
 
         function closeModal() {
@@ -7218,6 +7237,7 @@
             const actions = modal.querySelector('.modal-actions');
             modal.classList.remove('open');
             modal.classList.remove('modal-large');
+            setOverlayOpen(false);
             content.classList.remove('large');
             actions.style.display = 'flex';
             currentViewFile = null;
