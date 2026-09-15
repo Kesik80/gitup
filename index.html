@@ -1823,12 +1823,34 @@
             background: var(--bg-deep);
             overflow: hidden;
         }
+        .editor-gutter {
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: var(--gutter-w, 3.4em);
+            overflow: hidden;
+            z-index: 2;
+            padding: 20px 8px 20px 0;
+            box-sizing: border-box;
+            text-align: right;
+            font-family: 'Space Mono', monospace;
+            font-size: 13px;
+            line-height: 1.7;
+            color: var(--text-dim);
+            background: var(--bg-deep);
+            border-right: 1px solid var(--border-dim);
+            user-select: none;
+            pointer-events: none;
+        }
+        .editor-gutter .gline { overflow: hidden; }
+
         .editor-wrap .editor-highlight,
         .editor-wrap .editor-input {
             position: absolute;
             inset: 0;
             margin: 0;
-            padding: 20px;
+            padding: 20px 20px 20px calc(var(--gutter-w, 3.4em) + 10px);
             border: 0;
             box-sizing: border-box;
             font-family: 'Space Mono', monospace;
@@ -1840,7 +1862,13 @@
             tab-size: 4;
             overflow: auto;
         }
+        .editor-wrap .editor-highlight .eline {
+            white-space: pre-wrap;
+            overflow-wrap: break-word;
+            word-break: break-word;
+        }
         .editor-wrap .editor-highlight {
+            white-space: normal;
             z-index: 0;
             color: var(--text-primary);
             background: transparent;
@@ -1860,9 +1888,10 @@
         @media (max-width: 767px), (max-height: 600px) {
             .editor-wrap .editor-highlight,
             .editor-wrap .editor-input {
-                padding: 12px 10px;
+                padding: 12px 10px 12px calc(var(--gutter-w, 3.4em) + 8px);
                 font-size: 12px;
             }
+            .editor-gutter { padding: 12px 6px 12px 0; font-size: 12px; }
         }
 
         .modal-content.large .modal-body .file-editor-textarea {
@@ -6643,6 +6672,7 @@
                     renderViewHeader(true);
                     body.innerHTML = `
                         <div class="editor-wrap">
+                            <div class="editor-gutter" id="inlineEditorGutter" aria-hidden="true"><div id="inlineGutterInner"></div></div>
                             <pre class="editor-highlight" id="inlineEditorHL" aria-hidden="true"></pre>
                             <textarea class="editor-input" id="inlineEditorTA" spellcheck="false" autocapitalize="off" autocorrect="off">${esc(currentText)}</textarea>
                         </div>`;
@@ -6663,13 +6693,38 @@
                     const ta = document.getElementById('inlineEditorTA');
                     const hl = document.getElementById('inlineEditorHL');
 
-                    // Перерисовка подсветки: хвостовой перевод строки нужен,
-                    // иначе последняя строка «подпрыгивает» при наборе
+                    const gutter = document.getElementById('inlineEditorGutter');
+                    const gutterInner = document.getElementById('inlineGutterInner');
+                    const GUTTER_LIMIT = 3000;   // выше — замеры строк заметно тормозят
+
+                    // Каждая строка — свой блок. Высоту блока меряем и задаём
+                    // такую же ячейке номера: тогда номера совпадают с кодом
+                    // даже когда длинная строка перенеслась на несколько.
                     function paint() {
                         if (!hl) return;
-                        hl.innerHTML = highlight(esc(ta.value + '\n'), ext, name);
-                        hl.scrollTop = ta.scrollTop;
-                        hl.scrollLeft = ta.scrollLeft;
+                        const lines = splitHighlightedLines(highlight(esc(ta.value), ext, name));
+                        hl.innerHTML = lines.map(l => `<div class="eline">${l || ' '}</div>`).join('');
+                        syncScroll();
+                        paintGutter(lines.length);
+                    }
+
+                    function paintGutter(count) {
+                        if (!gutter || !gutterInner) return;
+                        if (count > GUTTER_LIMIT) { gutter.style.display = 'none'; return; }
+                        gutter.style.display = '';
+
+                        const rows = hl.children;
+                        let html = '';
+                        for (let i = 0; i < rows.length; i++) {
+                            html += `<div class="gline" style="height:${rows[i].offsetHeight}px">${i + 1}</div>`;
+                        }
+                        gutterInner.innerHTML = html;
+                        gutterInner.style.transform = `translateY(${-ta.scrollTop}px)`;
+                    }
+
+                    function syncScroll() {
+                        if (hl) { hl.scrollTop = ta.scrollTop; hl.scrollLeft = ta.scrollLeft; }
+                        if (gutterInner) gutterInner.style.transform = `translateY(${-ta.scrollTop}px)`;
                     }
 
                     let paintTimer = null;
@@ -6701,11 +6756,8 @@
                     updateUndoState();   // правки могли остаться с прошлого захода
                     ta.focus();
 
-                    ta.addEventListener('scroll', () => {
-                        if (!hl) return;
-                        hl.scrollTop = ta.scrollTop;
-                        hl.scrollLeft = ta.scrollLeft;
-                    });
+                    ta.addEventListener('scroll', syncScroll);
+                    window.addEventListener('resize', () => paintGutter(hl ? hl.children.length : 0));
 
                     ta.addEventListener('input', () => {
                         draftText = ta.value;
