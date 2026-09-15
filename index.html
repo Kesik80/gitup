@@ -2086,11 +2086,13 @@
             padding: 16px;
             background: rgba(0, 0, 0, 0.6);
         }
-        /* Поверх шторки загрузки: она сама position:fixed, поэтому и диалог
-           крепим к экрану, иначе он лёг бы только на видимую часть списка */
+        /* Поверх шторки загрузки. Диалог лежит в body, а не внутри шторки:
+           у той есть transform, а трансформированный предок становится
+           системой координат для position:fixed — окно уезжало за экран. */
         .inner-dialog.over-sheet {
             position: fixed;
-            z-index: 950;
+            inset: 0;
+            z-index: 960;        /* шторка — 901 */
         }
         .inner-dialog-box {
             width: 100%;
@@ -3951,6 +3953,8 @@
             const sheet = document.getElementById('uploadSheet');
             const bd = document.getElementById('uploadBackdrop');
             if (sheet) { sheet.classList.remove('open'); sheet.setAttribute('aria-hidden', 'true'); }
+            const strayDialog = document.getElementById('unsavedDialog');
+            if (strayDialog && strayDialog.classList.contains('over-sheet')) strayDialog.remove();
             setOverlayOpen(false);
             if (bd) bd.classList.remove('open');
             document.body.style.overflow = '';
@@ -7547,14 +7551,13 @@
                 const word = selectedFiles.length === 1 ? 'файл' : 'файлов';
                 // Диалог живёт внутри шторки: общее окно накрывало её
                 // затемнением, и казалось, что список файлов пропал
-                const sheet = document.getElementById('uploadSheet');
                 const okTarget = await innerDialog(
                     `Загрузить ${selectedFiles.length} ${word}?`,
                     `${repo} · ветка ${branch} · папка /${path}`,
                     [{ act: 'cancel', label: 'Отмена' },
                      { act: 'ok', label: 'Загрузить', primary: true }],
                     'cancel',
-                    sheet && sheet.classList.contains('open') ? sheet : null);
+                    document.body);
                 if (okTarget !== 'ok') return;
             }
             localStorage.setItem('gh-last-upload-target', target);
