@@ -2114,6 +2114,37 @@
             line-height: 1.5;
             margin-bottom: 16px;
         }
+        .inner-dialog-input {
+            width: 100%;
+            margin-bottom: 10px;
+            padding: 10px 12px;
+            box-sizing: border-box;
+            background: var(--bg-deep);
+            border: 1px solid var(--border-dim);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-family: 'Space Mono', monospace;
+            font-size: 13px;
+            outline: none;
+        }
+        .inner-dialog-input:focus { border-color: var(--accent-cyan); }
+        .inner-dialog-tools {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 14px;
+        }
+        .inner-dialog-tools button {
+            font-family: 'Space Mono', monospace;
+            font-size: 11px;
+            padding: 5px 9px;
+            border: 1px solid var(--border-dim);
+            border-radius: 6px;
+            background: var(--bg-deep);
+            color: var(--text-dim);
+            cursor: pointer;
+        }
+
         .inner-dialog-actions {
             display: flex;
             flex-wrap: wrap;
@@ -3775,6 +3806,9 @@
         });
 
         function handleBackPress() {
+            const renameBox = document.getElementById('renameUploadDialog');
+            if (renameBox) { renameBox.remove(); return; }
+
             if (unsavedDialogOpen()) return;          // ждём ответа в диалоге
 
             const openModalEl = document.getElementById('modal');
@@ -3955,6 +3989,8 @@
             if (sheet) { sheet.classList.remove('open'); sheet.setAttribute('aria-hidden', 'true'); }
             const strayDialog = document.getElementById('unsavedDialog');
             if (strayDialog && strayDialog.classList.contains('over-sheet')) strayDialog.remove();
+            const strayRename = document.getElementById('renameUploadDialog');
+            if (strayRename) strayRename.remove();
             setOverlayOpen(false);
             if (bd) bd.classList.remove('open');
             document.body.style.overflow = '';
@@ -7498,31 +7534,62 @@
             });
         }
 
+        // Своё окно, а не общее модальное: над открытой шторкой оно
+        // на телефоне не всплывало, и переименовать было нечем
         function renameUploadFile(id) {
             const file = selectedFiles.find(f => f.id === id);
             if (!file) return;
 
-            openModal(
-                'Переименовать файл',
-                `<input type="text" class="form-input" id="renameUploadInput" value="${esc(file.name)}">
-                <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;">
-                  ${['index.html'].map(n =>
-                    `<button onclick="document.getElementById('renameUploadInput').value='${n}';this.parentNode.querySelectorAll('button').forEach(b=>b.style.opacity='0.5');this.style.opacity='1';"
-                      style="font:11px monospace;padding:3px 8px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);cursor:pointer;">${n}</button>`
-                  ).join('')}
-                  <button onclick="document.getElementById('renameUploadInput').value=cleanFileName(document.getElementById('renameUploadInput').value);this.parentNode.querySelectorAll('button').forEach(b=>b.style.opacity='0.5');this.style.opacity='1';"
-                    style="font:11px monospace;padding:3px 8px;border:1px solid var(--accent-cyan);border-radius:4px;background:var(--surface);color:var(--accent-cyan);cursor:pointer;">🧹 Очистить имя</button>
-                </div>`,
-                () => {
-                    const newName = document.getElementById('renameUploadInput').value.trim();
-                    if (!newName || newName === file.name) return;
+            const box = document.createElement('div');
+            box.className = 'inner-dialog over-sheet';
+            box.id = 'renameUploadDialog';
+            box.innerHTML = `
+                <div class="inner-dialog-box">
+                    <div class="inner-dialog-title">Переименовать файл</div>
+                    <input type="text" class="inner-dialog-input" id="renameUploadInput"
+                           value="${esc(file.name)}" autocomplete="off" autocorrect="off" spellcheck="false">
+                    <div class="inner-dialog-tools">
+                        <button data-tool="clean">🧹 Очистить имя</button>
+                        <button data-tool="index">index.html</button>
+                    </div>
+                    <div class="inner-dialog-actions">
+                        <button class="btn btn-secondary" data-act="cancel">Отмена</button>
+                        <button class="btn btn-primary" data-act="ok">Переименовать</button>
+                    </div>
+                </div>`;
+            document.body.appendChild(box);
 
-                    file.name = newName;
-                    file.relPath = newName;
-                    renderFileList();
-                    toast('Файл переименован', 'success');
+            const input = document.getElementById('renameUploadInput');
+            input.focus();
+            input.setSelectionRange(0, (input.value.lastIndexOf('.') + 1 || input.value.length + 1) - 1);
+
+            const apply = () => {
+                const newName = input.value.trim();
+                box.remove();
+                if (!newName || newName === file.name) return;
+                file.name = newName;
+                file.relPath = newName;
+                renderFileList();
+                updateTargetLabels();
+                toast('Файл переименован', 'success');
+            };
+
+            box.addEventListener('click', (e) => {
+                const tool = e.target.closest('[data-tool]');
+                if (tool) {
+                    input.value = tool.dataset.tool === 'clean' ? cleanFileName(input.value) : 'index.html';
+                    input.focus();
+                    return;
                 }
-            );
+                const act = e.target.closest('[data-act]');
+                if (act) { act.dataset.act === 'ok' ? apply() : box.remove(); return; }
+                if (e.target === box) box.remove();          // тап по фону — отмена
+            });
+
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') { e.preventDefault(); apply(); }
+                if (e.key === 'Escape') { e.preventDefault(); box.remove(); }
+            });
         }
 
         function removeFile(id) {
