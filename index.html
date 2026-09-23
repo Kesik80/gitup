@@ -180,6 +180,7 @@
             content: '';
             position: fixed;
             inset: 0;
+            z-index: -1;      /* фоновая сетка — за содержимым */
             background-image: 
                 linear-gradient(var(--border-dim) 1px, transparent 1px),
                 linear-gradient(90deg, var(--border-dim) 1px, transparent 1px);
@@ -199,6 +200,7 @@
             content: '';
             position: fixed;
             inset: 0;
+            z-index: -1;      /* полоса сканирования — тоже за содержимым */
             background: linear-gradient(
                 to bottom,
                 transparent 0%,
@@ -217,7 +219,9 @@
         
         .app {
             position: relative;
-            z-index: 1;
+            /* Без z-index намеренно: он создавал слой, внутри которого
+               уведомления, меню и модальные окна не могли подняться над
+               шторкой загрузки. Фоновые слои вместо этого уведены назад. */
             max-width: 1400px;
             margin: 0 auto;
             padding: 12px 16px;
@@ -2348,7 +2352,7 @@
             border: 1px solid var(--border-bright);
             border-radius: 8px;
             min-width: 160px;
-            z-index: 500;
+            z-index: 1000;     /* меню сортировки — выше плавающей кнопки */
             padding: 6px 0;
             display: none;
             box-shadow: 0 8px 32px rgba(0,0,0,0.5);
