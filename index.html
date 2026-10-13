@@ -2841,7 +2841,12 @@
                                 </svg>
                                 Описание изменений
                             </label>
-                            <input type="text" class="form-input" id="commitMessage" placeholder="Что изменилось?" style="font-family:'Space Mono',monospace; font-size:12px;">
+                            <!-- name/autocomplete/data-*: иначе менеджер паролей Chrome считает это поле
+                                 логином (оно ближайшее текстовое над полем пароля) и подставляет сюда почту -->
+                            <input type="text" class="form-input" id="commitMessage" name="commit-message"
+                                   placeholder="Что изменилось?" autocomplete="off" autocorrect="off" spellcheck="false"
+                                   data-lpignore="true" data-1p-ignore data-form-type="other"
+                                   style="font-family:'Space Mono',monospace; font-size:12px;">
                         </div>
 
                         <div class="upload-target" id="uploadTarget">Репозиторий не выбран</div>
@@ -2963,7 +2968,7 @@
                         <div id="connFields">
                         <div class="form-group">
                             <label class="form-label" id="tokenLabel">Пароль</label>
-                            <input type="password" class="form-input" id="token" placeholder="Введите пароль..." onkeypress="if(event.key==='Enter') connect()">
+                            <input type="password" class="form-input" id="token" name="gitup-password" placeholder="Введите пароль..." autocomplete="current-password" onkeypress="if(event.key==='Enter') connect()">
                             <label class="remember-row" for="rememberDevice">
                                 <input type="checkbox" id="rememberDevice" checked>
                                 <span>Запомнить сеанс на этом устройстве</span>
@@ -3258,6 +3263,9 @@
         let selectedFiles = [];
         // Сообщение коммита, вынутое из COMMIT_MSG.txt в корне ZIP-архива
         let zipCommitMessage = '';
+        // Поле «Описание изменений» учитываем, только если текст набрали руками:
+        // автозаполнение браузера однажды отправило в историю адрес почты
+        let commitMsgTouched = false;
         let explorerPath = '';
         let explorerCache = {};
         let selectedItems = new Set();
@@ -7351,6 +7359,8 @@
                         if (raw.trim()) {                     // пустой или из одних пробелов — считаем отсутствующим
                             zipCommitMessage = raw.replace(/\s+$/, '');
                             msgNote = ` · 📝 ${zipCommitMessage.split('\n')[0]}`;
+                            // Показываем в самом поле, что уйдёт в историю, если ничего не набирать
+                            document.getElementById('commitMessage').placeholder = `📝 ${zipCommitMessage.split('\n')[0]}`;
                         }
                     } catch (err) { /* нечитаемый COMMIT_MSG.txt — просто игнорируем */ }
                     files = files.filter(f => f !== msgEntry);
@@ -7623,6 +7633,9 @@
             renderFileList();
         }
 
+        // Набранное руками сообщение — единственное, что перебивает COMMIT_MSG.txt
+        document.getElementById('commitMessage').addEventListener('input', () => { commitMsgTouched = true; });
+
         // Upload
         document.getElementById('uploadBtn').onclick = async () => {
             if (isUploading || selectedFiles.length === 0) return;
@@ -7724,8 +7737,9 @@
                 const tree = await treeRes.json();
                 prog(90, 'Создание коммита...');
 
-                // Приоритет: вручную введённое сообщение → COMMIT_MSG.txt из архива → заглушка
-                const typedMsg = document.getElementById('commitMessage').value.trim();
+                // Приоритет: набранное руками → COMMIT_MSG.txt из архива → заглушка.
+                // Значение, которое подставил браузер, а не человек, в расчёт не берём
+                const typedMsg = commitMsgTouched ? document.getElementById('commitMessage').value.trim() : '';
                 const commitMsg = typedMsg || zipCommitMessage || `Upload ${selectedFiles.length} file(s)`;
 
                 const newCommitRes = await fetch(`https://api.github.com/repos/${repo}/git/commits`, {
@@ -7763,6 +7777,11 @@
 
                 selectedFiles = [];
                 zipCommitMessage = '';     // сообщение из архива живёт только до своей отправки
+                // Описание не переносим на следующую отправку: прошлое к ней уже не относится
+                const msgField = document.getElementById('commitMessage');
+                msgField.value = '';
+                msgField.placeholder = 'Что изменилось?';
+                commitMsgTouched = false;
                 renderFileList();
 
                 scheduleExplorerRefresh(explorerPath);
