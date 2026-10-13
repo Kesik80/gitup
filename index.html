@@ -3256,6 +3256,8 @@
     <script>
         // State
         let selectedFiles = [];
+        // Сообщение коммита, вынутое из COMMIT_MSG.txt в корне ZIP-архива
+        let zipCommitMessage = '';
         let explorerPath = '';
         let explorerCache = {};
         let selectedItems = new Set();
@@ -7324,7 +7326,7 @@
             try {
                 const zip = await JSZip.loadAsync(file);
                 const entries = Object.values(zip.files).filter(f => !f.dir);
-                const files = entries.filter(f =>
+                let files = entries.filter(f =>
                     !f.name.startsWith('__MACOSX') &&
                     !f.name.includes('/.DS_Store') &&
                     !f.name.endsWith('.DS_Store')
@@ -7335,6 +7337,25 @@
                 const allEntries = Object.values(zip.files);
                 const roots = new Set(files.map(f => f.name.split('/')[0]));
                 const autoPrefix = roots.size === 1 ? [...roots][0] + '/' : '';
+
+                // COMMIT_MSG.txt в корне архива (уже после снятия общего префикса) —
+                // это не файл для репозитория, а сообщение коммита
+                const stripPrefix = p => (autoPrefix && p.startsWith(autoPrefix)) ? p.slice(autoPrefix.length) : p;
+                const msgEntry = files.find(f => stripPrefix(f.name).toLowerCase() === 'commit_msg.txt');
+                zipCommitMessage = '';
+                let msgNote = '';
+                if (msgEntry) {
+                    try {
+                        // JSZip отдаёт 'text' как UTF-8; BOM и CRLF убираем, хвостовые пустые строки тоже
+                        const raw = (await msgEntry.async('text')).replace(/^﻿/, '').replace(/\r\n/g, '\n');
+                        if (raw.trim()) {                     // пустой или из одних пробелов — считаем отсутствующим
+                            zipCommitMessage = raw.replace(/\s+$/, '');
+                            msgNote = ` · 📝 ${zipCommitMessage.split('\n')[0]}`;
+                        }
+                    } catch (err) { /* нечитаемый COMMIT_MSG.txt — просто игнорируем */ }
+                    files = files.filter(f => f !== msgEntry);
+                    if (!files.length) { toast('В архиве нет файлов кроме COMMIT_MSG.txt', 'error'); return; }
+                }
 
                 for (const entry of files) {
                     let relPath = entry.name;
@@ -7373,7 +7394,7 @@
                     // Save original paths so user can restore prefix
                     const addedIds = selectedFiles.slice(-totalAdded).map(f => f.id);
                     toastWithAction(
-                        `📦 ${files.length} файлов${gitkeepNote}. Папка «${autoPrefix.slice(0,-1)}» убрана`,
+                        `📦 ${files.length} файлов${gitkeepNote}. Папка «${autoPrefix.slice(0,-1)}» убрана${msgNote}`,
                         'Восстановить',
                         () => {
                             selectedFiles.forEach(f => {
@@ -7389,7 +7410,7 @@
                         }
                     );
                 } else {
-                    toast(`✅ Распаковано: ${files.length} файлов${gitkeepNote}`, 'success');
+                    toast(`✅ Распаковано: ${files.length} файлов${gitkeepNote}${msgNote}`, 'success');
                 }
             } catch (e) {
                 toast('Ошибка распаковки: ' + e.message, 'error');
@@ -7598,6 +7619,7 @@
 
         function removeFile(id) {
             selectedFiles = selectedFiles.filter(f => f.id !== id);
+            if (!selectedFiles.length) zipCommitMessage = '';   // очередь пуста — сообщение архива больше не относится ни к чему
             renderFileList();
         }
 
@@ -7702,10 +7724,14 @@
                 const tree = await treeRes.json();
                 prog(90, 'Создание коммита...');
 
+                // Приоритет: вручную введённое сообщение → COMMIT_MSG.txt из архива → заглушка
+                const typedMsg = document.getElementById('commitMessage').value.trim();
+                const commitMsg = typedMsg || zipCommitMessage || `Upload ${selectedFiles.length} file(s)`;
+
                 const newCommitRes = await fetch(`https://api.github.com/repos/${repo}/git/commits`, {
                     method: 'POST',
                     headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: document.getElementById('commitMessage').value.trim() || `Upload ${selectedFiles.length} file(s)`, tree: tree.sha, parents: [commitSha] })
+                    body: JSON.stringify({ message: commitMsg, tree: tree.sha, parents: [commitSha] })
                 });
 
                 const newCommit = await newCommitRes.json();
@@ -7717,7 +7743,8 @@
                     body: JSON.stringify({ sha: newCommit.sha })
                 });
 
-                toast(`Загружено ${selectedFiles.length} файл(ов)`, 'success');
+                const subject = commitMsg.split('\n')[0];
+                toast(`Загружено ${selectedFiles.length} файл(ов) · ${subject.length > 72 ? subject.slice(0, 71) + '…' : subject}`, 'success');
 
                 // Optimistically show uploaded items immediately if the
                 // upload destination is the folder currently being viewed.
@@ -7735,6 +7762,7 @@
                 }
 
                 selectedFiles = [];
+                zipCommitMessage = '';     // сообщение из архива живёт только до своей отправки
                 renderFileList();
 
                 scheduleExplorerRefresh(explorerPath);
