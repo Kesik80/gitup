@@ -465,6 +465,84 @@
             color: var(--text-primary);
         }
 
+        /* ── Свой выпадающий список ───────────────────────────────
+           Системный список select на Android рисует сам браузер, и он
+           остаётся белым даже при color-scheme: dark. Нативный select
+           остаётся в разметке (значение, options, события change — всё
+           прежнее), но прячется, а пользователь видит эту кнопку. */
+        select.cs-native { display: none !important; }
+
+        .cs-trigger {
+            width: 100%;
+            padding: 9px 12px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-dim);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-family: 'Space Mono', monospace;
+            font-size: 13px;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            outline: none;
+        }
+        .cs-trigger:active { background: var(--bg-elevated); }
+        .cs-trigger.open {
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 0 3px rgba(139, 233, 253, 0.1), var(--glow-cyan);
+        }
+        .cs-label {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .cs-arrow { flex: 0 0 auto; opacity: 0.65; transition: transform 0.2s; }
+        .cs-trigger.open .cs-arrow { transform: rotate(180deg); }
+
+        .cs-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.55);
+            z-index: 3000;
+        }
+        .cs-panel {
+            position: fixed;
+            z-index: 3001;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-bright);
+            border-radius: 12px;
+            box-shadow: 0 14px 44px rgba(0, 0, 0, 0.65);
+            padding: 6px;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior: contain;
+        }
+        .cs-option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px;
+            border-radius: 8px;
+            font-family: 'Space Mono', monospace;
+            font-size: 13px;
+            color: var(--text-primary);
+            cursor: pointer;
+        }
+        .cs-option:active { background: var(--bg-surface); }
+        .cs-option.sel { background: rgba(139, 233, 253, 0.12); font-weight: 700; }
+        .cs-tick {
+            flex: 0 0 14px;
+            width: 14px;
+            color: var(--accent-cyan);
+            opacity: 0;
+        }
+        .cs-option.sel .cs-tick { opacity: 1; }
+        .cs-option-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
         .form-input:focus,
         .form-select:focus {
             border-color: var(--accent-cyan);
@@ -3012,7 +3090,7 @@
                             Подключить
                         </button>
                         </div><!-- /authGroup -->
-                        <div class="form-group" style="margin-top: 20px;">
+                        <div class="form-group" id="repoGroup" style="margin-top: 20px;">
                             <label class="form-label">Репозиторий</label>
                             <select class="form-select" id="repository">
                                 <option value="">Сначала подключитесь...</option>
@@ -3835,6 +3913,8 @@
         });
 
         function handleBackPress() {
+            if (csClose()) return;                   // открыт список репозиториев/веток
+
             const renameBox = document.getElementById('renameUploadDialog');
             if (renameBox) { renameBox.remove(); return; }
 
@@ -4177,6 +4257,132 @@
         document.getElementById('branch').addEventListener('change', () => updateTargetLabels());
         document.getElementById('uploadPathInput').addEventListener('input', () => updateTargetLabels());
 
+        // ── Свой выпадающий список вместо системного ──────────────
+        // Нативный select остаётся в DOM и остаётся источником правды:
+        // .value, options и событие change работают как раньше, поэтому
+        // остальной код трогать не пришлось.
+        let csOpen = null;                 // { sel, trigger, panel, backdrop }
+
+        function csClose() {
+            if (!csOpen) return false;
+            csOpen.panel.remove();
+            csOpen.backdrop.remove();
+            csOpen.trigger.classList.remove('open');
+            csOpen = null;
+            window.removeEventListener('resize', csClose);
+            window.removeEventListener('scroll', csClose, true);
+            return true;
+        }
+
+        function csOpenPanel(sel, trigger) {
+            csClose();
+            const backdrop = document.createElement('div');
+            backdrop.className = 'cs-backdrop';
+            backdrop.onclick = csClose;
+
+            const panel = document.createElement('div');
+            panel.className = 'cs-panel';
+            panel.setAttribute('role', 'listbox');
+
+            Array.from(sel.options).forEach((o, i) => {
+                const row = document.createElement('div');
+                row.className = 'cs-option' + (i === sel.selectedIndex ? ' sel' : '');
+                row.setAttribute('role', 'option');
+                const tick = document.createElement('span');
+                tick.className = 'cs-tick';
+                tick.textContent = '✓';
+                const label = document.createElement('span');
+                label.className = 'cs-option-text';
+                label.textContent = o.text;
+                if (o.style.color) label.style.color = o.style.color;   // цвет репозитория
+                row.append(tick, label);
+                row.onclick = () => {
+                    csClose();
+                    if (sel.selectedIndex === i) return;                // то же значение — не дёргаем change
+                    sel.selectedIndex = i;
+                    csSync(sel);
+                    sel.dispatchEvent(new Event('change'));
+                };
+                panel.appendChild(row);
+            });
+
+            document.body.append(backdrop, panel);
+            trigger.classList.add('open');
+
+            // Размещаем под полем, а если места мало — над ним
+            const r = trigger.getBoundingClientRect();
+            const vh = window.innerHeight;
+            const below = vh - r.bottom - 12;
+            const above = r.top - 12;
+            const useAbove = below < 200 && above > below;
+            const maxH = Math.max(140, Math.min(vh * 0.55, useAbove ? above : below));
+            panel.style.left = Math.max(8, r.left) + 'px';
+            panel.style.width = Math.min(r.width, window.innerWidth - 16) + 'px';
+            panel.style.maxHeight = maxH + 'px';
+            if (useAbove) {
+                panel.style.bottom = (vh - r.top + 6) + 'px';
+                panel.style.top = 'auto';
+            } else {
+                panel.style.top = (r.bottom + 6) + 'px';
+                panel.style.bottom = 'auto';
+            }
+            try { panel.querySelector('.cs-option.sel')?.scrollIntoView({ block: 'nearest' }); } catch {}
+
+            csOpen = { sel, trigger, panel, backdrop };
+            window.addEventListener('resize', csClose);
+            window.addEventListener('scroll', csClose, true);
+        }
+
+        function csSync(sel) {
+            const trigger = sel.csTrigger;
+            if (!trigger) return;
+            const opt = sel.options[sel.selectedIndex];
+            trigger.querySelector('.cs-label').textContent = opt ? opt.text : '';
+            // Цвет репозитория код по-прежнему пишет в стиль самого select
+            trigger.style.color = sel.style.color || '';
+            trigger.style.borderColor = sel.style.borderColor || '';
+            trigger.style.fontWeight = sel.style.fontWeight || '';
+        }
+
+        function enhanceSelect(id) {
+            const sel = document.getElementById(id);
+            if (!sel || sel.csTrigger) return;
+
+            const trigger = document.createElement('button');
+            trigger.type = 'button';
+            trigger.className = 'cs-trigger';
+            trigger.id = id + 'Trigger';
+            trigger.innerHTML = '<span class="cs-label"></span>'
+                + '<svg class="cs-arrow" width="14" height="14" fill="none" stroke="currentColor" '
+                + 'stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>';
+            trigger.onclick = () => { csOpen && csOpen.sel === sel ? csClose() : csOpenPanel(sel, trigger); };
+
+            sel.classList.add('cs-native');
+            sel.after(trigger);
+            sel.csTrigger = trigger;
+
+            // .value присваивают и программно, без события change —
+            // перехватываем сеттер, чтобы кнопка не отставала от поля
+            const desc = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value');
+            Object.defineProperty(sel, 'value', {
+                configurable: true,
+                get() { return desc.get.call(this); },
+                set(v) { desc.set.call(this, v); csSync(sel); }
+            });
+
+            // Список опций пересобирают, цвет поля пишут в style — следим за обоими
+            new MutationObserver(() => csSync(sel))
+                .observe(sel, { childList: true, subtree: true, attributes: true, attributeFilter: ['style'] });
+            sel.addEventListener('change', () => csSync(sel));
+            csSync(sel);
+        }
+
+        enhanceSelect('repository');
+        enhanceSelect('branch');
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape' && csOpen) { e.preventDefault(); csClose(); }
+        }, true);
+
         // ── Connection collapse ───────────────────────────────────
         function collapseConn(repoName) {
             document.getElementById('connCollapsedBar').style.display = 'flex';
@@ -4189,7 +4395,11 @@
             document.getElementById('connFields').style.display = 'block';
             // Уже подключены — показываем только выбор репозитория и ветки
             const authGroup = document.getElementById('authGroup');
-            if (authGroup) authGroup.style.display = sessionStorage.getItem('gh-token') ? 'none' : '';
+            const connected = !!sessionStorage.getItem('gh-token');
+            if (authGroup) authGroup.style.display = connected ? 'none' : '';
+            // Отступ нужен, только когда сверху есть блок входа
+            const repoGroup = document.getElementById('repoGroup');
+            if (repoGroup) repoGroup.style.marginTop = connected ? '0' : '20px';
         }
 
         // ── Drop zone visibility ──────────────────────────────────
