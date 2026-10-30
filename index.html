@@ -520,6 +520,7 @@
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
             overscroll-behavior: contain;
+            touch-action: pan-y;
         }
         .cs-option {
             display: flex;
@@ -4265,12 +4266,12 @@
 
         function csClose() {
             if (!csOpen) return false;
+            window.removeEventListener('resize', csClose);
+            window.removeEventListener('scroll', csOpen.onScroll, true);
             csOpen.panel.remove();
             csOpen.backdrop.remove();
             csOpen.trigger.classList.remove('open');
             csOpen = null;
-            window.removeEventListener('resize', csClose);
-            window.removeEventListener('scroll', csClose, true);
             return true;
         }
 
@@ -4283,6 +4284,16 @@
             const panel = document.createElement('div');
             panel.className = 'cs-panel';
             panel.setAttribute('role', 'listbox');
+
+            // Протяжка пальцем — это прокрутка, а не выбор пункта
+            let dragged = false, startY = 0;
+            panel.addEventListener('touchstart', e => {
+                dragged = false;
+                startY = e.touches[0].clientY;
+            }, { passive: true });
+            panel.addEventListener('touchmove', e => {
+                if (Math.abs(e.touches[0].clientY - startY) > 8) dragged = true;
+            }, { passive: true });
 
             Array.from(sel.options).forEach((o, i) => {
                 const row = document.createElement('div');
@@ -4297,6 +4308,7 @@
                 if (o.style.color) label.style.color = o.style.color;   // цвет репозитория
                 row.append(tick, label);
                 row.onclick = () => {
+                    if (dragged) { dragged = false; return; }   // палец прокручивал список
                     csClose();
                     if (sel.selectedIndex === i) return;                // то же значение — не дёргаем change
                     sel.selectedIndex = i;
@@ -4328,9 +4340,11 @@
             }
             try { panel.querySelector('.cs-option.sel')?.scrollIntoView({ block: 'nearest' }); } catch {}
 
-            csOpen = { sel, trigger, panel, backdrop };
+            // Прокрутка страницы под панелью закрывает её, прокрутка внутри — нет
+            const onScroll = e => { if (!panel.contains(e.target)) csClose(); };
+            csOpen = { sel, trigger, panel, backdrop, onScroll };
             window.addEventListener('resize', csClose);
-            window.addEventListener('scroll', csClose, true);
+            window.addEventListener('scroll', onScroll, true);
         }
 
         function csSync(sel) {
