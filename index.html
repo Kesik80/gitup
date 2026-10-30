@@ -21,6 +21,9 @@
         }
         
         :root {
+            /* Системные элементы (выпадающий список select, полосы прокрутки)
+               рисует сам браузер — без color-scheme они остаются белыми */
+            color-scheme: dark;
             /* Cyberpunk-inspired palette */
             --bg-void: #0a0e14;
             --bg-deep: #101419;
@@ -52,6 +55,7 @@
 
         /* Light theme */
         [data-theme="light"] {
+            color-scheme: light;
             --bg-void: #f0f4f8;
             --bg-deep: #e8edf3;
             --bg-surface: #ffffff;
@@ -455,6 +459,12 @@
             outline: none;
         }
         
+        /* Не все браузеры красят пункты списка по color-scheme — задаём явно */
+        .form-select option {
+            background: var(--bg-surface);
+            color: var(--text-primary);
+        }
+
         .form-input:focus,
         .form-select:focus {
             border-color: var(--accent-cyan);
@@ -2966,6 +2976,10 @@
                         </div>
                         <!-- Full fields (hidden after connect) -->
                         <div id="connFields">
+                        <!-- Вход целиком: при «сменить репозиторий» уже подключённому
+                             пользователю прячем, иначе поле пароля сбивает с толку
+                             и отодвигает список репозиториев вниз -->
+                        <div id="authGroup">
                         <div class="form-group">
                             <label class="form-label" id="tokenLabel">Пароль</label>
                             <input type="password" class="form-input" id="token" name="gitup-password" placeholder="Введите пароль..." autocomplete="current-password" onkeypress="if(event.key==='Enter') connect()">
@@ -2997,6 +3011,7 @@
                             </svg>
                             Подключить
                         </button>
+                        </div><!-- /authGroup -->
                         <div class="form-group" style="margin-top: 20px;">
                             <label class="form-label">Репозиторий</label>
                             <select class="form-select" id="repository">
@@ -4172,6 +4187,9 @@
         function expandConn() {
             document.getElementById('connCollapsedBar').style.display = 'none';
             document.getElementById('connFields').style.display = 'block';
+            // Уже подключены — показываем только выбор репозитория и ветки
+            const authGroup = document.getElementById('authGroup');
+            if (authGroup) authGroup.style.display = sessionStorage.getItem('gh-token') ? 'none' : '';
         }
 
         // ── Drop zone visibility ──────────────────────────────────
